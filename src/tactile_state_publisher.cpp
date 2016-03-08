@@ -10,27 +10,26 @@
 #include <urdf_parser/urdf_parser.h>
 #include <urdf_sensor/tactile.h>
 #include <boost/thread/locks.hpp>
+#include <map>
+#include <vector>
 #include <string>
-
-
-using namespace std;
+#include <algorithm>
 
 
 TactileStatePublisher::TactileStatePublisher():
   publish_rate_(DEFAULT_PUBLISH_RATE)
 {
   // configure the tsp
-  //READ FROM URDF
+  // READ FROM URDF
   config();
-    
+
   // init publisher/subscribers
   init();
-  
 }
 
 void TactileStatePublisher::config()
 {
-  if (urdf_model.initParam("/robot_description"))
+  if (urdf_model_.initParam("/robot_description"))
   {
     createSensorDataMap();
   }
@@ -40,12 +39,12 @@ void TactileStatePublisher::createSensorDataMap()
 {
   // prepare the recurrent tactile message
   std::map<std::string, urdf::SensorSharedPtr>::iterator it;
-   
+
   // loop over all the sensor found in the URDF
-  for (it = urdf_model.sensors_.begin(); it != urdf_model.sensors_.end(); it++)
+  for (it = urdf_model_.sensors_.begin(); it != urdf_model_.sensors_.end(); it++)
   {
     boost::shared_ptr<urdf::Tactile> tactile_sensor_ptr = boost::static_pointer_cast<urdf::Tactile>(it->second->sensor);
-    if (!tactile_sensor_ptr) continue; // some other sensor than tactile
+    if (!tactile_sensor_ptr) continue;  // some other sensor than tactile
 
     sensor_msgs::ChannelFloat32 sensor_data;
     sensor_data.name = it->second->name;
@@ -68,8 +67,8 @@ void TactileStatePublisher::createSensorDataMap()
     }
 
     tactile_msg_.sensors.push_back(sensor_data);
-    // add to sensor_data_map
-    sensor_data_map_[sensor_data.name] = &(tactile_msg_.sensors.back());
+    // add the index to sensor_data_map
+    sensor_data_map_[sensor_data.name] = tactile_msg_.sensors.size() - 1;
   }
 }
 
@@ -77,15 +76,15 @@ void TactileStatePublisher::init()
 {
   // init sensor_list
   // FROM URDF
-  //source_list_.push_back("/rh/tactile_tip");
-  //source_list_.push_back("/rh/tactile_mid");
-  //source_list_.push_back("/rh/tactile_prox");
+  // source_list_.push_back("/rh/tactile_tip");
+  // source_list_.push_back("/rh/tactile_mid");
+  // source_list_.push_back("/rh/tactile_prox");
   source_list_.push_back("/rh/tactile_mid");
   source_list_.push_back("/rh/tactile_prox");
-  
+
   // initialize publisher
   tactile_pub_ = nh_.advertise<tactile_msgs::TactileState>("tactile_states", 5);
-  
+
   // intialize subscribers from source list if any
   for (size_t i = 0; i < source_list_.size(); ++i)
   {
@@ -101,15 +100,16 @@ void TactileStatePublisher::tactile_state_cb(const tactile_msgs::TactileStateCon
   for (size_t i = 0; i < msg->sensors.size(); ++i)
   {
     const std::string &name = msg->sensors[i].name;
-    std::map<std::string, sensor_msgs::ChannelFloat32*>::iterator it = sensor_data_map_.find(name);
+    std::map<std::string, size_t>::iterator it = sensor_data_map_.find(name);
     if (it == sensor_data_map_.end()) continue;
 
     // store new data in the tactile_msg
     const sensor_msgs::ChannelFloat32::_values_type &values = msg->sensors[i].values;
-    ROS_ASSERT(it->second->values.size() == values.size());
+    sensor_msgs::ChannelFloat32::_values_type &dest_values = tactile_msg_.sensors[it->second].values;
+    if (dest_values.size() == values.size())
     {
       boost::unique_lock<boost::shared_mutex> lock(mutex_);
-      std::copy(values.begin(), values.end(), it->second->values.begin());
+      std::copy(values.begin(), values.end(), dest_values.begin());
     }
   }
 }

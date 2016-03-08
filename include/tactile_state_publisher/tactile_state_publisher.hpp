@@ -49,9 +49,9 @@ protected:
   mutable boost::shared_mutex mutex_; // multiple reads / one write mutex
   // typedef shared pointers
   //typedef boost::shared_ptr<urdf::Sensor> SensorSharedPtr;
-  urdf::Model urdf_model;
+  urdf::Model urdf_model_;
 
-  std::map<std::string, sensor_msgs::ChannelFloat32*> sensor_data_map_;
+  std::map<std::string, size_t> sensor_data_map_;
  // std::map<std::string, SensorSharedPtr> sensor_map_;
   
   /**
