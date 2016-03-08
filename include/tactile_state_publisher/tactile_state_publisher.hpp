@@ -60,8 +60,7 @@ protected:
   void init();
   void createSensorDataMap();
   void config();
-  bool sensorParser(std::string param);
-  
+
   /**
    * retrieve sensor from sensor_map
    */
