@@ -106,10 +106,10 @@ void TactileStatePublisher::tactile_state_cb(const tactile_msgs::TactileStateCon
     // store new data in the tactile_msg
     const sensor_msgs::ChannelFloat32::_values_type &src = msg->sensors[i].values;
     sensor_msgs::ChannelFloat32::_values_type &dst = tactile_msg_.sensors[it->second].values;
-    if (dst.size() == src.size())
+    if (dst.size() <= src.size())
     {
       boost::unique_lock<boost::shared_mutex> lock(mutex_);
-      std::copy(src.begin(), src.end(), dst.begin());
+      std::copy(src.begin(), src.begin() + dst.size(), dst.begin());
     }
   }
 }
