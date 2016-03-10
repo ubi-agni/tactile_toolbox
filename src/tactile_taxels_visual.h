@@ -31,7 +31,6 @@
 
 #include "tactile_visual_base.h"
 #include <urdf_sensor/tactile.h>
-#include <tactile_filters/TactileValueArray.h>
 
 namespace rviz {
 
@@ -54,7 +53,6 @@ protected:
 
 protected:
 
-  ::tactile::TactileValueArray values_;  /// tactile values
   std::vector<unsigned int> mapping_;  /// mapping raw data indeces to values_
   std::vector<TaxelEntityPtr> taxels_;
 };

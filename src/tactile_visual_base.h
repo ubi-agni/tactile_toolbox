@@ -32,6 +32,7 @@
 #include <urdf_sensor/tactile.h>
 #include <tactile_msgs/TactileState.h>
 #include <geometry_msgs/Pose.h>
+#include <tactile_filters/TactileValueArray.h>
 #include <tactile_filters/TactileValue.h>
 #include <ros/time.h>
 #include <rviz/properties/bool_property.h>
@@ -97,7 +98,9 @@ protected:
   std::string frame_;  // frame this sensor is attached to
   geometry_msgs::Pose pose_; // pose relative to this frame_
 
+  ::tactile::TactileValueArray values_;  /// tactile values
   ros::Time last_update_time_;
+
   const ColorMap *color_map_;
   ::tactile::TactileValue::Mode mode_;
   bool enabled_;

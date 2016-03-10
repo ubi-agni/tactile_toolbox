@@ -32,7 +32,6 @@
 #include "tactile_visual_base.h"
 #include <urdf_sensor/tactile.h>
 #include <rviz/ogre_helpers/point_cloud.h>
-#include <tactile_filters/TactileValueArray.h>
 
 namespace rviz {
 
@@ -53,7 +52,6 @@ protected:
 protected:
   rviz::PointCloud *cloud_;
   std::vector<rviz::PointCloud::Point> points_;
-  ::tactile::TactileValueArray values_;
 };
 
 }
