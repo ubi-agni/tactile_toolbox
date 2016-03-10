@@ -30,7 +30,6 @@
  */
 
 #include "tactile_taxels_visual.h"
-#include "color_map.h"
 
 #include <rviz/mesh_loader.h>
 #include <rviz/display_context.h>
@@ -203,16 +202,14 @@ void TactileTaxelsVisual::update(const ros::Time &stamp, const sensor_msgs::Chan
     if (*it < N) vit->update(values[*it]);
     else ROS_ERROR_STREAM("too short taxel msg for " << name_);
   }
-  last_update_time_ = stamp;
+  TactileVisualBase::update(stamp);
 }
 
 void TactileTaxelsVisual::update()
 {
-  updatePose();
-
   auto vit = values_.begin();
   for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++vit) {
-    const QColor &c = color_map_->map(vit->value(mode_));
+    const QColor &c = mapValue(*vit);
     (*it)->setColor(c.redF(), c.greenF(), c.blueF(), c.alphaF());
   }
 }

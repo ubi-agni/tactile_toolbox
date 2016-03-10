@@ -36,6 +36,7 @@
 #include <tactile_filters/TactileValue.h>
 #include <ros/time.h>
 #include <rviz/properties/bool_property.h>
+#include <QColor>
 
 namespace Ogre
 {
@@ -48,6 +49,7 @@ class Display;
 class DisplayContext;
 class Property;
 class BoolProperty;
+class FloatProperty;
 
 namespace tactile {
 
@@ -69,25 +71,39 @@ public:
 
   /// update data buffer from new readings
   virtual void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) = 0;
-  /// update visual
+  /// update sensor's scene_node_
+  bool updatePose();
+  /// update min/max properties from raw_range_
+  void updateRangeProperties();
+  /// update taxels
   virtual void update() = 0;
+
+  /// most recent update older than timeout?
+  bool expired(const ros::Time &timeout);
+
   /// isVisible() simply returns status of this' BoolProperty
   bool isVisible() {return this->getBool();}
+  /// enabled status of Property
   bool isEnabled() {return enabled_;}
 
   void setColorMap(const ColorMap* color_map);
   void setMode(::tactile::TactileValue::Mode mode);
-  bool expired(const ros::Time &timeout);
+  void setAccumulationMode(::tactile::TactileValueArray::AccMode mode, bool mean);
+  void setMeanLambda (float fLambda) {values_.setMeanLambda(fLambda);}
+  void setRangeLambda (float fLambda) {values_.setRangeLambda(fLambda);}
+  void setReleaseDecay (float fDecay) {values_.setReleaseDecay(fDecay);}
 
 public Q_SLOTS:
   void setVisible(bool visible);
   void setEnabled(bool enabled);
 
 protected:
-  bool updatePose();
+  QColor mapValue(const::tactile::TactileValue &value);
+  void update(const ros::Time &stamp);
 
 protected Q_SLOTS:
   void onVisibleChanged();
+  void onRangeChanged();
 
 protected:
   rviz::Display *owner_;
@@ -103,6 +119,14 @@ protected:
 
   const ColorMap *color_map_;
   ::tactile::TactileValue::Mode mode_;
+  ::tactile::TactileValueArray::AccMode acc_mode_;
+  bool acc_mean_;
+
+  ::tactile::Range raw_range_;
+  rviz::FloatProperty *range_min_property_;
+  rviz::FloatProperty *range_max_property_;
+  rviz::FloatProperty *acc_value_property_;
+
   bool enabled_;
 };
 

@@ -35,7 +35,9 @@ ColorMap::ColorMap(float fMin, float fMax)
 
 void ColorMap::init(float fMin, float fMax)
 {
-	colors.clear();
+	this->colors.clear();
+	this->fMin = fMin;
+	this->fMax = fMax;
 }
 
 void ColorMap::append(const QColor &c)

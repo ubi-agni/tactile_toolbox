@@ -43,6 +43,7 @@
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/parse_color.h>
 #include <rviz/properties/ros_topic_property.h>
+#include <rviz/properties/enum_property.h>
 #include <rviz/validate_floats.h>
 
 #include <boost/foreach.hpp>
@@ -52,7 +53,9 @@ namespace rviz
 {
 namespace tactile {
 
-TactileStateDisplay::TactileStateDisplay() {
+TactileStateDisplay::TactileStateDisplay()
+  : mode_(::tactile::TactileValue::absCurrent)
+{
   topic_property_ = new rviz::RosTopicProperty
       ("topic", "/tactile_state", "tactile_msgs/TactileState", "",
        this, SLOT(onTopicChanged()));
@@ -62,12 +65,36 @@ TactileStateDisplay::TactileStateDisplay() {
        ROBOT_DESC + " defining tactile sensors",
        this, SLOT(onRobotDescriptionChanged()));
 
+  mode_property_ = new rviz::EnumProperty
+      ("display mode", QString::fromStdString(::tactile::TactileValue::getModeName(mode_)),
+       "", this, SLOT(onModeChanged()));
+
+  mean_lambda_property_ = new rviz::FloatProperty
+      ("mean lambda", 0.7, "sliding average discount for mean computation",
+       mode_property_, SLOT(onModeParamsChanged()), this);
+  mean_lambda_property_->setMin(0.0); mean_lambda_property_->setMax(1.0);
+
+  range_lambda_property_ = new rviz::FloatProperty
+      ("range lambda", 0.9995, "sliding average discount for range computation",
+       mode_property_, SLOT(onModeParamsChanged()), this);
+  range_lambda_property_->setMin(0.0); range_lambda_property_->setMax(1.0);
+
+  release_decay_property_ = new rviz::FloatProperty
+      ("release decay", 0.05, "linear decay for release",
+       mode_property_, SLOT(onModeParamsChanged()), this);
+  release_decay_property_->setMin(0.0); release_decay_property_->setMax(1.0);
+
   timeout_property_ = new rviz::FloatProperty
       ("display timeout", 1, "", this);
 
   sensors_property_ = new rviz::BoolProperty("sensors", true, "", this,
                                              SLOT(onAllVisibleChanged()));
   sensors_property_->collapse();
+
+  // init mode_property_
+  for (unsigned int m = ::tactile::TactileValue::rawCurrent, end = ::tactile::TactileValue::lastMode; m != end; ++m) {
+    mode_property_->addOptionStd(::tactile::TactileValue::getModeName(::tactile::TactileValue::Mode(m)), m);
+  }
 
   // init color maps
   QStringList colorNames;
@@ -170,15 +197,42 @@ void TactileStateDisplay::onRobotDescriptionChanged()
       visual.reset(new TactileTaxelsVisual(it->first, it->second->parent_link_name, sensor->_taxels,
                                            this, context_, scene_node_, sensors_property_));
     }
-    if (visual) {
-      // visual->setMode();
-      visual->setColorMap(&abs_color_map_);
-      sensors_[it->first] = visual;
-    }
+    if (visual) sensors_[it->first] = visual;
   }
-
+  onModeChanged();
   subscribe();
   context_->queueRender();
+}
+
+void TactileStateDisplay::onModeChanged()
+{
+  mode_ = ::tactile::TactileValue::getMode(mode_property_->getStdString());
+  ColorMap *color_map = 0;
+
+  // choose color map based on mode
+  switch (mode_) {
+    case ::tactile::TactileValue::dynCurrentRelease:
+    case ::tactile::TactileValue::dynMeanRelease:
+      color_map = &rel_color_map_;
+      break;
+    default:
+      color_map = &abs_color_map_;
+      break;
+  }
+
+  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+    it->second->setMode(mode_);
+    it->second->setColorMap(color_map);
+  }
+}
+
+void TactileStateDisplay::onModeParamsChanged()
+{
+  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+    it->second->setMeanLambda(mean_lambda_property_->getFloat());
+    it->second->setRangeLambda(range_lambda_property_->getFloat());
+    it->second->setReleaseDecay(release_decay_property_->getFloat());
+  }
 }
 
 void TactileStateDisplay::onAllVisibleChanged()
@@ -214,8 +268,12 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
     TactileVisualBase &sensor = *it->second;
-    sensor.setEnabled(sensor.expired(timeout) == false);
-    if (!sensor.isEnabled() || !sensor.isVisible()) continue;
+    sensor.updateRangeProperties();
+    if (!sensor.isVisible()) continue;
+
+    bool enabled = !sensor.expired(timeout) && sensor.updatePose();
+    sensor.setEnabled(enabled);
+    if (!enabled) continue;
 
     sensor.update();
   }

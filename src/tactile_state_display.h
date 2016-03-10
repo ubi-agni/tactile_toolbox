@@ -33,6 +33,7 @@
 
 #include <rviz/display.h>
 #include <tactile_msgs/TactileState.h>
+#include <tactile_filters/TactileValue.h>
 #include "color_map.h"
 
 namespace rviz
@@ -43,6 +44,7 @@ class BoolProperty;
 class ColorProperty;
 class FloatProperty;
 class RosTopicProperty;
+class EnumProperty;
 
 namespace tactile
 {
@@ -73,11 +75,19 @@ protected:
   protected Q_SLOTS:
   void onTopicChanged();
   void onRobotDescriptionChanged();
+  void onModeChanged();
+  void onModeParamsChanged();
   void onAllVisibleChanged();
 
 private:
   rviz::RosTopicProperty* topic_property_;
   rviz::StringProperty* robot_description_property_;
+
+  rviz::EnumProperty* mode_property_;
+  rviz::FloatProperty* mean_lambda_property_;
+  rviz::FloatProperty* range_lambda_property_;
+  rviz::FloatProperty* release_decay_property_;
+
   rviz::FloatProperty* timeout_property_;
   rviz::BoolProperty* sensors_property_;
 
@@ -85,6 +95,7 @@ private:
   ros::Subscriber  sub_;
   std::map<std::string, TactileVisualBasePtr> sensors_;
 
+  ::tactile::TactileValue::Mode mode_;
   ColorMap abs_color_map_;
   ColorMap rel_color_map_;
 };

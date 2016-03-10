@@ -30,7 +30,6 @@
  */
 
 #include "tactile_array_visual.h"
-#include "color_map.h"
 
 #include <rviz/config.h>
 #include <ros/console.h>
@@ -73,7 +72,7 @@ void TactileArrayVisual::update(const ros::Time &stamp,
 {
   if (values.size() == values_.size()) {
     values_.updateValues(values);
-    last_update_time_ = stamp;
+    TactileVisualBase::update(stamp);
   } else {
     ROS_ERROR_STREAM("invalid number of taxels for " << name_);
   }
@@ -81,11 +80,9 @@ void TactileArrayVisual::update(const ros::Time &stamp,
 
 void TactileArrayVisual::update()
 {
-  updatePose();
-
   auto p = points_.begin();
   for (auto it = values_.begin(), end = values_.end(); it != end; ++it, ++p) {
-    const QColor &c = color_map_->map(it->value(mode_));
+    const QColor &c = mapValue(*it);
     p->color.r = c.redF();
     p->color.g = c.greenF();
     p->color.b = c.blueF();

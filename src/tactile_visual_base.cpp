@@ -30,8 +30,9 @@
  */
 
 #include "tactile_visual_base.h"
+#include "color_map.h"
 
-#include <rviz/properties/property.h>
+#include <rviz/properties/float_property.h>
 #include <rviz/frame_manager.h>
 #include <rviz/display.h>
 #include <rviz/display_context.h>
@@ -49,11 +50,19 @@ TactileVisualBase::TactileVisualBase(const std::string &name, const std::string 
   : rviz::BoolProperty(QString::fromStdString(name), true, "", parent_property)
   , owner_(owner), context_(context), scene_node_(parent_node->createChildSceneNode())
   , name_(name), frame_(frame)
-  , color_map_(0), mode_(::tactile::TactileValue::absMean)
+  , color_map_(0)
+  , mode_(::tactile::TactileValue::absMean)
+  , acc_mode_(::tactile::TactileValueArray::Sum), acc_mean_(true)
   , enabled_(false)
-
 {
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
+  range_min_property_ = new rviz::FloatProperty
+      ("min raw value", raw_range_.min(), "", this, SLOT(onRangeChanged()));
+  range_max_property_ = new rviz::FloatProperty
+      ("max raw value", raw_range_.max(), "", this, SLOT(onRangeChanged()));
+  acc_value_property_ = new rviz::FloatProperty
+      ("current value", 0, "current value across sensor according to accumulation mode", this);
+  acc_value_property_->setReadOnly(true);
 }
 
 TactileVisualBase::~TactileVisualBase()
@@ -69,6 +78,29 @@ void TactileVisualBase::setColorMap(const ColorMap *color_map)
 void TactileVisualBase::setMode(::tactile::TactileValue::Mode mode)
 {
   mode_ = mode;
+}
+
+void TactileVisualBase::setAccumulationMode(::tactile::TactileValueArray::AccMode mode, bool mean)
+{
+  acc_mode_ = mode;
+  acc_mean_ = mean;
+}
+
+QColor TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
+{
+  float v = value.value(mode_);
+  // normalize to range 0..1
+  if (mode_ == ::tactile::TactileValue::rawCurrent ||
+      mode_ == ::tactile::TactileValue::rawMean)
+    v = (v - raw_range_.min()) / raw_range_.range();
+  return color_map_->map(v);
+}
+
+void TactileVisualBase::update(const ros::Time &stamp)
+{
+  last_update_time_ = stamp;
+  for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
+    raw_range_.update(it->absRange());
 }
 
 bool TactileVisualBase::expired(const ros::Time &timeout)
@@ -93,9 +125,21 @@ bool TactileVisualBase::updatePose()
   return true;
 }
 
+void TactileVisualBase::updateRangeProperties()
+{
+  range_min_property_->setFloat(raw_range_.min());
+  range_max_property_->setFloat(raw_range_.max());
+  acc_value_property_->setFloat(values_.accumulate(mode_, acc_mode_, acc_mean_));
+}
+
 void TactileVisualBase::onVisibleChanged()
 {
   scene_node_->setVisible(isVisible() && isEnabled());
+}
+
+void TactileVisualBase::onRangeChanged()
+{
+  raw_range_.init(range_min_property_->getFloat(), range_max_property_->getFloat());
 }
 
 void TactileVisualBase::setVisible(bool visible)
