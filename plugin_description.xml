@@ -5,5 +5,6 @@
     <description>
       display TactileState msgs
     </description>
+    <message_type>tactile_msgs/TactileState</message_type>
   </class>
 </library>
