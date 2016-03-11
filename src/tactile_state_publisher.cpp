@@ -19,8 +19,7 @@
 TactileStatePublisher::TactileStatePublisher():
   publish_rate_(DEFAULT_PUBLISH_RATE)
 {
-  // configure the tsp
-  // READ FROM URDF
+  // configure the tsp from URDF and param server
   config();
 
   // init publisher/subscribers
@@ -29,9 +28,39 @@ TactileStatePublisher::TactileStatePublisher():
 
 void TactileStatePublisher::config()
 {
+  // read sensors from URDF
   if (urdf_model_.initParam("/robot_description"))
   {
     createSensorDataMap();
+  }
+  
+  // read parameters
+  ros::NodeHandle nh_priv("~");    
+  double rate;
+  if(nh_priv.getParam("publish_rate", rate))
+  {
+    publish_rate_= ros::Rate(rate);
+  }
+    
+  XmlRpc::XmlRpcValue source_list_raw;
+  nh_priv.getParam("source_list", source_list_raw);
+  // parse the parameter list
+  if(source_list_raw.getType() == XmlRpc::XmlRpcValue::TypeArray)
+  {
+    // iterate on all the elements
+    for (int32_t index = 0; index < source_list_raw.size(); ++index)
+    {
+      // check the source is well formatted:
+      if (source_list_raw[index].getType() == XmlRpc::XmlRpcValue::TypeString)
+      {
+        std::string source_name = static_cast<std::string> (source_list_raw[index]);
+        source_list_.push_back(source_name);
+      }
+    }
+  }
+  else
+  {
+    ROS_ERROR("source list is not an array but type %d", source_list_raw.getType());
   }
 }
 
@@ -74,14 +103,6 @@ void TactileStatePublisher::createSensorDataMap()
 
 void TactileStatePublisher::init()
 {
-  // init sensor_list
-  // FROM URDF
-  // source_list_.push_back("/rh/tactile_tip");
-  // source_list_.push_back("/rh/tactile_mid");
-  // source_list_.push_back("/rh/tactile_prox");
-  source_list_.push_back("/rh/tactile_mid");
-  source_list_.push_back("/rh/tactile_prox");
-
   // initialize publisher
   tactile_pub_ = nh_.advertise<tactile_msgs::TactileState>("tactile_states", 5);
 
