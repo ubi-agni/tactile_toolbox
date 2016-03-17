@@ -181,11 +181,11 @@ void TaxelEntity::setColor(float r, float g, float b, float a)
 }
 
 
-TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::string &frame,
+TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                                          const std::vector<TactileTaxelSharedPtr> &taxels,
                                          rviz::Display *owner, rviz::DisplayContext *context,
                                          Ogre::SceneNode *parent_node, rviz::Property *parent_property)
-  : TactileVisualBase(name, frame, owner, context, parent_node, parent_property)
+  : TactileVisualBase(name, frame, origin, owner, context, parent_node, parent_property)
 {
   for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
     urdf::GeometryConstSharedPtr geometry = (*taxel)->geometry;

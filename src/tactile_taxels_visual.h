@@ -43,7 +43,7 @@ typedef boost::shared_ptr<TaxelEntity> TaxelEntityPtr;
 class TactileTaxelsVisual : public TactileVisualBase
 {
 public:
-  TactileTaxelsVisual(const std::string &name, const std::string &frame,
+  TactileTaxelsVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                       const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels,
                       rviz::Display *owner, rviz::DisplayContext *context, Ogre::SceneNode* parent_node, Property *parent_property);
 

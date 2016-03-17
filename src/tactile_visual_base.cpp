@@ -44,17 +44,22 @@
 namespace rviz {
 namespace tactile {
 
-TactileVisualBase::TactileVisualBase(const std::string &name, const std::string &frame,
+TactileVisualBase::TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                                      rviz::Display *owner, rviz::DisplayContext *context,
                                      Ogre::SceneNode *parent_node, rviz::Property *parent_property)
   : rviz::BoolProperty(QString::fromStdString(name), true, "", parent_property)
-  , owner_(owner), context_(context), scene_node_(parent_node->createChildSceneNode())
+  , owner_(owner), context_(context)
+  , link_node_(parent_node->createChildSceneNode())
+  , scene_node_(link_node_->createChildSceneNode())
   , name_(name), frame_(frame)
   , color_map_(0)
   , mode_(::tactile::TactileValue::absMean)
   , acc_mode_(::tactile::TactileValueArray::Sum), acc_mean_(true)
   , enabled_(false)
 {
+  scene_node_->setPosition(origin.position.x, origin.position.y, origin.position.z);
+  scene_node_->setOrientation(origin.rotation.w, origin.rotation.x, origin.rotation.y, origin.rotation.z);
+
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
   range_min_property_ = new rviz::FloatProperty
       ("min raw value", raw_range_.min(), "", this, SLOT(onRangeChanged()));
@@ -67,7 +72,7 @@ TactileVisualBase::TactileVisualBase(const std::string &name, const std::string 
 
 TactileVisualBase::~TactileVisualBase()
 {
-  context_->getSceneManager()->destroySceneNode(scene_node_);
+  context_->getSceneManager()->destroySceneNode(link_node_);
 }
 
 void TactileVisualBase::setColorMap(const ColorMap *color_map)
@@ -89,11 +94,17 @@ void TactileVisualBase::setAccumulationMode(::tactile::TactileValueArray::AccMod
 QColor TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
 {
   float v = value.value(mode_);
+  float a = 1.;
   // normalize to range 0..1
   if (mode_ == ::tactile::TactileValue::rawCurrent ||
-      mode_ == ::tactile::TactileValue::rawMean)
+      mode_ == ::tactile::TactileValue::rawMean) {
     v = (v - raw_range_.min()) / raw_range_.range();
-  return color_map_->map(v);
+    a = 0.;
+  }
+
+  QColor color = color_map_->map(v);
+  color.setAlphaF(a);
+  return color;
 }
 
 void TactileVisualBase::update(const ros::Time &stamp)
@@ -120,8 +131,8 @@ bool TactileVisualBase::updatePose()
     return false;
   }
   owner_->setStatusStd(rviz::StatusProperty::Ok, name_, "");
-  scene_node_->setPosition(pos);
-  scene_node_->setOrientation(quat);
+  link_node_->setPosition(pos);
+  link_node_->setOrientation(quat);
   return true;
 }
 
@@ -134,7 +145,7 @@ void TactileVisualBase::updateRangeProperties()
 
 void TactileVisualBase::onVisibleChanged()
 {
-  scene_node_->setVisible(isVisible() && isEnabled());
+  link_node_->setVisible(isVisible() && isEnabled());
 }
 
 void TactileVisualBase::onRangeChanged()

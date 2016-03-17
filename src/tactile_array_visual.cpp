@@ -39,11 +39,11 @@ using namespace urdf::tactile;
 namespace rviz {
 namespace tactile {
 
-TactileArrayVisual::TactileArrayVisual(const std::string &name, const std::string &frame,
+TactileArrayVisual::TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                                        const TactileArraySharedPtr &array,
                                        rviz::Display *owner, DisplayContext *context,
                                        Ogre::SceneNode *parent_node, rviz::Property *parent_property)
-   : TactileVisualBase(name, frame, owner, context, parent_node, parent_property)
+   : TactileVisualBase(name, frame, origin, owner, context, parent_node, parent_property)
 {
   cloud_ = new rviz::PointCloud();
   scene_node_->attachObject(cloud_);

@@ -39,7 +39,7 @@ namespace tactile {
 class TactileArrayVisual : public TactileVisualBase
 {
 public:
-  TactileArrayVisual(const std::string &name, const std::string &frame,
+  TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                      const urdf::tactile::TactileArraySharedPtr &array,
                      Display *owner, DisplayContext *context,
                      Ogre::SceneNode* parent_node, rviz::Property *parent_property);

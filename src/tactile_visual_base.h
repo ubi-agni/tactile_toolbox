@@ -62,7 +62,7 @@ class TactileVisualBase : public rviz::BoolProperty
 {
 Q_OBJECT
 public:
-  TactileVisualBase(const std::string &name, const std::string &frame,
+  TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                     rviz::Display *owner, rviz::DisplayContext *context,
                     Ogre::SceneNode* parent_node, rviz::Property *parent_property);
   virtual ~TactileVisualBase();
@@ -108,7 +108,8 @@ protected Q_SLOTS:
 protected:
   rviz::Display *owner_;
   rviz::DisplayContext *context_;
-  Ogre::SceneNode *scene_node_;
+  Ogre::SceneNode *link_node_;  // scene node at the link frame
+  Ogre::SceneNode *scene_node_; // scene node at the sensor frame
 
   std::string name_;   // sensor name
   std::string frame_;  // frame this sensor is attached to

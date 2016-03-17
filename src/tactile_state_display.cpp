@@ -188,10 +188,10 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 
     TactileVisualBasePtr visual;
     if (sensor->array_) {
-      visual.reset(new TactileArrayVisual(it->first, it->second->parent_link_, sensor->array_,
+      visual.reset(new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->array_,
                                           this, context_, scene_node_, sensors_property_));
     } else if (sensor->taxels_.size()) {
-      visual.reset(new TactileTaxelsVisual(it->first, it->second->parent_link_, sensor->taxels_,
+      visual.reset(new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->taxels_,
                                            this, context_, scene_node_, sensors_property_));
     }
     if (visual) sensors_[it->first] = visual;
