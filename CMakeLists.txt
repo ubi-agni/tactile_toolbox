@@ -17,5 +17,4 @@ generate_messages(
 
 catkin_package(
   CATKIN_DEPENDS sensor_msgs message_runtime
-  DEPENDS system_lib
 )
