@@ -1,0 +1,9 @@
+<library path="lib/liburdf_tactile">
+  <class name="tactile"
+         type="urdf::tactile::TactileSensorParser"
+         base_class_type="urdf::SensorParser">
+    <description>
+      parse tactile elements in URDF
+    </description>
+  </class>
+</library>
