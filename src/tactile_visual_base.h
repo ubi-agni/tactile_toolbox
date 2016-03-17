@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include <urdf_sensor/tactile.h>
+#include <urdf_tactile/tactile.h>
 #include <tactile_msgs/TactileState.h>
 #include <geometry_msgs/Pose.h>
 #include <tactile_filters/TactileValueArray.h>

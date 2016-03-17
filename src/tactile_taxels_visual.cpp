@@ -43,6 +43,8 @@
 
 #define RVIZ_PACKAGE_NAME "rviz"
 
+using namespace urdf::tactile;
+
 namespace rviz {
 namespace tactile {
 
@@ -180,14 +182,14 @@ void TaxelEntity::setColor(float r, float g, float b, float a)
 
 
 TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::string &frame,
-                                         const std::vector<urdf::TactileTaxelSharedPtr> &taxels,
+                                         const std::vector<TactileTaxelSharedPtr> &taxels,
                                          rviz::Display *owner, rviz::DisplayContext *context,
                                          Ogre::SceneNode *parent_node, rviz::Property *parent_property)
   : TactileVisualBase(name, frame, owner, context, parent_node, parent_property)
 {
   for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
     urdf::GeometryConstSharedPtr geometry = (*taxel)->geometry;
-    TaxelEntityPtr t(new TaxelEntity(*geometry, (*taxel)->origin, context, scene_node_));
+    TaxelEntityPtr t(new TaxelEntity(*geometry, urdf::Pose(), context, scene_node_));
     taxels_.push_back(t);
     mapping_.push_back((*taxel)->idx);
   }

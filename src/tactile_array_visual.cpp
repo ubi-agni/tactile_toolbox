@@ -34,11 +34,13 @@
 #include <rviz/config.h>
 #include <ros/console.h>
 
+using namespace urdf::tactile;
+
 namespace rviz {
 namespace tactile {
 
 TactileArrayVisual::TactileArrayVisual(const std::string &name, const std::string &frame,
-                                       const urdf::TactileArraySharedPtr &array,
+                                       const TactileArraySharedPtr &array,
                                        rviz::Display *owner, DisplayContext *context,
                                        Ogre::SceneNode *parent_node, rviz::Property *parent_property)
    : TactileVisualBase(name, frame, owner, context, parent_node, parent_property)
@@ -54,7 +56,7 @@ TactileArrayVisual::TactileArrayVisual(const std::string &name, const std::strin
   size_t idx = 0;
   for (auto it = points_.begin(), end = points_.end(); it != end; ++it, ++idx) {
     size_t row, col;
-    if (array->order == urdf::TactileArray::ROWMAJOR) {
+    if (array->order == TactileArray::ROWMAJOR) {
       row = idx / array->cols;
       col = idx % array->cols;
     } else {

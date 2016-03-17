@@ -30,7 +30,7 @@
 #pragma once
 
 #include "tactile_visual_base.h"
-#include <urdf_sensor/tactile.h>
+#include <urdf_tactile/tactile.h>
 
 namespace rviz {
 
@@ -44,7 +44,7 @@ class TactileTaxelsVisual : public TactileVisualBase
 {
 public:
   TactileTaxelsVisual(const std::string &name, const std::string &frame,
-                      const std::vector<urdf::TactileTaxelSharedPtr> &taxels,
+                      const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels,
                       rviz::Display *owner, rviz::DisplayContext *context, Ogre::SceneNode* parent_node, Property *parent_property);
 
 protected:

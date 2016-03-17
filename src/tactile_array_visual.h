@@ -30,18 +30,17 @@
 #pragma once
 
 #include "tactile_visual_base.h"
-#include <urdf_sensor/tactile.h>
+#include <urdf_tactile/tactile.h>
 #include <rviz/ogre_helpers/point_cloud.h>
 
 namespace rviz {
-
 namespace tactile {
 
 class TactileArrayVisual : public TactileVisualBase
 {
 public:
   TactileArrayVisual(const std::string &name, const std::string &frame,
-                     const urdf::TactileArraySharedPtr &array,
+                     const urdf::tactile::TactileArraySharedPtr &array,
                      Display *owner, DisplayContext *context,
                      Ogre::SceneNode* parent_node, rviz::Property *parent_property);
 

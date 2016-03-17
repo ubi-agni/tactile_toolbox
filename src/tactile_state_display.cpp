@@ -33,8 +33,9 @@
 #include "tactile_taxels_visual.h"
 #include "tactile_array_visual.h"
 
-#include <urdf_parser/urdf_parser.h>
-#include <urdf_sensor/tactile.h>
+#include <urdf/sensor.h>
+#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/parser.h>
 
 #include <rviz/visualization_manager.h>
 #include <rviz/frame_manager.h>
@@ -49,8 +50,9 @@
 #include <boost/foreach.hpp>
 const QString ROBOT_DESC = "robot description";
 
-namespace rviz
-{
+using namespace urdf::tactile;
+
+namespace rviz {
 namespace tactile {
 
 TactileStateDisplay::TactileStateDisplay()
@@ -167,34 +169,29 @@ void TactileStateDisplay::onRobotDescriptionChanged()
   std::string xml_string;
 
   sensors_.clear();
-
-  // read the robot description from the parameter server
-  const QString &param = robot_description_property_->getString();
-  if (!nh_.getParam(param.toStdString(), xml_string)) {
-    setStatus(rviz::StatusProperty::Error, ROBOT_DESC,
-              QString("failed to read %1% from parameter server").arg(param));
-    return;
-  }
-
-  boost::shared_ptr<urdf::ModelInterface> urdf_model = urdf::parseURDF(xml_string);
-  if (!urdf_model) {
-    setStatus(rviz::StatusProperty::Error, ROBOT_DESC,
-              QString("failed to parse URDF from ") + param);
+  urdf::SensorMap sensors;
+  try {
+    urdf::SensorParserMap parsers;
+    parsers.insert(std::make_pair("tactile", boost::shared_ptr<TactileSensorParser>(new TactileSensorParser())));
+    sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(), parsers);
+  } catch (const std::exception &e) {
+    setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
     return;
   }
 
   // create a TactileVisual for each tactile sensor listed in the URDF model
-  for (auto it = urdf_model->sensors_.begin(), end = urdf_model->sensors_.end(); it != end; ++it)
+  for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
   {
-    boost::shared_ptr<urdf::Tactile> sensor = boost::dynamic_pointer_cast<urdf::Tactile>(it->second->sensor);
+    boost::shared_ptr<TactileSensor> sensor
+        = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
     if (!sensor) continue;  // some other sensor than tactile
 
     TactileVisualBasePtr visual;
-    if (sensor->_array) {
-      visual.reset(new TactileArrayVisual(it->first, it->second->parent_link_name, sensor->_array,
+    if (sensor->array_) {
+      visual.reset(new TactileArrayVisual(it->first, it->second->parent_link_, sensor->array_,
                                           this, context_, scene_node_, sensors_property_));
-    } else if (sensor->_taxels.size()) {
-      visual.reset(new TactileTaxelsVisual(it->first, it->second->parent_link_name, sensor->_taxels,
+    } else if (sensor->taxels_.size()) {
+      visual.reset(new TactileTaxelsVisual(it->first, it->second->parent_link_, sensor->taxels_,
                                            this, context_, scene_node_, sensors_property_));
     }
     if (visual) sensors_[it->first] = visual;

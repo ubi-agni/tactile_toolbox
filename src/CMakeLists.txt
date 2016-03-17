@@ -7,8 +7,6 @@ set(CMAKE_AUTOMOC ON)
 include_directories(${QT_HEADERS_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR})
 include_directories(${catkin_INCLUDE_DIRS} ${tactile_filters_INCLUDE_DIRS})
 
-add_definitions(-std=c++11)
-
 add_library(${PROJECT_NAME} MODULE
   tactile_state_display.cpp
   tactile_visual_base.cpp
@@ -19,6 +17,7 @@ add_library(${PROJECT_NAME} MODULE
 )
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${tactile_filters_LIBRARIES})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
 
 # Install rules
 install(TARGETS
