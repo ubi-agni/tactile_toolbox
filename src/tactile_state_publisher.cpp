@@ -6,15 +6,19 @@
  * @brief  tactile state publisher
  */
 
-#include "tactile_state_publisher/tactile_state_publisher.hpp"
-#include <urdf_parser/urdf_parser.h>
-#include <urdf_sensor/tactile.h>
+#include "tactile_state_publisher.h"
+
+#include <urdf/sensor.h>
+#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/parser.h>
+
 #include <boost/thread/locks.hpp>
 #include <map>
 #include <vector>
 #include <string>
 #include <algorithm>
 
+using namespace urdf::tactile;
 
 TactileStatePublisher::TactileStatePublisher():
   publish_rate_(DEFAULT_PUBLISH_RATE)
@@ -28,20 +32,18 @@ TactileStatePublisher::TactileStatePublisher():
 
 void TactileStatePublisher::config()
 {
-  // read sensors from URDF
-  if (urdf_model_.initParam("/robot_description"))
-  {
-    createSensorDataMap();
-  }
-  
+  urdf::SensorParserMap parsers;
+  parsers.insert(std::make_pair("tactile", boost::shared_ptr<TactileSensorParser>(new TactileSensorParser())));
+  createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
+
   // read parameters
-  ros::NodeHandle nh_priv("~");    
+  ros::NodeHandle nh_priv("~");
   double rate;
   if(nh_priv.getParam("publish_rate", rate))
   {
     publish_rate_= ros::Rate(rate);
   }
-    
+
   XmlRpc::XmlRpcValue source_list_raw;
   nh_priv.getParam("source_list", source_list_raw);
   // parse the parameter list
@@ -64,30 +66,28 @@ void TactileStatePublisher::config()
   }
 }
 
-void TactileStatePublisher::createSensorDataMap()
+void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
 {
-  // prepare the recurrent tactile message
-  std::map<std::string, urdf::SensorSharedPtr>::iterator it;
-
   // loop over all the sensor found in the URDF
-  for (it = urdf_model_.sensors_.begin(); it != urdf_model_.sensors_.end(); it++)
+  for (auto it = sensors.begin(); it != sensors.end(); it++)
   {
-    boost::shared_ptr<urdf::Tactile> tactile_sensor_ptr = boost::static_pointer_cast<urdf::Tactile>(it->second->sensor);
+    boost::shared_ptr<TactileSensor> tactile_sensor_ptr
+        = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
     if (!tactile_sensor_ptr) continue;  // some other sensor than tactile
 
     sensor_msgs::ChannelFloat32 sensor_data;
-    sensor_data.name = it->second->name;
+    sensor_data.name = it->second->name_;
 
-    if (tactile_sensor_ptr->_array)
+    if (tactile_sensor_ptr->array_)
     {
-      sensor_data.values.resize(tactile_sensor_ptr->_array->rows * tactile_sensor_ptr->_array->cols);
+      sensor_data.values.resize(tactile_sensor_ptr->array_->rows * tactile_sensor_ptr->array_->cols);
     }
-    else if (tactile_sensor_ptr->_taxels.size())
+    else if (tactile_sensor_ptr->taxels_.size())
     {
       // find highest taxel index used
       unsigned int maxIdx = 0;
-      for (std::vector<urdf::TactileTaxelSharedPtr>::const_iterator it = tactile_sensor_ptr->_taxels.begin(),
-           end = tactile_sensor_ptr->_taxels.end(); it != end; ++it)
+      for (auto it = tactile_sensor_ptr->taxels_.begin(),
+           end = tactile_sensor_ptr->taxels_.end(); it != end; ++it)
       {
         if (maxIdx < (*it)->idx)
           maxIdx = (*it)->idx;
@@ -148,7 +148,7 @@ void TactileStatePublisher::publish()
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "tactile_state_publisher");
+  ros::init(argc, argv, ROS_PACKAGE_NAME);
 
   TactileStatePublisher tsp;
 

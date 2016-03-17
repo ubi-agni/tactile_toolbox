@@ -2,31 +2,24 @@ cmake_minimum_required(VERSION 2.8.3)
 project(tactile_state_publisher)
 
 find_package(catkin REQUIRED COMPONENTS
-  rospy
-  roscpp
-  sensor_msgs
   tactile_msgs
-  #urdfdom # should probably be a separate find_package
-  urdf
-  cmake_modules
+  urdf_tactile
 )
-
-find_package(TinyXML REQUIRED)
-#include_directories(SYSTEM ${TinyXML_INCLUDE_DIRS})
-
+message("${urdf_DIR}")
 catkin_package(
-CATKIN_DEPENDS  tactile_msgs sensor_msgs 
-INCLUDE_DIRS include
-LIBRARIES
-#DEPENDS TinyXML #urdfdom
+#  INCLUDE_DIRS include
+#  LIBRARIES
+#  CATKIN_DEPENDS tactile_msgs sensor_msgs
+#  DEPENDS
 )
 
-include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS}) # ${urdfdom_INCLUDE_DIRS}
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(tactile_state_publisher src/tactile_state_publisher.cpp)
-target_link_libraries(tactile_state_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES}) # ${TinyXML_LIBRARIES} ${urdfdom_LIBRARIES}
+add_executable(${PROJECT_NAME} src/tactile_state_publisher.cpp)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
 
-install(TARGETS tactile_state_publisher
+install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
