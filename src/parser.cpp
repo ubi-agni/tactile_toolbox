@@ -34,7 +34,7 @@
 
 /* Author: Robert Haschke */
 
-#include "urdf_tactile/parser.h"
+#include "parser.h"
 #include "urdf_tactile/tactile.h"
 #include <urdf_parser/utils.h>
 #include <urdf_parser/pose.h>

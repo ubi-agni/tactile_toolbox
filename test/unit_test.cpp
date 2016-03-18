@@ -1,4 +1,3 @@
-#include "urdf_tactile/parser.h"
 #include "urdf_tactile/tactile.h"
 #include <urdf/sensor.h>
 #include <fstream>
@@ -43,43 +42,33 @@ void check_sensor_map(const urdf::SensorMap &sensors)
 
 BOOST_AUTO_TEST_CASE(test_pluginlib_parsing)
 {
-  check_sensor_map(urdf::parseSensorsFromFile("tactile.urdf",
-                   urdf::getDefaultSensorParserMap()));
+  check_sensor_map(urdf::parseSensorsFromFile("tactile.urdf", urdf::getSensorParser("tactile")));
 }
 
-BOOST_AUTO_TEST_CASE(test_direct_parsing)
-{
-  boost::shared_ptr<TiXmlDocument> xml_doc = loadFromFile("tactile.urdf");
-  urdf::SensorParserMap parsers;
-  parsers.insert(std::make_pair("tactile", urdf::SensorParserSharedPtr(new TactileSensorParser)));
-
-  check_sensor_map(urdf::parseSensors(*xml_doc, parsers));
-}
-
-
-void change_and_check_order_mode(TactileSensorParser &parser,
+void change_and_check_order_mode(const urdf::SensorParserSharedPtr &parser,
                                  TiXmlElement &tactile_xml, const char* pcMode,
                                  TactileArray::DataOrder mode)
 {
   TiXmlElement *array_xml = tactile_xml.FirstChildElement("array");
   array_xml->SetAttribute("order", pcMode);
   boost::shared_ptr<TactileSensor> tactile
-      = boost::dynamic_pointer_cast<TactileSensor>(parser.parse(tactile_xml));
+      = boost::dynamic_pointer_cast<TactileSensor>(parser->parse(tactile_xml));
   BOOST_REQUIRE(tactile);
   BOOST_CHECK(tactile->array_->order == mode);
 }
 
 BOOST_AUTO_TEST_CASE(test_tactile_array)
 {
+  urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
   boost::shared_ptr<TiXmlDocument> root = loadFromFile("tactile.urdf");
   BOOST_REQUIRE(root);
 
   TiXmlElement *tactile_xml = root->RootElement()->FirstChildElement("sensor")->FirstChildElement("tactile");
   BOOST_REQUIRE(tactile_xml);
 
-  TactileSensorParser parser;
+  urdf::SensorParserSharedPtr parser = parsers["tactile"];
   boost::shared_ptr<TactileSensor> tactile
-      = boost::dynamic_pointer_cast<TactileSensor>(parser.parse(*tactile_xml));
+      = boost::dynamic_pointer_cast<TactileSensor>(parser->parse(*tactile_xml));
   BOOST_REQUIRE(tactile);
 
   BOOST_CHECK(tactile->taxels_.size() == 0);
@@ -94,14 +83,14 @@ BOOST_AUTO_TEST_CASE(test_tactile_array)
 
   // missing spacing attribute defaults to size
   array_xml->RemoveAttribute("spacing");
-  tactile = boost::dynamic_pointer_cast<TactileSensor>(parser.parse(*tactile_xml));
+  tactile = boost::dynamic_pointer_cast<TactileSensor>(parser->parse(*tactile_xml));
   BOOST_REQUIRE(tactile);
   BOOST_CHECK(tactile->array_->spacing.x == tactile->array_->size.x);
   BOOST_CHECK(tactile->array_->spacing.y == tactile->array_->size.y);
 
   // missing offset attribute defaults to zero
   array_xml->RemoveAttribute("offset");
-  tactile = boost::dynamic_pointer_cast<TactileSensor>(parser.parse(*tactile_xml));
+  tactile = boost::dynamic_pointer_cast<TactileSensor>(parser->parse(*tactile_xml));
   BOOST_REQUIRE(tactile);
   BOOST_CHECK(tactile->array_->offset.x == 0);
   BOOST_CHECK(tactile->array_->offset.y == 0);

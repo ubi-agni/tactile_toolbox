@@ -20,7 +20,7 @@ find_package(catkin REQUIRED pluginlib urdf)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-#  CATKIN_DEPENDS urdf
+  CATKIN_DEPENDS urdf
 #  DEPENDS system_lib
 )
 
