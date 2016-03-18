@@ -107,7 +107,7 @@ protected:
 
 protected Q_SLOTS:
   void onVisibleChanged();
-  void onRangeManuallyChanged();
+  void setRawRangeFromProperty();
 
 protected:
   rviz::Display *owner_;

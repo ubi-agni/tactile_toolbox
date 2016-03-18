@@ -47,6 +47,7 @@ public:
 };
 
 class RangeFloatProperty : public rviz::FloatProperty {
+  friend class RangeProperty;
   Q_OBJECT
 public:
    RangeFloatProperty (const QString& name = QString(), float fallback_value = 0,
@@ -54,16 +55,15 @@ public:
                        const char *changed_slot = 0, QObject* receiver = 0);
    bool  setValue(const QVariant& new_value);
    float getFloat() const {return value_;}
-   bool  manuallyEdited() const {return manually_edited_;}
+   bool  manuallyEdited() const {return shouldBeSaved();}
 
-   void save(rviz::Config &config) const;
    void load(const rviz::Config &config);
 
 protected:
    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option);
 
 protected Q_SLOTS:
-   void setManuallyEdited(bool manual=true);
+   void setManuallyEdited();
 
 Q_SIGNALS:
    void edited();
@@ -71,7 +71,7 @@ Q_SIGNALS:
 protected:
    float value_;
    float fallback_value_;
-   bool  manually_edited_;
+   bool  manually_edited_; // flag temporally set after manual editing
 };
 
 
@@ -85,15 +85,17 @@ public:
                 const char *changed_slot = 0,
                 QObject* receiver = 0);
 
-  void  save(Config config) const;
   void  reset();
   void  update(const ::tactile::Range &range);
   float min() const {return min_property_->getFloat();}
   float max() const {return max_property_->getFloat();}
 
+  bool setValue(const QVariant &new_value);
+  void save(Config config) const;
   void load(const Config &config);
+
 protected Q_SLOTS:
-  void updateFromChildren();
+  bool updateFromChildren();
 
 Q_SIGNALS:
    void edited();
@@ -101,6 +103,7 @@ Q_SIGNALS:
 protected:
   RangeFloatProperty *min_property_;
   RangeFloatProperty *max_property_;
+  bool ignore_children_updates_;
 };
 
 }

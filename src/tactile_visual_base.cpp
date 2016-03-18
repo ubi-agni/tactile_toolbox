@@ -67,7 +67,7 @@ TactileVisualBase::TactileVisualBase(const std::string &name,
 
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
   range_property_ = new RangeProperty("data range", "", this);
-  connect(range_property_, SIGNAL(edited()), this, SLOT(onRangeManuallyChanged()));
+  connect(range_property_, SIGNAL(edited()), this, SLOT(setRawRangeFromProperty()));
   acc_value_property_ = new rviz::FloatProperty
       ("current value", 0, "current value across sensor according to accumulation mode", this);
   acc_value_property_->setReadOnly(true);
@@ -139,7 +139,7 @@ bool TactileVisualBase::updatePose()
   return true;
 }
 
-void TactileVisualBase::onRangeManuallyChanged()
+void TactileVisualBase::setRawRangeFromProperty()
 {
   raw_range_.init(range_property_->min(), range_property_->max());
 }
@@ -157,8 +157,8 @@ void TactileVisualBase::updateRangeProperty()
 void TactileVisualBase::reset()
 {
   values_.reset();
-  raw_range_.init();
   range_property_->reset();
+  setRawRangeFromProperty();
 }
 
 void TactileVisualBase::onVisibleChanged()

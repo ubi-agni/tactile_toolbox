@@ -39,41 +39,42 @@ RangeFloatProperty::RangeFloatProperty(const QString &name, float fallback_value
   : rviz::FloatProperty(name, fallback_value, description, parent, changed_slot, receiver)
   , value_(fallback_value)
   , fallback_value_(fallback_value)
+  , manually_edited_(false)
 {
-  setManuallyEdited(false);
+  setShouldBeSaved(false);
   Property::setValue("");
   setValue(fallback_value);
 }
 
-void RangeFloatProperty::setManuallyEdited(bool manual)
+void RangeFloatProperty::setManuallyEdited()
 {
-  manually_edited_ = manual;
-  setShouldBeSaved(manually_edited_);
+  manually_edited_ = true;
 }
 
 bool RangeFloatProperty::setValue(const QVariant &new_value)
 {
   bool ok = false;
+  bool manually_changed = manually_edited_;
+  manually_edited_ = false; // reset flag in any case
+
   float value = new_value.toFloat(&ok);
   if (ok) {
+    if (manually_changed) setShouldBeSaved(true);
     value_ = value;
-    bool ret = Property::setValue(value_ == fallback_value_ ? QVariant("") : QVariant(value_));
-    if (manuallyEdited()) Q_EMIT edited();
-    return ret;
-  } else {
-    setManuallyEdited(false);
+  } else { // after invalid input: auto-compute the value
+    setShouldBeSaved(false);  // don't save it anymore
     value_ = fallback_value_;
-    return Property::setValue("");
   }
+  bool ret = Property::setValue(value_ == fallback_value_ ? QVariant("") : QVariant(value_));
+  if (ret && manually_changed) // value manually changed?
+    Q_EMIT edited();
+  return ret;
 }
 
-void RangeFloatProperty::save(Config &config) const
-{
-  if (manuallyEdited()) FloatProperty::save(config);
-}
 void RangeFloatProperty::load(const Config &config)
 {
-  setManuallyEdited(config.isValid());
+  // value was only saved when manually changed before
+  manually_edited_ = config.isValid();
   FloatProperty::load(config);
 }
 
@@ -84,7 +85,7 @@ QWidget *RangeFloatProperty::createEditor(QWidget *parent, const QStyleOptionVie
   editor->setFrame(false);
   editor->setValidator(new EmptyOrDoubleValidator(editor));
 
-  // allow to distinguish manual changes from programmatical ones:
+  // allow to distinguish manual changes from programmatical ones in setValue()
   connect(editor, SIGNAL(editingFinished()), this, SLOT(setManuallyEdited()));
   return editor;
 }
@@ -93,6 +94,7 @@ QWidget *RangeFloatProperty::createEditor(QWidget *parent, const QStyleOptionVie
 RangeProperty::RangeProperty(const QString &name, const QString &description,
                              Property *parent, const char *changed_slot, QObject *receiver)
   : Property (name, "", description, parent, changed_slot, receiver)
+  , ignore_children_updates_(false)
 {
   min_property_ = new RangeFloatProperty("minimum", FLT_MAX, description, this);
   max_property_ = new RangeFloatProperty("maximum", -FLT_MAX, description, this);
@@ -120,10 +122,26 @@ void RangeProperty::update(const ::tactile::Range &range)
   max_property_->setFloat(range.max());
 }
 
-void RangeProperty::updateFromChildren()
+bool RangeProperty::updateFromChildren()
 {
-  setValue(QString("%1; %2").arg(min_property_->getValue().toString(),
-                                 max_property_->getValue().toString()));
+  if (ignore_children_updates_) return false;
+  return Property::setValue(QString("%1; %2").arg(min_property_->getValue().toString(),
+                                                  max_property_->getValue().toString()));
+}
+
+bool RangeProperty::setValue(const QVariant &new_value)
+{
+  QStringList values = new_value.toString().split(";", QString::KeepEmptyParts);
+  if (values.size() != 2) {
+    values.clear(); values << "" << "";
+  }
+  ignore_children_updates_ = true;
+  min_property_->setManuallyEdited();
+  min_property_->setValue(values[0]);
+  max_property_->setManuallyEdited();
+  max_property_->setValue(values[1]);
+  ignore_children_updates_ = false;
+  return updateFromChildren();
 }
 
 void RangeProperty::save(Config config) const
