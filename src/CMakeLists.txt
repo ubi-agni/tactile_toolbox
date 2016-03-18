@@ -19,6 +19,7 @@ add_library(${PROJECT_NAME} MODULE
   tactile_taxels_visual.cpp
   tactile_array_visual.cpp
   range_property.cpp
+  group_property.cpp
   color_map.cpp
   plugin_init.cpp
 )

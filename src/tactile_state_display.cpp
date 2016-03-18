@@ -32,6 +32,7 @@
 #include "tactile_state_display.h"
 #include "tactile_taxels_visual.h"
 #include "tactile_array_visual.h"
+#include "group_property.h"
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
@@ -88,8 +89,8 @@ TactileStateDisplay::TactileStateDisplay()
   timeout_property_ = new rviz::FloatProperty
       ("display timeout", 1, "", this);
 
-  sensors_property_ = new rviz::BoolProperty("sensors", true, "", this,
-                                             SLOT(onAllVisibleChanged()));
+  sensors_property_ = new GroupProperty("sensors", true, "", this,
+                                        SLOT(onAllVisibleChanged()));
   sensors_property_->collapse();
 
   // init mode_property_
@@ -175,11 +176,33 @@ void TactileStateDisplay::onTopicChanged()
   context_->queueRender();
 }
 
+GroupProperty* TactileStateDisplay::getGroupProperty(const QString &path, GroupProperty *parent)
+{
+  assert(parent);
+  QStringList names = path.split("/", QString::SkipEmptyParts);
+  Q_FOREACH(const QString &name, names) {
+    GroupProperty *child = 0;
+    for(int i=0, end=parent->numChildren(); i < end && !child; ++i) {
+      rviz::Property *prop = parent->childAtUnchecked(i);
+      if (prop->getName() != name) continue;
+      child = dynamic_cast<GroupProperty*>(prop);
+    }
+    if (child)
+      parent = child;
+    else
+      parent = new GroupProperty(name, parent->getBool(), "", parent,
+                                 SLOT(onAllVisibleChanged()), this);
+  }
+  return parent;
+}
+
 void TactileStateDisplay::onRobotDescriptionChanged()
 {
   std::string xml_string;
 
+  sensors_property_->removeChildren();
   sensors_.clear();
+
   urdf::SensorMap sensors;
   try {
     sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(),
@@ -196,15 +219,21 @@ void TactileStateDisplay::onRobotDescriptionChanged()
         = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
     if (!sensor) continue;  // some other sensor than tactile
 
-    TactileVisualBasePtr visual;
+    TactileVisualBase *visual=0;
     if (sensor->array_) {
-      visual.reset(new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->array_,
-                                          this, context_, scene_node_, sensors_property_));
+      visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_,
+                                      sensor->array_, this, context_, scene_node_);
     } else if (sensor->taxels_.size()) {
-      visual.reset(new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->taxels_,
-                                           this, context_, scene_node_, sensors_property_));
+      visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_,
+                                       sensor->taxels_, this, context_, scene_node_);
     }
-    if (visual) sensors_[it->first] = visual;
+    if (visual) {
+      GroupProperty *group_property
+          = getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
+      group_property->addChild(visual);
+      visual->setGroup(QString::fromStdString(it->second->group_));
+      sensors_[it->first] = visual;
+    }
   }
   if (sensors_.size())
     setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("found %1 tactile sensors").arg(sensors_.size()));
@@ -249,9 +278,15 @@ void TactileStateDisplay::onModeParamsChanged()
 
 void TactileStateDisplay::onAllVisibleChanged()
 {
-  bool show = sensors_property_->getBool();
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it)
-    it->second->setVisible(show);
+  GroupProperty *parent = dynamic_cast<GroupProperty*>(sender());
+  parent->setBoolRecursively(parent->getBool());
+
+  // once hide/show the sensors
+  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+    GroupProperty *parent = static_cast<GroupProperty*>(it->second->getParent());
+    if (it->second->getGroup() == parent->getName())
+      it->second->setVisible(parent->getBool());
+  }
 }
 
 // This is our callback to handle an incoming message.

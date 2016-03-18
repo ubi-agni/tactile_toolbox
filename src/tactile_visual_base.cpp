@@ -49,9 +49,9 @@ TactileVisualBase::TactileVisualBase(const std::string &name,
                                      const std::string &frame, const urdf::Pose &origin,
                                      rviz::Display *owner, rviz::DisplayContext *context,
                                      Ogre::SceneNode *parent_node, rviz::Property *parent_property)
-  : rviz::BoolProperty(QString::fromStdString(name), true, "", parent_property)
+  : GroupProperty(QString::fromStdString(name), true, "", parent_property)
   , owner_(owner), context_(context), scene_node_(parent_node->createChildSceneNode())
-  , name_(name), frame_(frame)
+  , frame_(frame)
   , color_map_(0)
   , mode_(::tactile::TactileValue::rawCurrent)
   , acc_mode_(::tactile::TactileValueArray::Sum), acc_mean_(true)
@@ -129,10 +129,10 @@ bool TactileVisualBase::updatePose()
   {
     std::string error;
     context_->getFrameManager()->transformHasProblems(frame_, ros::Time(), error);
-    owner_->setStatusStd(rviz::StatusProperty::Error, name_, error);
+    owner_->setStatusStd(rviz::StatusProperty::Error, getNameStd(), error);
     return false;
   }
-  owner_->setStatusStd(rviz::StatusProperty::Ok, name_, "");
+  owner_->setStatus(rviz::StatusProperty::Ok, getName(), "");
   scene_node_->setPosition(pos);
   scene_node_->setOrientation(quat);
   return true;

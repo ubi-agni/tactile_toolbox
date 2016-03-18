@@ -45,7 +45,8 @@ class TactileTaxelsVisual : public TactileVisualBase
 public:
   TactileTaxelsVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                       const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels,
-                      rviz::Display *owner, rviz::DisplayContext *context, Ogre::SceneNode* parent_node, Property *parent_property);
+                      rviz::Display *owner, rviz::DisplayContext *context,
+                      Ogre::SceneNode* parent_node, Property *parent_property=0);
 
 protected:
   void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values);

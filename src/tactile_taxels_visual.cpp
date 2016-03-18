@@ -202,7 +202,7 @@ void TactileTaxelsVisual::update(const ros::Time &stamp, const sensor_msgs::Chan
   auto vit = values_.begin();
   for (auto it = mapping_.begin(), end = mapping_.end(); it != end; ++it, ++vit) {
     if (*it < N) vit->update(values[*it]);
-    else ROS_ERROR_STREAM("too short taxel msg for " << name_);
+    else ROS_ERROR_STREAM("too short taxel msg for " << qPrintable(getName()));
   }
   TactileVisualBase::update(stamp);
 }

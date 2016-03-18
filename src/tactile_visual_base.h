@@ -29,13 +29,13 @@
 
 #pragma once
 
+#include "group_property.h"
 #include <urdf_tactile/tactile.h>
 #include <tactile_msgs/TactileState.h>
 #include <geometry_msgs/Pose.h>
 #include <tactile_filters/TactileValueArray.h>
 #include <tactile_filters/TactileValue.h>
 #include <ros/time.h>
-#include <rviz/properties/bool_property.h>
 #include <QColor>
 
 namespace Ogre
@@ -59,13 +59,13 @@ class RangeProperty;
 /* Each TactileVisual represents the visualization of a single tactile sensor,
  * let it be a vector of taxels or an array.
  */
-class TactileVisualBase : public rviz::BoolProperty
+class TactileVisualBase : public GroupProperty
 {
 Q_OBJECT
 public:
   TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin,
                     rviz::Display *owner, rviz::DisplayContext *context,
-                    Ogre::SceneNode* parent_node, rviz::Property *parent_property);
+                    Ogre::SceneNode* parent_node, rviz::Property *parent_property=0);
   virtual ~TactileVisualBase();
 
   Qt::ItemFlags getViewFlags(int column) const;
@@ -97,6 +97,11 @@ public:
   void setRangeLambda (float fLambda) {values_.setRangeLambda(fLambda);}
   void setReleaseDecay (float fDecay) {values_.setReleaseDecay(fDecay);}
 
+  // accessor functions
+  const QString &getGroup() const {return group_;}
+  void  setGroup(const QString &group) {group_ = group;}
+  const std::string &getLinkFrame() const {return frame_;}
+
 public Q_SLOTS:
   void setVisible(bool visible);
   void setEnabled(bool enabled);
@@ -114,7 +119,7 @@ protected:
   rviz::DisplayContext *context_;
   Ogre::SceneNode *scene_node_;
 
-  std::string name_;   // sensor name
+  QString group_;  // display group
   std::string frame_;  // frame this sensor is attached to
   geometry_msgs::Pose pose_; // pose relative to this frame_
 

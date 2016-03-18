@@ -10,7 +10,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Willow Garage, Inc. nor the names of its
+ *     * Neither the name of the copyright holder nor the names of its
  *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
  *
@@ -26,32 +26,28 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-#pragma once
-
-#include "tactile_visual_base.h"
-#include <urdf_tactile/tactile.h>
-#include <rviz/ogre_helpers/point_cloud.h>
+#include "group_property.h"
 
 namespace rviz {
 namespace tactile {
 
-class TactileArrayVisual : public TactileVisualBase
+GroupProperty::GroupProperty(const QString &name, bool default_value, const QString &description,
+                             Property *parent, const char *changed_slot, QObject *receiver)
+  : rviz::BoolProperty(name, default_value, description, parent, changed_slot, receiver)
 {
-public:
-  TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-                     const urdf::tactile::TactileArraySharedPtr &array,
-                     Display *owner, DisplayContext *context,
-                     Ogre::SceneNode* parent_node, rviz::Property *parent_property=0);
+}
 
-protected:
-  void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values);
-  void update();
-
-protected:
-  rviz::PointCloud *cloud_;
-  std::vector<rviz::PointCloud::Point> points_;
-};
+void GroupProperty::setBoolRecursively(bool new_value)
+{
+  blockSignals(true);
+  setValue(new_value);
+  blockSignals(false);
+  for (int i=0, end=numChildren(); i < end; ++i) {
+    GroupProperty *child = dynamic_cast<GroupProperty*>(childAtUnchecked(i));
+    if (child)
+      child->setBoolRecursively(new_value);
+  }
+}
 
 }
 }

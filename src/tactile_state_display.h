@@ -50,7 +50,7 @@ namespace tactile
 {
 
 class TactileVisualBase;
-typedef boost::shared_ptr<TactileVisualBase> TactileVisualBasePtr;
+class GroupProperty;
 
 class TactileStateDisplay : public rviz::Display
 {
@@ -74,6 +74,7 @@ protected:
   void update(float wall_dt, float ros_dt);
 
   void processMessage(const tactile_msgs::TactileState::ConstPtr& msg);
+  GroupProperty *getGroupProperty(const QString &path, GroupProperty *parent);
 
   protected Q_SLOTS:
   void onTopicChanged();
@@ -92,11 +93,11 @@ private:
   rviz::FloatProperty* release_decay_property_;
 
   rviz::FloatProperty* timeout_property_;
-  rviz::BoolProperty* sensors_property_;
+  GroupProperty* sensors_property_;
 
   ros::NodeHandle  nh_;
   ros::Subscriber  sub_;
-  std::map<std::string, TactileVisualBasePtr> sensors_;
+  std::map<std::string, TactileVisualBase*> sensors_;
 
   ::tactile::TactileValue::Mode mode_;
   ColorMap abs_color_map_;

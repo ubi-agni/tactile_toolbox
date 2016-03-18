@@ -76,7 +76,7 @@ void TactileArrayVisual::update(const ros::Time &stamp,
     values_.updateValues(values);
     TactileVisualBase::update(stamp);
   } else {
-    ROS_ERROR_STREAM("invalid number of taxels for " << name_);
+    ROS_ERROR_STREAM("invalid number of taxels for " << qPrintable(getName()));
   }
 }
 

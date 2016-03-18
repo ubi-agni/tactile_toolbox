@@ -10,7 +10,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Willow Garage, Inc. nor the names of its
+ *     * Neither the name of the copyright holder nor the names of its
  *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
  *
@@ -26,31 +26,28 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 #pragma once
 
-#include "tactile_visual_base.h"
-#include <urdf_tactile/tactile.h>
-#include <rviz/ogre_helpers/point_cloud.h>
+#include <rviz/properties/bool_property.h>
 
 namespace rviz {
 namespace tactile {
 
-class TactileArrayVisual : public TactileVisualBase
+// BoolProperty which propagates changed value down to children
+class GroupProperty : public rviz::BoolProperty
 {
+  Q_OBJECT
 public:
-  TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-                     const urdf::tactile::TactileArraySharedPtr &array,
-                     Display *owner, DisplayContext *context,
-                     Ogre::SceneNode* parent_node, rviz::Property *parent_property=0);
+  GroupProperty(const QString& name = QString(),
+                bool default_value = true,
+                const QString& description = QString(),
+                Property* parent = 0,
+                const char *changed_slot = 0,
+                QObject* receiver = 0);
 
-protected:
-  void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values);
-  void update();
-
-protected:
-  rviz::PointCloud *cloud_;
-  std::vector<rviz::PointCloud::Point> points_;
+  /** recursively set new_value for all GroupProperty children,
+   *  but block signals */
+  void setBoolRecursively(bool new_value);
 };
 
 }
