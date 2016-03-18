@@ -48,6 +48,7 @@ public:
   /** recursively set new_value for all GroupProperty children,
    *  but block signals */
   void setBoolRecursively(bool new_value);
+  void removeEmptyChildren();
 };
 
 }

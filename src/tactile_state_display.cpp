@@ -142,7 +142,6 @@ void TactileStateDisplay::setTopic(const QString &topic, const QString &datatype
 
 void TactileStateDisplay::onInitialize()
 {
-  onRobotDescriptionChanged();
 }
 
 void TactileStateDisplay::reset()
@@ -159,7 +158,7 @@ void TactileStateDisplay::resetTactile()
 
 void TactileStateDisplay::onEnable()
 {
-  subscribe();
+  onRobotDescriptionChanged();
 }
 
 void TactileStateDisplay::onDisable()
@@ -198,49 +197,61 @@ GroupProperty* TactileStateDisplay::getGroupProperty(const QString &path, GroupP
 
 void TactileStateDisplay::onRobotDescriptionChanged()
 {
-  std::string xml_string;
+  // save settings of old sensors to restore them later
+  std::map<std::string, rviz::Config> configs;
+  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+    rviz::Config config;
+    it->second->save(config);
+    configs[it->first] = config;
+    delete it->second;
+  }
 
-  sensors_property_->removeChildren();
   sensors_.clear();
-
   urdf::SensorMap sensors;
   try {
     sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(),
                                           urdf::getSensorParser("tactile"));
+
+    // create a TactileVisual for each tactile sensor listed in the URDF model
+    for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
+    {
+      boost::shared_ptr<TactileSensor> sensor
+          = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
+      if (!sensor) continue;  // some other sensor than tactile
+
+      TactileVisualBase *visual=0;
+      if (sensor->array_) {
+        visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_,
+                                        sensor->array_, this, context_, scene_node_);
+      } else if (sensor->taxels_.size()) {
+        visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_,
+                                         sensor->taxels_, this, context_, scene_node_);
+      }
+      if (visual) {
+        GroupProperty *group_property
+            = getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
+        group_property->addChild(visual);
+        visual->setGroup(QString::fromStdString(it->second->group_));
+        sensors_[it->first] = visual;
+
+        // copy sensor settings
+        auto config = configs.find(it->first);
+        if (config != configs.end())
+          visual->load(config->second);
+      }
+    }
+    if (sensors_.size())
+      setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("found %1 tactile sensors").arg(sensors_.size()));
+    else
+      setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "no tactile sensors found");
   } catch (const std::exception &e) {
     setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
-    return;
   }
 
-  // create a TactileVisual for each tactile sensor listed in the URDF model
-  for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
-  {
-    boost::shared_ptr<TactileSensor> sensor
-        = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
-    if (!sensor) continue;  // some other sensor than tactile
-
-    TactileVisualBase *visual=0;
-    if (sensor->array_) {
-      visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_,
-                                      sensor->array_, this, context_, scene_node_);
-    } else if (sensor->taxels_.size()) {
-      visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_,
-                                       sensor->taxels_, this, context_, scene_node_);
-    }
-    if (visual) {
-      GroupProperty *group_property
-          = getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
-      group_property->addChild(visual);
-      visual->setGroup(QString::fromStdString(it->second->group_));
-      sensors_[it->first] = visual;
-    }
-  }
-  if (sensors_.size())
-    setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("found %1 tactile sensors").arg(sensors_.size()));
-  else
-    setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "no tactile sensors found");
+  sensors_property_->removeEmptyChildren();
 
   onModeChanged();
+  onModeParamsChanged();
   subscribe();
   context_->queueRender();
 }

@@ -49,5 +49,16 @@ void GroupProperty::setBoolRecursively(bool new_value)
   }
 }
 
+void GroupProperty::removeEmptyChildren()
+{
+  for (int i=numChildren()-1; i >= 0; --i) {
+    GroupProperty *child = dynamic_cast<GroupProperty*>(childAtUnchecked(i));
+    if (!child) continue;
+    child->removeEmptyChildren();
+    if (child->numChildren() == 0)
+      delete child;
+  }
+}
+
 }
 }
