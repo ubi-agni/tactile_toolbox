@@ -4,9 +4,10 @@ project(rviz_tactile_plugins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED rviz urdf_tactile tactile_msgs)
+find_package(catkin REQUIRED rviz urdf tactile_msgs)
 find_package(Qt4 REQUIRED)
 find_package(tactile_filters REQUIRED)
+find_package(urdf_tactile REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

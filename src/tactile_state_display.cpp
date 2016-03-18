@@ -35,7 +35,6 @@
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
-#include <urdf_tactile/parser.h>
 
 #include <rviz/visualization_manager.h>
 #include <rviz/frame_manager.h>
@@ -183,9 +182,8 @@ void TactileStateDisplay::onRobotDescriptionChanged()
   sensors_.clear();
   urdf::SensorMap sensors;
   try {
-    urdf::SensorParserMap parsers;
-    parsers.insert(std::make_pair("tactile", boost::shared_ptr<TactileSensorParser>(new TactileSensorParser())));
-    sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(), parsers);
+    sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(),
+                                          urdf::getSensorParser("tactile"));
   } catch (const std::exception &e) {
     setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
     return;

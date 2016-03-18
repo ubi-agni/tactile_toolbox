@@ -4,8 +4,14 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct cmake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
 
-include_directories(${QT_HEADERS_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR})
-include_directories(${catkin_INCLUDE_DIRS} ${tactile_filters_INCLUDE_DIRS})
+include_directories(
+  ${QT_HEADERS_DIR}
+  ${QT_QTCORE_INCLUDE_DIR}
+  ${QT_QTGUI_INCLUDE_DIR}
+  ${catkin_INCLUDE_DIRS}
+  ${urdf_tactile_INCLUDE_DIRS}
+  ${tactile_filters_INCLUDE_DIRS}
+)
 
 add_library(${PROJECT_NAME} MODULE
   tactile_state_display.cpp
