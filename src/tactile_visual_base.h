@@ -83,12 +83,12 @@ public:
   virtual void reset();
 
   /// most recent update older than timeout?
-  bool expired(const ros::Time &timeout);
+  bool expired(const ros::Time &timeout) const;
 
   /// isVisible() simply returns status of this' BoolProperty
-  bool isVisible() {return this->getBool();}
+  bool isVisible() const {return this->getBool();}
   /// enabled status of Property
-  bool isEnabled() {return enabled_;}
+  bool isEnabled() const {return enabled_;}
 
   void setColorMap(const ColorMap* color_map);
   void setMode(::tactile::TactileValue::Mode mode);
