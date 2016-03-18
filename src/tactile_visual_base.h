@@ -54,6 +54,7 @@ class FloatProperty;
 namespace tactile {
 
 class ColorMap;
+class RangeProperty;
 
 /* Each TactileVisual represents the visualization of a single tactile sensor,
  * let it be a vector of taxels or an array.
@@ -74,9 +75,12 @@ public:
   /// update sensor's scene_node_
   bool updatePose();
   /// update min/max properties from raw_range_
-  void updateRangeProperties();
+  void updateRangeProperty();
   /// update taxels
   virtual void update() = 0;
+
+  /// reset ranges
+  virtual void reset();
 
   /// most recent update older than timeout?
   bool expired(const ros::Time &timeout);
@@ -103,7 +107,7 @@ protected:
 
 protected Q_SLOTS:
   void onVisibleChanged();
-  void onRangeChanged();
+  void onRangeManuallyChanged();
 
 protected:
   rviz::Display *owner_;
@@ -124,8 +128,7 @@ protected:
   bool acc_mean_;
 
   ::tactile::Range raw_range_;
-  rviz::FloatProperty *range_min_property_;
-  rviz::FloatProperty *range_max_property_;
+  RangeProperty *range_property_;
   rviz::FloatProperty *acc_value_property_;
 
   bool enabled_;

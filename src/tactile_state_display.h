@@ -60,6 +60,8 @@ public:
   TactileStateDisplay();
   ~TactileStateDisplay();
 
+  void resetTactile();
+
 protected:
   void subscribe();
   void unsubscribe();

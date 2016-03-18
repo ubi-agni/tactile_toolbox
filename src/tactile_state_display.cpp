@@ -145,6 +145,13 @@ void TactileStateDisplay::reset()
   Display::reset();
 }
 
+void TactileStateDisplay::resetTactile()
+{
+  // reset tactile_filters
+  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it)
+    it->second->reset();
+}
+
 void TactileStateDisplay::onEnable()
 {
   subscribe();
@@ -154,12 +161,12 @@ void TactileStateDisplay::onDisable()
 {
   unsubscribe();
   reset();
+  resetTactile();
 }
 
 void TactileStateDisplay::onTopicChanged()
 {
   unsubscribe();
-  reset();
   subscribe();
   context_->queueRender();
 }
@@ -265,7 +272,7 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
     TactileVisualBase &sensor = *it->second;
-    sensor.updateRangeProperties();
+    sensor.updateRangeProperty();
     if (!sensor.isVisible()) continue;
 
     bool enabled = !sensor.expired(timeout) && sensor.updatePose();

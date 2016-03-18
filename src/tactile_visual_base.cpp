@@ -30,6 +30,7 @@
  */
 
 #include "tactile_visual_base.h"
+#include "range_property.h"
 #include "color_map.h"
 
 #include <rviz/properties/float_property.h>
@@ -61,10 +62,8 @@ TactileVisualBase::TactileVisualBase(const std::string &name, const std::string 
   scene_node_->setOrientation(origin.rotation.w, origin.rotation.x, origin.rotation.y, origin.rotation.z);
 
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
-  range_min_property_ = new rviz::FloatProperty
-      ("min raw value", raw_range_.min(), "", this, SLOT(onRangeChanged()));
-  range_max_property_ = new rviz::FloatProperty
-      ("max raw value", raw_range_.max(), "", this, SLOT(onRangeChanged()));
+  range_property_ = new RangeProperty("data range", "", this);
+  connect(range_property_, SIGNAL(edited()), this, SLOT(onRangeManuallyChanged()));
   acc_value_property_ = new rviz::FloatProperty
       ("current value", 0, "current value across sensor according to accumulation mode", this);
   acc_value_property_->setReadOnly(true);
@@ -136,21 +135,31 @@ bool TactileVisualBase::updatePose()
   return true;
 }
 
-void TactileVisualBase::updateRangeProperties()
+void TactileVisualBase::onRangeManuallyChanged()
 {
-  range_min_property_->setFloat(raw_range_.min());
-  range_max_property_->setFloat(raw_range_.max());
-  acc_value_property_->setFloat(values_.accumulate(mode_, acc_mode_, acc_mean_));
+  raw_range_.init(range_property_->min(), range_property_->max());
+}
+
+void TactileVisualBase::updateRangeProperty()
+{
+  range_property_->update(raw_range_);
+  float value = values_.accumulate(mode_, acc_mode_, acc_mean_);
+  if (value > -FLT_MAX && value < FLT_MAX)
+    acc_value_property_->setFloat(value);
+  else
+    acc_value_property_->setValue("");
+}
+
+void TactileVisualBase::reset()
+{
+  values_.reset();
+  raw_range_.init();
+  range_property_->reset();
 }
 
 void TactileVisualBase::onVisibleChanged()
 {
   link_node_->setVisible(isVisible() && isEnabled());
-}
-
-void TactileVisualBase::onRangeChanged()
-{
-  raw_range_.init(range_min_property_->getFloat(), range_max_property_->getFloat());
 }
 
 void TactileVisualBase::setVisible(bool visible)
