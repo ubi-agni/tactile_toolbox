@@ -10,7 +10,6 @@
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
-#include <urdf_tactile/parser.h>
 
 #include <boost/thread/locks.hpp>
 #include <map>
@@ -32,8 +31,7 @@ TactileStatePublisher::TactileStatePublisher():
 
 void TactileStatePublisher::config()
 {
-  urdf::SensorParserMap parsers;
-  parsers.insert(std::make_pair("tactile", boost::shared_ptr<TactileSensorParser>(new TactileSensorParser())));
+  urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
   createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
 
   // read parameters
