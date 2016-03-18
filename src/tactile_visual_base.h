@@ -112,8 +112,7 @@ protected Q_SLOTS:
 protected:
   rviz::Display *owner_;
   rviz::DisplayContext *context_;
-  Ogre::SceneNode *link_node_;  // scene node at the link frame
-  Ogre::SceneNode *scene_node_; // scene node at the sensor frame
+  Ogre::SceneNode *scene_node_;
 
   std::string name_;   // sensor name
   std::string frame_;  // frame this sensor is attached to

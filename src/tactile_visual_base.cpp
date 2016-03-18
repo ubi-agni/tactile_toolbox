@@ -45,21 +45,25 @@
 namespace rviz {
 namespace tactile {
 
-TactileVisualBase::TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin,
+TactileVisualBase::TactileVisualBase(const std::string &name,
+                                     const std::string &frame, const urdf::Pose &origin,
                                      rviz::Display *owner, rviz::DisplayContext *context,
                                      Ogre::SceneNode *parent_node, rviz::Property *parent_property)
   : rviz::BoolProperty(QString::fromStdString(name), true, "", parent_property)
-  , owner_(owner), context_(context)
-  , link_node_(parent_node->createChildSceneNode())
-  , scene_node_(link_node_->createChildSceneNode())
+  , owner_(owner), context_(context), scene_node_(parent_node->createChildSceneNode())
   , name_(name), frame_(frame)
   , color_map_(0)
   , mode_(::tactile::TactileValue::absMean)
   , acc_mode_(::tactile::TactileValueArray::Sum), acc_mean_(true)
   , enabled_(false)
 {
-  scene_node_->setPosition(origin.position.x, origin.position.y, origin.position.z);
-  scene_node_->setOrientation(origin.rotation.w, origin.rotation.x, origin.rotation.y, origin.rotation.z);
+  pose_.position.x = origin.position.x;
+  pose_.position.y = origin.position.y;
+  pose_.position.z = origin.position.z;
+  pose_.orientation.w = origin.rotation.w;
+  pose_.orientation.x = origin.rotation.x;
+  pose_.orientation.y = origin.rotation.y;
+  pose_.orientation.z = origin.rotation.z;
 
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
   range_property_ = new RangeProperty("data range", "", this);
@@ -71,7 +75,7 @@ TactileVisualBase::TactileVisualBase(const std::string &name, const std::string 
 
 TactileVisualBase::~TactileVisualBase()
 {
-  context_->getSceneManager()->destroySceneNode(link_node_);
+  context_->getSceneManager()->destroySceneNode(scene_node_);
 }
 
 void TactileVisualBase::setColorMap(const ColorMap *color_map)
@@ -130,8 +134,8 @@ bool TactileVisualBase::updatePose()
     return false;
   }
   owner_->setStatusStd(rviz::StatusProperty::Ok, name_, "");
-  link_node_->setPosition(pos);
-  link_node_->setOrientation(quat);
+  scene_node_->setPosition(pos);
+  scene_node_->setOrientation(quat);
   return true;
 }
 
@@ -159,7 +163,7 @@ void TactileVisualBase::reset()
 
 void TactileVisualBase::onVisibleChanged()
 {
-  link_node_->setVisible(isVisible() && isEnabled());
+  scene_node_->setVisible(isVisible() && isEnabled());
 }
 
 void TactileVisualBase::setVisible(bool visible)
