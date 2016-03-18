@@ -135,6 +135,11 @@ void TactileStateDisplay::unsubscribe()
   sub_.shutdown();
 }
 
+void TactileStateDisplay::setTopic(const QString &topic, const QString &datatype)
+{
+  topic_property_->setString(topic);
+}
+
 void TactileStateDisplay::onInitialize()
 {
   onRobotDescriptionChanged();
@@ -203,6 +208,11 @@ void TactileStateDisplay::onRobotDescriptionChanged()
     }
     if (visual) sensors_[it->first] = visual;
   }
+  if (sensors_.size())
+    setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("found %1 tactile sensors").arg(sensors_.size()));
+  else
+    setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "no tactile sensors found");
+
   onModeChanged();
   subscribe();
   context_->queueRender();

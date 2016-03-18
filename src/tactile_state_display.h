@@ -66,6 +66,7 @@ protected:
   void subscribe();
   void unsubscribe();
 
+  void setTopic(const QString &topic, const QString &datatype);
   void onInitialize();
   void reset();
   void onEnable();
