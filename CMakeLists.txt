@@ -19,7 +19,9 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${urdf_tactile_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_publisher.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
+add_definitions(-std=c++11)
+# only works since cmake 3.1
+# target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
