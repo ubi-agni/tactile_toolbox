@@ -25,7 +25,10 @@ add_library(${PROJECT_NAME} MODULE
 )
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${tactile_filters_LIBRARIES})
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
+
+add_definitions(-std=c++11)
+# only works since cmake 3.1:
+# target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
 
 # Install rules
 install(TARGETS
