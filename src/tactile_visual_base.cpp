@@ -53,7 +53,7 @@ TactileVisualBase::TactileVisualBase(const std::string &name,
   , owner_(owner), context_(context), scene_node_(parent_node->createChildSceneNode())
   , name_(name), frame_(frame)
   , color_map_(0)
-  , mode_(::tactile::TactileValue::absMean)
+  , mode_(::tactile::TactileValue::rawCurrent)
   , acc_mode_(::tactile::TactileValueArray::Sum), acc_mean_(true)
   , enabled_(false)
 {
@@ -96,17 +96,16 @@ void TactileVisualBase::setAccumulationMode(::tactile::TactileValueArray::AccMod
 
 QColor TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
 {
+  static QColor errColor("magenta");
   float v = value.value(mode_);
-  float a = 1.;
   // normalize to range 0..1
   if (mode_ == ::tactile::TactileValue::rawCurrent ||
       mode_ == ::tactile::TactileValue::rawMean) {
     v = (v - raw_range_.min()) / raw_range_.range();
-    a = 0.;
   }
+  if (isnan(v)) return errColor;
 
   QColor color = color_map_->map(v);
-  color.setAlphaF(a);
   return color;
 }
 

@@ -55,7 +55,7 @@ namespace rviz {
 namespace tactile {
 
 TactileStateDisplay::TactileStateDisplay()
-  : mode_(::tactile::TactileValue::absCurrent)
+  : mode_(::tactile::TactileValue::rawCurrent)
 {
   topic_property_ = new rviz::RosTopicProperty
       ("topic", "/tactile_state", "tactile_msgs/TactileState", "",
