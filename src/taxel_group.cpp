@@ -97,7 +97,7 @@ void TaxelGroup::update(const TaxelMapping &mapping, Iterator input_begin, Itera
 {
 	for (auto it = mapping.begin(), end = mapping.end(); it != end; ++it) {
 		assert(input_begin + it->first < input_end);
-		taxels_[it->second].weight_ = *(input_begin + it->first);
+		taxels_[it->second].weight = *(input_begin + it->first);
 	}
 }
 template void TaxelGroup::update<std::vector<float>::const_iterator>
@@ -107,6 +107,39 @@ std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end
 
 void TaxelGroup::average(tactile_msgs::TactileContact &contact)
 {
+	double sum = 0;
+	Eigen::Vector3d pos, normal, force, torque;
+	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
+		double w = it->weight;
+		sum += w;
+		pos += w * it->position;
+		normal += w * it->normal;
+	}
+	if (sum > Eigen::NumTraits<double>::dummy_precision()) {
+		pos /= sum;
+		normal.normalize();
+	} else {
+		// TODO: return a contact or not??
+		pos.setZero();
+		normal.setZero();
+	}
+	contact.position.x = pos.x();
+	contact.position.y = pos.y();
+	contact.position.z = pos.z();
+
+	contact.normal.x = normal.x();
+	contact.normal.y = normal.y();
+	contact.normal.z = normal.z();
+
+	force = sum * normal;
+	contact.wrench.force.x = force.x();
+	contact.wrench.force.y = force.y();
+	contact.wrench.force.z = force.z();
+
+	torque = pos.cross(force);
+	contact.wrench.torque.x = torque.x();
+	contact.wrench.torque.y = torque.y();
+	contact.wrench.torque.z = torque.z();
 }
 
 } // namespace tactile

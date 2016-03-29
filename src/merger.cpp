@@ -41,7 +41,6 @@ struct Merger::GroupData {
 	mutable boost::mutex mutex;
 	TaxelGroupPtr group;
 	ros::Time timestamp;
-	std::deque<tactile_msgs::TactileContact> msgs;
 };
 
 Merger::GroupData::GroupData(const TaxelGroupPtr &group)
@@ -100,13 +99,16 @@ tactile_msgs::TactileContacts Merger::getContacts() {
 	for (auto it = groups_.begin(), end = groups_.end(); it != end; ++it) {
 		const GroupDataPtr &data = it->second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
-		// for now, handle a single contact per group only
-		data->msgs.resize(1);
-		tactile_msgs::TactileContact &contact = data->msgs[0];
+
+		// TODO: How should we handle a stalled topic?
+		tactile_msgs::TactileContact contact;
+		contact.name = it->first; // group name
+		contact.header.frame_id = data->group->frame();
+		contact.header.stamp = data->timestamp;
 		data->group->average(contact);
 
 		// insert all contacts of the group into result array
-		contacts.contacts.insert(contacts.contacts.end(), data->msgs.begin(), data->msgs.end());
+		contacts.contacts.push_back(contact);
 	}
 	return contacts;
 }

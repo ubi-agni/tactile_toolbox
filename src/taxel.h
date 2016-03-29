@@ -27,24 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
-#include <Eigen/Geometry>
+#include <Eigen/Dense>
 #include <urdf_model/pose.h>
 
 namespace tactile {
 
-class Taxel
+struct Taxel
 {
-friend class TaxelGroup;
-public:
-	typedef Eigen::Transform<double, 3, Eigen::AffineCompact> TransformType;
-
 	Taxel(const urdf::Pose &sensor_frame, const urdf::Pose &taxel_frame);
-	Taxel(const TransformType &origin);
 
-private:
-	/// this is the taxel origin, z-axis of frame pointing along normal direction
-	TransformType origin_;
-	double weight_;
+	Eigen::Vector3d position;
+	Eigen::Vector3d normal;
+	double weight;
 };
 
 } // namespace tactile

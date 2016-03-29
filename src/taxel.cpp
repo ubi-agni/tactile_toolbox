@@ -27,11 +27,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include "taxel.h"
+#include <Eigen/Geometry>
 
 namespace tactile {
 
 Taxel::Taxel(const urdf::Pose &sensor_frame, const urdf::Pose &taxel_frame)
-   : weight_(0)
+   : weight(0)
 {
 	Eigen::Vector3d sensor_translation(sensor_frame.position.x,
 	                                   sensor_frame.position.y,
@@ -49,14 +50,11 @@ Taxel::Taxel(const urdf::Pose &sensor_frame, const urdf::Pose &taxel_frame)
 	                                  taxel_frame.rotation.y,
 	                                  taxel_frame.rotation.z);
 
-	origin_ = Eigen::Translation3d(sensor_translation) * sensor_rotation *
-	          Eigen::Translation3d(taxel_translation) * taxel_rotation;
-}
-
-Taxel::Taxel(const TransformType &origin)
-   : weight_(0)
-{
-	origin_ = origin;
+	Eigen::Transform<double, 3, Eigen::AffineCompact> origin
+	      = Eigen::Translation3d(sensor_translation) * sensor_rotation *
+	        Eigen::Translation3d(taxel_translation) * taxel_rotation;
+	position = origin.translation();
+	normal = origin.affine().col(2); // normal is along z-axis
 }
 
 } // namespace tactile

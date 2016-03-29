@@ -56,6 +56,7 @@ public:
 	void addTaxels(const std::string &sensor_name, const urdf::tactile::TactileArraySharedPtr &array, const urdf::Pose &sensor_origin);
 	void addTaxels(const std::string &sensor_name, const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels, const urdf::Pose &sensor_origin);
 
+	const std::string& frame() const {return frame_;}
 	const std::vector<Taxel>& taxels() const {return taxels_;}
 	size_t size() const {return taxels_.size();}
 	const SensorToTaxelMapping& mappings() const {return mappings_;}
