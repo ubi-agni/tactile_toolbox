@@ -95,17 +95,22 @@ template void Merger::update<std::vector<float>::const_iterator>
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
 tactile_msgs::TactileContacts Merger::getContacts() {
+	static ros::Duration timeout(1);
+	ros::Time now = ros::Time::now();
+
 	tactile_msgs::TactileContacts contacts;
 	for (auto it = groups_.begin(), end = groups_.end(); it != end; ++it) {
 		const GroupDataPtr &data = it->second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
+		if (data->timestamp + timeout < now)
+			continue; // ignore stalled groups
 
-		// TODO: How should we handle a stalled topic?
 		tactile_msgs::TactileContact contact;
 		contact.name = it->first; // group name
 		contact.header.frame_id = data->group->frame();
 		contact.header.stamp = data->timestamp;
-		data->group->average(contact);
+		if (!data->group->average(contact))
+			continue; // ignore not contacted groups
 
 		// insert all contacts of the group into result array
 		contacts.contacts.push_back(contact);

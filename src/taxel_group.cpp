@@ -105,7 +105,7 @@ template void TaxelGroup::update<std::vector<float>::const_iterator>
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
 
-void TaxelGroup::average(tactile_msgs::TactileContact &contact)
+bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 {
 	double sum = 0;
 	Eigen::Vector3d pos, normal, force, torque;
@@ -118,11 +118,9 @@ void TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	if (sum > Eigen::NumTraits<double>::dummy_precision()) {
 		pos /= sum;
 		normal.normalize();
-	} else {
-		// TODO: return a contact or not??
-		pos.setZero();
-		normal.setZero();
-	}
+	} else
+		return false;
+
 	contact.position.x = pos.x();
 	contact.position.y = pos.y();
 	contact.position.z = pos.z();
@@ -140,6 +138,7 @@ void TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	contact.wrench.torque.x = torque.x();
 	contact.wrench.torque.y = torque.y();
 	contact.wrench.torque.z = torque.z();
+	return true;
 }
 
 } // namespace tactile

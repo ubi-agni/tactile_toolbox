@@ -63,7 +63,7 @@ public:
 
 	template <typename Iterator>
 	void update(const TaxelMapping &mapping, Iterator begin, Iterator end);
-	void average(tactile_msgs::TactileContact &contact);
+	bool average(tactile_msgs::TactileContact &contact);
 
 private:
 	void addTaxel(const Taxel &taxel);
