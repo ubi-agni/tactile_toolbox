@@ -103,6 +103,7 @@ public:
   const std::string &getLinkFrame() const {return frame_;}
 
 public Q_SLOTS:
+  void onVisibleChanged();
   void setVisible(bool visible);
   void setEnabled(bool enabled);
 
@@ -111,7 +112,6 @@ protected:
   void update(const ros::Time &stamp);
 
 protected Q_SLOTS:
-  void onVisibleChanged();
   void setRawRangeFromProperty();
 
 protected:

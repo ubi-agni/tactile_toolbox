@@ -292,11 +292,9 @@ void TactileStateDisplay::onAllVisibleChanged()
   GroupProperty *parent = dynamic_cast<GroupProperty*>(sender());
   parent->setBoolRecursively(parent->getBool());
 
-  // once hide/show the sensors
+  // once hide/show the actual sensors in the end
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    GroupProperty *parent = static_cast<GroupProperty*>(it->second->getParent());
-    if (it->second->getGroup() == parent->getName())
-      it->second->setVisible(parent->getBool());
+    it->second->onVisibleChanged();
   }
 }
 
