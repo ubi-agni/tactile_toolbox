@@ -7,4 +7,14 @@
     </description>
     <message_type>tactile_msgs/TactileState</message_type>
   </class>
+
+  <class name="rviz_tactile_plugins/Tactile Contact Display"
+         type="rviz::tactile::TactileContactDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      display TactileContact msgs
+    </description>
+    <message_type>tactile_msgs/TactileContact</message_type>
+    <message_type>tactile_msgs/TactileContacts</message_type>
+  </class>
 </library>

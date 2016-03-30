@@ -21,6 +21,8 @@ add_library(${PROJECT_NAME} MODULE
   range_property.cpp
   group_property.cpp
   color_map.cpp
+
+  tactile_contact_display.cpp
   plugin_init.cpp
 )
 ## Specify libraries to link a library or executable target against
