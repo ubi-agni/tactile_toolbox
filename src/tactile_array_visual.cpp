@@ -84,7 +84,7 @@ void TactileArrayVisual::update()
 {
   auto p = points_.begin();
   for (auto it = values_.begin(), end = values_.end(); it != end; ++it, ++p) {
-    const QColor &c = mapValue(*it);
+    const QColor &c = mapColor(mapValue(*it));
     p->color.r = c.redF();
     p->color.g = c.greenF();
     p->color.b = c.blueF();

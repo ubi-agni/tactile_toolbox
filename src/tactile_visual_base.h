@@ -108,7 +108,8 @@ public Q_SLOTS:
   void setEnabled(bool enabled);
 
 protected:
-  QColor mapValue(const::tactile::TactileValue &value);
+  float mapValue(const::tactile::TactileValue &value);
+  QColor mapColor(float value);
   void update(const ros::Time &stamp);
 
 protected Q_SLOTS:

@@ -48,7 +48,7 @@
 #include <rviz/validate_floats.h>
 
 #include <boost/foreach.hpp>
-const QString ROBOT_DESC = "robot description";
+static const QString ROBOT_DESC = "robot description";
 
 using namespace urdf::tactile;
 

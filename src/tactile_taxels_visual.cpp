@@ -211,7 +211,7 @@ void TactileTaxelsVisual::update()
 {
   auto vit = values_.begin();
   for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++vit) {
-    const QColor &c = mapValue(*vit);
+    const QColor &c = mapColor(mapValue(*vit));
     (*it)->setColor(c.redF(), c.greenF(), c.blueF(), c.alphaF());
   }
 }

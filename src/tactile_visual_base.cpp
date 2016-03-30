@@ -94,16 +94,21 @@ void TactileVisualBase::setAccumulationMode(::tactile::TactileValueArray::AccMod
   acc_mean_ = mean;
 }
 
-QColor TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
+float TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
 {
-  static QColor errColor("magenta");
   float v = value.value(mode_);
   // normalize to range 0..1
   if (mode_ == ::tactile::TactileValue::rawCurrent ||
       mode_ == ::tactile::TactileValue::rawMean) {
     v = (v - raw_range_.min()) / raw_range_.range();
   }
-  if (isnan(v)) return errColor;
+  return v;
+}
+
+QColor TactileVisualBase::mapColor(float v)
+{
+  static QColor errColor("magenta");
+  if (!std::isfinite(v)) return errColor;
 
   QColor color = color_map_->map(v);
   return color;
