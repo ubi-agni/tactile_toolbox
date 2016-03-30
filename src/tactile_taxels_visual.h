@@ -32,7 +32,14 @@
 #include "tactile_visual_base.h"
 #include <urdf_tactile/tactile.h>
 
+#define ENABLE_ARROWS 1
+
 namespace rviz {
+
+#if ENABLE_ARROWS
+class Arrow;
+typedef boost::shared_ptr<rviz::Arrow> ArrowPtr;
+#endif
 
 namespace tactile {
 
@@ -53,10 +60,22 @@ protected:
   void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values);
   void update();
 
-protected:
+#if ENABLE_ARROWS
+protected Q_SLOTS:
+  void onVisibleChanged();
+  void onArrowsEnabled();
+#endif
 
+protected:
   std::vector<unsigned int> mapping_;  /// mapping raw data indeces to values_
   std::vector<TaxelEntityPtr> taxels_;
+
+#if ENABLE_ARROWS
+  rviz::BoolProperty *arrows_property_;
+  rviz::FloatProperty *arrows_scale_property_;
+  Ogre::SceneNode *arrows_node_;
+  std::vector<rviz::ArrowPtr> arrows_;
+#endif
 };
 
 }

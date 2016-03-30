@@ -33,7 +33,9 @@
 
 #include <rviz/mesh_loader.h>
 #include <rviz/display_context.h>
-#include "rviz/ogre_helpers/shape.h"
+#include <rviz/ogre_helpers/shape.h>
+#include <rviz/ogre_helpers/arrow.h>
+#include <rviz/properties/float_property.h>
 #include <ros/console.h>
 
 #include <OgreSceneManager.h>
@@ -187,11 +189,29 @@ TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::str
                                          Ogre::SceneNode *parent_node, rviz::Property *parent_property)
   : TactileVisualBase(name, frame, origin, owner, context, parent_node, parent_property)
 {
+#if ENABLE_ARROWS
+  arrows_property_ = new rviz::BoolProperty
+      ("Show arrows", false, "", this, SLOT(onArrowsEnabled()));
+  arrows_scale_property_ = new rviz::FloatProperty
+      ("Arrow scale", 0.01, "", arrows_property_);
+  arrows_node_ = scene_node_->createChildSceneNode();
+#endif
+
   for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
     urdf::GeometryConstSharedPtr geometry = (*taxel)->geometry;
     TaxelEntityPtr t(new TaxelEntity(*geometry, urdf::Pose(), context, scene_node_));
     taxels_.push_back(t);
     mapping_.push_back((*taxel)->idx);
+
+#if ENABLE_ARROWS
+    rviz::ArrowPtr arrow(new rviz::Arrow(context->getSceneManager(), arrows_node_));
+    const urdf::Vector3  &pos = (*taxel)->origin.position;
+    const urdf::Rotation &rot = (*taxel)->origin.rotation;
+    arrow->setColor(1, 0, 0, 1);
+    arrow->setPosition(Ogre::Vector3(pos.x, pos.y, pos.z));
+    arrow->setDirection(Ogre::Quaternion(rot.w, rot.x, rot.y, rot.z).zAxis());
+    arrows_.push_back(arrow);
+#endif
   }
   values_.init(taxels_.size());
 }
@@ -209,12 +229,34 @@ void TactileTaxelsVisual::update(const ros::Time &stamp, const sensor_msgs::Chan
 
 void TactileTaxelsVisual::update()
 {
-  auto vit = values_.begin();
-  for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++vit) {
-    const QColor &c = mapColor(mapValue(*vit));
+  auto val_it = values_.begin();
+  for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++val_it) {
+    const QColor &c = mapColor(mapValue(*val_it));
     (*it)->setColor(c.redF(), c.greenF(), c.blueF(), c.alphaF());
   }
+
+#if ENABLE_ARROWS
+  float scale = arrows_scale_property_->getFloat();
+  val_it = values_.begin();
+  for (auto it = arrows_.begin(), end = arrows_.end(); it != end; ++it, ++val_it) {
+    float value = mapValue(*val_it);
+    value = std::isfinite(value) ? value*scale : 0.0;
+    (*it)->setScale(Ogre::Vector3(value, value, value));
+  }
+#endif
 }
+
+#if ENABLE_ARROWS
+void TactileTaxelsVisual::onVisibleChanged()
+{
+  TactileVisualBase::onVisibleChanged();
+  onArrowsEnabled();
+}
+
+void TactileTaxelsVisual::onArrowsEnabled() {
+  arrows_node_->setVisible(arrows_property_->getBool());
+}
+#endif
 
 }
 }

@@ -103,7 +103,7 @@ public:
   const std::string &getLinkFrame() const {return frame_;}
 
 public Q_SLOTS:
-  void onVisibleChanged();
+  virtual void onVisibleChanged();
   void setVisible(bool visible);
   void setEnabled(bool enabled);
 
