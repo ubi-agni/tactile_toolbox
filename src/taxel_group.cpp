@@ -129,7 +129,7 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	contact.normal.y = normal.y();
 	contact.normal.z = normal.z();
 
-	force = sum * normal;
+	force = (-sum) * normal; // force acts opposite to normal
 	contact.wrench.force.x = force.x();
 	contact.wrench.force.y = force.y();
 	contact.wrench.force.z = force.z();
