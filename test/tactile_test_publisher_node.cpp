@@ -11,7 +11,6 @@ int main(int argc, char **argv) {
 	ros::Publisher publ = n.advertise<tactile_msgs::TactileContacts>(std::string("/tactile_contact_states"),10);
 
 	tactile_msgs::TactileContacts msgs;
-	msgs.header = std_msgs::Header();
 
 	for (int i = 0; i < 10; ++i) {
 		for (int k = 0; k < 10; ++k) {

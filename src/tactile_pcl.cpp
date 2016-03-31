@@ -1,12 +1,12 @@
-
-#include <tactile_pcl/tactile_pcl.h>
-
+#include "tactile_pcl.h"
 #include <pcl_conversions/pcl_conversions.h>
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef pcl::PointXYZINormal PointT;
 typedef pcl::PointCloud<PointT> CloudT;
+
+using namespace tactile_msgs;
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,15 +25,15 @@ float normalizedNormal(PointT &p) {
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
 TactileToPointCloud::TactileToPointCloud()
-	: m_node(), m_queue(), m_spinner(1,&m_queue), m_tf_listener(m_node) {
+   : m_node(), m_queue(), m_spinner(1,&m_queue), m_tf_listener(m_node) {
 	m_node.setCallbackQueue(&m_queue);
 }
 
 TactileToPointCloud::~TactileToPointCloud() {}
 
 void TactileToPointCloud::init(std::string const &tactile_topic,
-															 std::string const &pointcloud_topic,
-															 std::string const &base_tf) {
+                               std::string const &pointcloud_topic,
+                               std::string const &base_tf) {
 
 	m_base_tf = base_tf;
 
@@ -62,26 +62,26 @@ void TactileToPointCloud::setNameFilter(boost::regex const &expr, bool filter_ne
 	m_filter_negative = filter_negative;
 }
 
-void TactileToPointCloud::convert(TactileContactsMSGPtr const &in_msg, PCMSG &out_msg) {
+void TactileToPointCloud::convert(const tactile_msgs::TactileContactsPtr &in_msg, sensor_msgs::PointCloud2 &out_msg) {
 
-	TactileContactsMSG::_contacts_type &contacts = in_msg->contacts;
+	TactileContacts::_contacts_type &contacts = in_msg->contacts;
 	CloudT cloud;
 
 	for (uint i = 0; i < contacts.size(); ++i) {
-		TactileContactMSG &contact = contacts[i];
-		const TactileContactMSG::_name_type &name = contact.name;
+		TactileContact &contact = contacts[i];
+		const TactileContact::_name_type &name = contact.name;
 		if (!m_expr.empty() && !(boost::regex_match(name,m_expr)^m_filter_negative)) {
 			continue;
 		}
-		const TactileContactMSG::_position_type &pos = contact.position;
-		const TactileContactMSG::_normal_type &normal = contact.normal;
-		const TactileContactMSG::_wrench_type &wrench = contact.wrench;
+		const TactileContact::_position_type &pos = contact.position;
+		const TactileContact::_normal_type &normal = contact.normal;
+		const TactileContact::_wrench_type &wrench = contact.wrench;
 		tf::Vector3 p(pos.x,pos.y,pos.z);
 		tf::Vector3 n(normal.x,normal.y,normal.z);
 
 		try {
 			tf::StampedTransform transform;
-			m_tf_listener.lookupTransform(name,m_base_tf,ros::Time(0),transform);
+			m_tf_listener.lookupTransform(contact.header.frame_id,m_base_tf,ros::Time(0),transform);
 			p = transform(p);
 			n = transform.getBasis()*n;
 		} catch(std::runtime_error const &e) {
@@ -103,19 +103,16 @@ void TactileToPointCloud::convert(TactileContactsMSGPtr const &in_msg, PCMSG &ou
 
 	// convert to ros message
 	pcl::toROSMsg(cloud,out_msg);
-	out_msg.header.stamp = in_msg->header.stamp;
-	out_msg.header.frame_id = in_msg->header.frame_id;
-	out_msg.header.seq = in_msg->header.seq;
+	out_msg.header.stamp = ros::Time::now();
+	out_msg.header.frame_id = m_base_tf;
 }
 
-void TactileToPointCloud::publish(const PCMSG &out_msg) {
+void TactileToPointCloud::publish(const sensor_msgs::PointCloud2 &out_msg) {
 	m_publisher.publish(out_msg);
 }
 
-void TactileToPointCloud::callback(TactileContactsMSGPtr const &data) {
-
-	PCMSG out_msg;
+void TactileToPointCloud::callback(TactileContactsPtr const &data) {
+	sensor_msgs::PointCloud2 out_msg;
 	convert(data,out_msg);
 	publish(out_msg);
 }
-

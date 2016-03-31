@@ -1,8 +1,7 @@
 #include <iostream>
 
 #include <ros/ros.h>
-
-#include <tactile_pcl/tactile_pcl.h>
+#include "tactile_pcl.h"
 
 int main(int argc, char **argv) {
 

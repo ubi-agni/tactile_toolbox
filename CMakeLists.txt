@@ -5,11 +5,10 @@ project(tactile_pcl)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
+	roscpp
 	sensor_msgs
-	pcl_conversions
 	tactile_msgs
+	pcl_conversions
 	tf
 )
 
@@ -110,10 +109,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS src
-	LIBRARIES tactile_pcl
-	CATKIN_DEPENDS roscpp std_msgs
-	DEPENDS system_lib
+#	INCLUDE_DIRS
+#	LIBRARIES
+#	CATKIN_DEPENDS roscpp std_msgs
+#	DEPENDS system_lib
 )
 
 ###########
@@ -125,16 +124,6 @@ catkin_package(
 # include_directories(include)
 include_directories(
 	${catkin_INCLUDE_DIRS}
-	src
-)
-
-## Declare a C++ library
-add_library(tactile_pcl
-	src/${PROJECT_NAME}/tactile_pcl.cpp
-)
-
-target_link_libraries(tactile_pcl
-	${catkin_LIBRARIES}
 )
 
 ## Add cmake target dependencies of the library
@@ -142,25 +131,20 @@ target_link_libraries(tactile_pcl
 ## either from message generation or dynamic reconfigure
 # add_dependencies(tactile_pcl ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Declare a C++ executable
-add_executable(tactile_pcl_node app/tactile_pcl_node.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(tactile_pcl_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
+add_executable(tactile_pcl_node
+	src/tactile_pcl.cpp
+	src/tactile_pcl_node.cpp
+)
 target_link_libraries(tactile_pcl_node
-  ${catkin_LIBRARIES}
-	tactile_pcl
+	${catkin_LIBRARIES}
 )
 
 
-add_executable(tactile_test_publisher_node app/tactile_test_publisher_node.cpp)
-
+add_executable(tactile_test_publisher_node
+	test/tactile_test_publisher_node.cpp
+)
 target_link_libraries(tactile_test_publisher_node
 	${catkin_LIBRARIES}
-	tactile_pcl
 )
 
 #############
