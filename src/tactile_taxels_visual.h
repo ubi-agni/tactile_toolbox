@@ -32,7 +32,7 @@
 #include "tactile_visual_base.h"
 #include <urdf_tactile/tactile.h>
 
-#define ENABLE_ARROWS 1
+#define ENABLE_ARROWS 0
 
 namespace rviz {
 
