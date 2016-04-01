@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
 {
 	ros::init(argc, argv, ROS_PACKAGE_NAME);
 	ros::NodeHandle nh;
+	ros::NodeHandle nh_priv("~");
 
 	tactile::Merger merger;
 	merger.init();
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 	std::vector<std::string> topics; topics.push_back("tactile_states");
 	SubscriberList subs = subscribe(nh, topics, boost::bind(message_handler, boost::ref(merger), _1));
 
-	ros::Rate rate(100);
+	ros::Rate rate(nh_priv.param("rate", 100.));
 	while (ros::ok())
 	{
 		ros::spinOnce();
