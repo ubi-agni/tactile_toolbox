@@ -12,8 +12,7 @@ int main(int argc, char **argv) {
 	ros::NodeHandle nh_priv("~");
 
 	ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("tactile_pcl", 10);
-	PCLCollector collector;
-	collector.setTargetFrame("world");
+	PCLCollector collector(nh_priv.param<std::string>("frame", ""));
 
 	message_filters::Subscriber<tactile_msgs::TactileContact> sub(nh, "tactile_contact_states", 10);
 	collector.setSource(sub);

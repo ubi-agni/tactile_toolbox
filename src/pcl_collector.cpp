@@ -2,6 +2,8 @@
 #include "conversions.h"
 
 #include <boost/thread/locks.hpp>
+#include <urdf/sensor.h>
+#include <urdf/model.h>
 
 using namespace tactile_msgs;
 
@@ -10,10 +12,48 @@ namespace tactile {
 ros::Duration PCLCollector::timeout_;
 
 PCLCollector::PCLCollector(const std::string &target_frame)
-   : target_frame_(target_frame)
-   , tf_buffer_()
+   : tf_buffer_()
    , tf_listener_(tf_buffer_)
 {
+	initFromRobotDescription();
+	setTargetFrame(target_frame);
+}
+
+static
+void loadRobotDescription(std::string &xml_string, const std::string &param)
+{
+	ros::NodeHandle nh;
+
+	// gets the location of the robot description on the parameter server
+	std::string full_param;
+	if (!nh.searchParam(param, full_param)){
+		throw std::runtime_error("Could not find parameter " + param + " on parameter server");
+	}
+
+	// read the robot description from the parameter server
+	if (!nh.getParam(full_param, xml_string)){
+		throw std::runtime_error("Could not read parameter " + param + " on parameter server");
+	}
+}
+
+void PCLCollector::initFromRobotDescription(const std::string &param)
+{
+	try {
+		std::string xml_string;
+		loadRobotDescription(xml_string, param);
+
+		// fetch robot_root_frame
+		urdf::Model model;
+		if (model.initString(xml_string))
+			robot_root_frame_ = model.root_link_->name;
+		else
+			ROS_WARN_STREAM("failed to parse " << param);
+
+		// fetch sensor descriptions
+		sensors_ = parseSensors(xml_string, urdf::getSensorParser("tactile"));
+	} catch (const std::exception &e) {
+		ROS_WARN_STREAM("failed to parse robot description:" << e.what());
+	}
 }
 
 template <typename M>
@@ -61,10 +101,8 @@ void PCLCollector::addPoint(ContactPoint &point, const geometry_msgs::TransformS
 
 void PCLCollector::setTargetFrame(const std::string &frame)
 {
-	if (frame.empty()) {
-		//TODO init pcl_ structure: load robot_description (for target_frame_ and raw sensor info)
-	}
-	target_frame_ = frame;
+	// use robot's root frame as fallback if frame is empty
+	target_frame_ = frame.empty() ? robot_root_frame_ : frame;
 	// update tf filter
 	if (tf_filter_) tf_filter_->setTargetFrame(target_frame_);
 }

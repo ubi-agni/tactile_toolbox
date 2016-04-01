@@ -2,6 +2,7 @@
 
 #include <tactile_msgs/TactileState.h>
 #include <tactile_msgs/TactileContacts.h>
+#include <urdf/sensor.h>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -24,6 +25,7 @@ public:
 	typedef pcl::PointXYZINormal ContactPoint;
 
 	PCLCollector(const std::string &target_frame="");
+	void initFromRobotDescription(const std::string &param="robot_description");
 
 	template <typename M>
 	void setSource(message_filters::Subscriber<M> &sub);
@@ -40,7 +42,10 @@ protected:
 	void addPoint(ContactPoint &point, const geometry_msgs::TransformStamped &transform);
 
 protected:
-	std::string target_frame_; // target frame, the PCL should be expressed in
+	std::string robot_root_frame_;
+	urdf::SensorMap sensors_; //< tactile sensors
+
+	std::string target_frame_; //< target frame, the PCL should be expressed in
 	pcl::PointCloud<ContactPoint> pcl_;
 
 	tf2_ros::Buffer tf_buffer_;
