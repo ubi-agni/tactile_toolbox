@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	tactile::Merger merger;
 	merger.init();
 
-	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("contact_states", 5);
+	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
 
 	std::vector<std::string> topics; topics.push_back("tactile_states");
 	SubscriberList subs = subscribe(nh, topics, boost::bind(message_handler, boost::ref(merger), _1));
