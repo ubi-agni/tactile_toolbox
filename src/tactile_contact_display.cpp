@@ -78,7 +78,7 @@ TactileContactDisplay::TactileContactDisplay()
   , full_update_(true)
 {
   topic_property_ = new TactileContactTopicProperty
-      ("Topic", "contact_states", "", this, SLOT(onTopicChanged()));
+      ("Topic", "tactile_contact_states", "", this, SLOT(onTopicChanged()));
 
   at_contact_point_property_ = new rviz::BoolProperty
       ("Display wrench in contact frame?", true, "", this);
