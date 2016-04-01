@@ -9,7 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	tactile_msgs
 	pcl_conversions
-	tf
+	tf2_ros
+	tf2_geometry_msgs
 )
 
 #SET(PCL_ROOT "/vol/famula/nightly" CACHE PATH "icl root path (e.g. /vol/famula)")
@@ -131,21 +132,7 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(tactile_pcl ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(tactile_pcl_node
-	src/tactile_pcl.cpp
-	src/tactile_pcl_node.cpp
-)
-target_link_libraries(tactile_pcl_node
-	${catkin_LIBRARIES}
-)
-
-
-add_executable(tactile_test_publisher_node
-	test/tactile_test_publisher_node.cpp
-)
-target_link_libraries(tactile_test_publisher_node
-	${catkin_LIBRARIES}
-)
+add_subdirectory(src)
 
 #############
 ## Install ##
