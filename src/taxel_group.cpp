@@ -115,7 +115,7 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 		pos += w * it->position;
 		normal += w * it->normal;
 	}
-	if (sum > Eigen::NumTraits<double>::dummy_precision()) {
+	if (sum > Eigen::NumTraits<float>::dummy_precision()) {
 		pos /= sum;
 		normal.normalize();
 	} else
