@@ -1,0 +1,28 @@
+<package>
+  <name>tactile_toolbox</name>
+  <version>0.1.0</version>
+  <description>
+    <tt>tactile_toolbox</tt> contains packages to handle various kinds of tactile sensors.
+  </description>
+
+  <author email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</author>
+  <maintainer email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</maintainer>
+
+  <license>BSD</license>
+
+  <url type="repository">https://github.com/ubi-agni/tactile_toolbox</url>
+  <url type="bugtracker">https://github.com/ubi-agni/tactile_toolbox/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>tactile_msgs</run_depend>
+  <run_depend>urdf_tactile</run_depend>
+  <run_depend>tactile_state_publisher</run_depend>
+  <run_depend>tactile_merger</run_depend>
+  <run_depend>tactile_pcl</run_depend>
+  <run_depend>rviz_tactile_plugins</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
