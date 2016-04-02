@@ -1,5 +1,8 @@
 # Message describing the net effect of a single contact
 
+# specify link frame and timestamp of contact
+Header header
+
 # unique name of the contact
 string name
 # contact point location
