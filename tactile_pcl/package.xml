@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package>
+<name>tactile_pcl</name>
+  <version>0.1.0</version>
+  <description>Convert TactileState or TactileContact messages into pcl messages</description>
+
+  <maintainer email="troehlig@techfak.uni-bielefeld.de">Tobias Roehlig</maintainer>
+
+  <license>GPLv3</license>
+
+  <author email="troehlig@techfak.uni-bielefeld.de">Tobias Roehlig</author>
+  <author email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</author>
+  <maintainer email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>tactile_msgs</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>urdf_tactile</build_depend>
+
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>tactile_msgs</run_depend>
+  <run_depend>pcl_conversions</run_depend>
+  <run_depend>tf2_ros</run_depend>
+  <run_depend>urdf</run_depend>
+
+  <export>
+  </export>
+</package>
