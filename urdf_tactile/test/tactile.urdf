@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="robot" version="1.0" xmlns="http://www.ros.org">
+  <link name="link1"/>
+
+  <sensor name="tactile_array_sensor" update_rate="100">
+    <parent link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <tactile>
+      <array rows="16" cols="16" size="0.1 0.1" spacing="0.1 0.1" offset="0. 0."/>
+    </tactile>
+  </sensor>
+
+  <sensor name="unknown sensor" update_rate="20">
+    <parent link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <unknown/>
+  </sensor>
+
+  <sensor name="tactile_taxel_sensor" update_rate="100">
+    <parent link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <tactile>
+      <taxel idx="0" xyz="0 0 0" rpy="0 0 0">
+        <geometry>
+          <mesh filename="some.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </taxel>
+      <taxel idx="0" xyz="0 0 0" rpy="0 0 0">
+        <geometry>
+          <mesh filename="some.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </taxel>
+
+      <!-- the array element should be ignored with a warning -->
+      <array rows="16" cols="16" size="0.1 0.1" spacing="0.1 0.1" offset="0. 0."/>
+    </tactile>
+  </sensor>
+</robot>
