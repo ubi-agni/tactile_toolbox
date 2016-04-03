@@ -9,9 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
 	tactile_msgs
 	pcl_conversions
 	tf2_ros
-	urdf
+	urdf_tactile
 )
-find_package(urdf_tactile REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)

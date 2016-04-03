@@ -1,7 +1,6 @@
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
-  ${urdf_tactile_INCLUDE_DIRS}
   ${tactile_filters_INCLUDE_DIRS}
 )
 

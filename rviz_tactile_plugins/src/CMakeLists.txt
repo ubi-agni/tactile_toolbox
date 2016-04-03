@@ -9,7 +9,6 @@ include_directories(
   ${QT_QTCORE_INCLUDE_DIR}
   ${QT_QTGUI_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
-  ${urdf_tactile_INCLUDE_DIRS}
   ${tactile_filters_INCLUDE_DIRS}
 )
 

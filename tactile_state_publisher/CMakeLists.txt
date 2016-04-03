@@ -3,9 +3,8 @@ project(tactile_state_publisher)
 
 find_package(catkin REQUIRED COMPONENTS
   tactile_msgs
-  urdf
+  urdf_tactile
 )
-find_package(urdf_tactile REQUIRED)
 
 message("${urdf_DIR}")
 catkin_package(
@@ -15,7 +14,7 @@ catkin_package(
 #  DEPENDS
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${urdf_tactile_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_publisher.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

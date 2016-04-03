@@ -19,7 +19,8 @@ find_package(catkin REQUIRED pluginlib urdf)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  # Don't export the plugin-lib! This should be loaded dynamically only.
+#  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS urdf
 #  DEPENDS system_lib
 )
