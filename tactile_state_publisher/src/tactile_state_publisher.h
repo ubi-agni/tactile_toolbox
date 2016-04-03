@@ -30,6 +30,7 @@ public:
    * publish the current tactile values
    */
   void publish();
+  bool valid() const;
 
 private:
 

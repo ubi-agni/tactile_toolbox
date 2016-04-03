@@ -31,8 +31,13 @@ TactileStatePublisher::TactileStatePublisher():
 
 void TactileStatePublisher::config()
 {
-  urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
-  createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
+  try {
+    urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
+    createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
+  } catch (const std::exception &e) {
+    ROS_ERROR_STREAM(e.what());
+    return;
+  }
 
   // read parameters
   ros::NodeHandle nh_priv("~");
@@ -143,18 +148,28 @@ void TactileStatePublisher::publish()
   publish_rate_.sleep();
 }
 
+bool TactileStatePublisher::valid() const
+{
+  return !tactile_subs_.empty() && !sensor_data_map_.empty();
+}
+
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, ROS_PACKAGE_NAME);
 
-  TactileStatePublisher tsp;
+  try {
+    TactileStatePublisher tsp;
+    if (!tsp.valid()) return EINVAL;
 
-  while (ros::ok())
-  {
-    tsp.publish();
-    ros::spinOnce();
+    while (ros::ok())
+    {
+      tsp.publish();
+      ros::spinOnce();
+    }
+  } catch (const std::exception &e) {
+    ROS_ERROR_STREAM(e.what());
+    return EFAULT;
   }
-
   return 0;
 }
