@@ -27,8 +27,13 @@ public:
 	PCLCollector(const std::string &target_frame="");
 	void initFromRobotDescription(const std::string &param="robot_description");
 
-	template <typename M>
-	void setSource(message_filters::Subscriber<M> &sub);
+	template <typename M, typename F>
+	void setSource(F &f, unsigned int queue_size) {
+		// connect F to a tf filter that signals to process()
+		tf2_ros::MessageFilter<M> *tf_filter = new tf2_ros::MessageFilter<M>(f, tf_buffer_, target_frame_, queue_size, NULL);
+		tf_filter_.reset(tf_filter);
+		tf_filter->registerCallback(&PCLCollector::process<M>, this);
+	}
 
 	void setTargetFrame(const std::string &frame);
 	const std::string& targetFrame() const {return target_frame_;}

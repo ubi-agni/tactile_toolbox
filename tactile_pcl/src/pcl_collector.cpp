@@ -56,17 +56,6 @@ void PCLCollector::initFromRobotDescription(const std::string &param)
 	}
 }
 
-template <typename M>
-void PCLCollector::setSource(message_filters::Subscriber<M> &sub)
-{
-	tf2_ros::MessageFilter<M> *f = new tf2_ros::MessageFilter<M>(sub, tf_buffer_, target_frame_, 10, NULL);
-	tf_filter_.reset(f);
-	f->registerCallback(&PCLCollector::process<M>, this);
-}
-
-// instantiate templates
-template void PCLCollector::setSource<TactileContact>(message_filters::Subscriber<TactileContact>&);
-
 // template specializations for different types
 template <>
 void PCLCollector::process<TactileContact>(const TactileContactConstPtr &msg)
