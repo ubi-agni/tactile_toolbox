@@ -101,6 +101,7 @@ public:
   const QString &getGroup() const {return group_;}
   void  setGroup(const QString &group) {group_ = group;}
   const std::string &getLinkFrame() const {return frame_;}
+  void  setTFPrefix(const std::string &tf_prefix);
 
 public Q_SLOTS:
   virtual void onVisibleChanged();
@@ -122,6 +123,7 @@ protected:
 
   QString group_;  // display group
   std::string frame_;  // frame this sensor is attached to
+  std::string tf_prefix_;
   geometry_msgs::Pose pose_; // pose relative to this frame_
 
   ::tactile::TactileValueArray values_;  /// tactile values

@@ -76,9 +76,10 @@ protected:
   void processMessage(const tactile_msgs::TactileState::ConstPtr& msg);
   GroupProperty *getGroupProperty(const QString &path, GroupProperty *parent);
 
-  protected Q_SLOTS:
+protected Q_SLOTS:
   void onTopicChanged();
   void onRobotDescriptionChanged();
+  void onTFPrefixChanged();
   void onModeChanged();
   void onModeParamsChanged();
   void onAllVisibleChanged();
@@ -86,6 +87,7 @@ protected:
 private:
   rviz::RosTopicProperty* topic_property_;
   rviz::StringProperty* robot_description_property_;
+  rviz::StringProperty* tf_prefix_property_;
 
   rviz::EnumProperty* mode_property_;
   rviz::FloatProperty* mean_lambda_property_;

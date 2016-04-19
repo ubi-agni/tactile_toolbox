@@ -67,6 +67,12 @@ TactileStateDisplay::TactileStateDisplay()
        ROBOT_DESC + " defining tactile sensors",
        this, SLOT(onRobotDescriptionChanged()));
 
+  tf_prefix_property_ = new StringProperty
+      ("TF Prefix", "",
+       "Usually the robot link names are the same as the tf frame names. "
+       "This option allows you to set a prefix. Mainly useful for multi-robot situations.",
+       this, SLOT(onTFPrefixChanged()));
+
   mode_property_ = new rviz::EnumProperty
       ("display mode", QString::fromStdString(::tactile::TactileValue::getModeName(mode_)),
        "", this, SLOT(onModeChanged()));
@@ -253,6 +259,16 @@ void TactileStateDisplay::onRobotDescriptionChanged()
   onModeChanged();
   onModeParamsChanged();
   subscribe();
+  context_->queueRender();
+}
+
+void TactileStateDisplay::onTFPrefixChanged()
+{
+  const std::string &tf_prefix = tf_prefix_property_->getStdString();
+  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+    it->second->setTFPrefix(tf_prefix);
+  }
+  clearStatuses();
   context_->queueRender();
 }
 

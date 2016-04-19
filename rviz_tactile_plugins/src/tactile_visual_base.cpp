@@ -38,6 +38,7 @@
 #include <rviz/display.h>
 #include <rviz/display_context.h>
 #include <ros/time.h>
+#include <tf/tf.h>
 
 #include <OgreSceneNode.h>
 #include <OgreSceneManager.h>
@@ -94,6 +95,11 @@ void TactileVisualBase::setAccumulationMode(::tactile::TactileValueArray::AccMod
   acc_mean_ = mean;
 }
 
+void TactileVisualBase::setTFPrefix(const std::string &tf_prefix)
+{
+	tf_prefix_ = tf_prefix;
+}
+
 float TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
 {
   float v = value.value(mode_);
@@ -130,10 +136,11 @@ bool TactileVisualBase::updatePose()
 {
   Ogre::Vector3 pos;
   Ogre::Quaternion quat;
-  if (!context_->getFrameManager()->transform(frame_, ros::Time(), pose_, pos, quat))
+  const std::string& frame = tf_prefix_.empty() ? frame_ : tf::resolve(tf_prefix_, frame_);
+  if (!context_->getFrameManager()->transform(frame, ros::Time(), pose_, pos, quat))
   {
     std::string error;
-    context_->getFrameManager()->transformHasProblems(frame_, ros::Time(), error);
+	 context_->getFrameManager()->transformHasProblems(frame, ros::Time(), error);
     owner_->setStatusStd(rviz::StatusProperty::Error, getNameStd(), error);
     return false;
   }
