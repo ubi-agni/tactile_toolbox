@@ -26,6 +26,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
+/* Author: Robert Haschke */
+
 #include <urdf_tactile/taxel_info_iterator.h>
 
 using namespace urdf::tactile;
@@ -33,12 +36,6 @@ using namespace urdf::tactile;
 namespace tactile {
 
 namespace {
-
-void finish(TaxelInfo &info) {
-  static const urdf::Vector3 zAxis(0,0,1);
-  info.position = info.taxel_origin.position;
-  info.normal = info.taxel_origin.rotation * zAxis;
-}
 
 urdf::Pose compose(const urdf::Pose &a, const urdf::Pose &b) {
   urdf::Pose r;
@@ -52,127 +49,220 @@ urdf::Pose compose(const urdf::Pose &a, const urdf::Pose &b) {
 
 } // anonymous namespace
 
-// Define how to retrieve begin() and end() iterators with a template trait
-template<typename Iterator>
-struct iterator_traits {
-  /// retrieve begin iterator
-  static Iterator begin(const urdf::Sensor &sensor);
-  /// retrieve end iterator
-  static Iterator end(const urdf::Sensor &sensor);
+/******************************************************************************
+ * common interface class TaxelInfoIteratorI for implementations
+ ******************************************************************************/
+class TaxelInfoIteratorI : public std::iterator<std::random_access_iterator_tag, TaxelInfo>
+{
+public:
+  TaxelInfoIteratorI(const urdf::SensorConstSharedPtr &sensor) : sensor(sensor) {}
+  virtual TaxelInfoIteratorI* clone() const = 0;
+  virtual ~TaxelInfoIteratorI() {}
+
+  virtual TaxelInfoIteratorI& operator++() = 0;
+  virtual TaxelInfoIteratorI& operator--() = 0;
+  virtual bool operator==(const TaxelInfoIteratorI& other) const = 0;
+
+  virtual void initInfo(TaxelInfo &info);
+  virtual void updateInfo(TaxelInfo &info) = 0;
+  void finishInfo(TaxelInfo &info);
+
+  urdf::SensorConstSharedPtr sensor;
 };
 
-/******************************************************************************
- * generic TaxelInfoIterator implementation
- ******************************************************************************/
-template <typename Iterator>
-TaxelInfoIterator<Iterator> TaxelInfoIterator<Iterator>::begin(const urdf::SensorConstSharedPtr &sensor) {
-  return TaxelInfoIterator(sensor, ::tactile::iterator_traits<Iterator>::begin(*sensor));
-}
-
-template <typename Iterator>
-TaxelInfoIterator<Iterator> TaxelInfoIterator<Iterator>::end(const urdf::SensorConstSharedPtr &sensor) {
-  return TaxelInfoIterator(sensor, ::tactile::iterator_traits<Iterator>::end(*sensor));
-}
-
-template <typename Iterator>
-TaxelInfoIterator<Iterator>::TaxelInfoIterator(const urdf::SensorConstSharedPtr &sensor,
-                                               const Iterator &it)
-  : boost::transform_iterator<Function, Iterator>
-    (it, boost::bind(&TaxelInfoIterator<Iterator>::transform, this, _1))
-  , sensor(sensor)
+void TaxelInfoIteratorI::initInfo(TaxelInfo &info)
 {
   // initialize common properties of all taxels
   info.link = sensor->parent_link_;
   info.group = sensor->group_;
   info.channel = tactile_sensor_cast(*sensor).channel_;
-  info.geometry_origin = sensor->origin_;
-  // specific constructor part
-  // TODO init();
+}
+
+void TaxelInfoIteratorI::finishInfo(TaxelInfo& info) {
+  static const urdf::Vector3 zAxis(0,0,1);
+  info.position = info.taxel_origin.position;
+  info.normal = info.taxel_origin.rotation * zAxis;
 }
 
 /******************************************************************************
- * specializations for std::vector<TactileTaxelSharedPtr>::const_iterator
+ * generic TaxelInfoIterator:
+ * - implements interface TaxelInfoIteratorI
+ * - use template to implement common stuff
+ ******************************************************************************/
+template<typename Iterator>
+class TaxelInfoIteratorBase : public TaxelInfoIteratorI
+{
+protected:
+  Iterator it;
+
+public:
+  typedef Iterator iterator;
+
+  explicit TaxelInfoIteratorBase(const urdf::SensorConstSharedPtr &sensor, Iterator it)
+    : TaxelInfoIteratorI(sensor), it(it) {}
+
+  TaxelInfoIteratorI* clone() const {return new TaxelInfoIteratorBase(*this);}
+  TaxelInfoIteratorI& operator++() { ++it; return *this; }
+  TaxelInfoIteratorI& operator--() { --it; return *this; }
+  bool operator==(const TaxelInfoIteratorI& other) const {
+    // if sensors are equal, iterator types are actually identical and we can safely static_cast
+    return (sensor == other.sensor) && (it == static_cast<const TaxelInfoIteratorBase&>(other).it);
+  }
+  void initInfo(TaxelInfo& info);
+  void updateInfo(TaxelInfo& info);
+};
+
+/******************************************************************************
+ * TaxelInfoIterator for vector of taxels
  ******************************************************************************/
 typedef std::vector<TactileTaxelSharedPtr>::const_iterator VectorBaseIterator;
 template <>
-struct iterator_traits<VectorBaseIterator> {
-  /// retrieve first iterator
-  static std::vector<TactileTaxelSharedPtr>::const_iterator
-  begin(const urdf::Sensor &sensor) {
-    return tactile_sensor_cast(sensor).taxels_.begin();
-  }
-
-  /// retrieve last iterator
-  static std::vector<TactileTaxelSharedPtr>::const_iterator
-  end(const urdf::Sensor &sensor) {
-    return tactile_sensor_cast(sensor).taxels_.end();
-  }
-};
-
-// TODO: compute TaxelInfo only once during iterator update
+void TaxelInfoIteratorBase<VectorBaseIterator>::initInfo(TaxelInfo& info) {
+  TaxelInfoIteratorI::initInfo(info);
+  info.geometry_origin = sensor->origin_;
+}
 template <>
-const TaxelInfo& TaxelInfoIterator<VectorBaseIterator>::transform(const TactileTaxelSharedPtr &taxel) {
-  // taxel-specific properties
-  info.geometry = taxel->geometry;
-  info.idx = taxel->idx;
-  info.taxel_origin = compose(sensor->origin_, taxel->origin);
-
-  finish(info);
-  return info;
+void TaxelInfoIteratorBase<VectorBaseIterator>::updateInfo(TaxelInfo& info) {
+  const TactileTaxel &taxel = **it;
+  info.geometry = taxel.geometry;
+  info.idx = taxel.idx;
+  info.taxel_origin = compose(sensor->origin_, taxel.origin);
+  finishInfo(info);
 }
 
 /******************************************************************************
- * specializations for boost::counting_iterator<size_t>
+ * TaxelInfoIterator for 2D taxel array
  ******************************************************************************/
-typedef boost::counting_iterator<size_t> ArrayBaseIterator;
+typedef size_t ArrayBaseIterator;
 template <>
-struct iterator_traits<ArrayBaseIterator> {
-  /// retrieve first iterator
-  static ArrayBaseIterator begin(const urdf::Sensor &sensor) {
-    return ArrayBaseIterator(0);
-  }
-
-  /// retrieve last iterator
-  static ArrayBaseIterator end(const urdf::Sensor &sensor) {
-    const TactileSensor &tactile = tactile_sensor_cast(sensor);
-    return ArrayBaseIterator(tactile.array_->rows * tactile.array_->cols);
-  }
-};
-
-template <>
-const TaxelInfo& TaxelInfoIterator<ArrayBaseIterator>::transform(const size_t& idx) {
-  const TactileSensor &tactile = tactile_sensor_cast(*sensor);
-  const TactileArray &array = *tactile.array_;
-
-  // TODO: init()
-  urdf::Box *b = new urdf::Box();
-  b->dim = urdf::Vector3(array.size.x, array.size.y, 0);
-  info.geometry.reset(b);
-
-  // taxel-specific properties
-  info.idx = idx;
+void TaxelInfoIteratorBase<ArrayBaseIterator>::initInfo(TaxelInfo& info) {
+  TaxelInfoIteratorI::initInfo(info);
+  info.geometry_origin = sensor->origin_;
   info.taxel_origin.rotation = info.geometry_origin.rotation;
+
+  const TactileArray &array = *tactile_sensor_cast(*sensor).array_;
+  urdf::Box *box = new urdf::Box();
+  box->dim = urdf::Vector3(array.size.x, array.size.y, 0);
+  info.geometry.reset(box);
+}
+
+template <>
+void TaxelInfoIteratorBase<ArrayBaseIterator>::updateInfo(TaxelInfo& info) {
+  const TactileArray &array = *tactile_sensor_cast(*sensor).array_;
+
+  info.idx = it;
 
   size_t row, col;
   if (array.order == TactileArray::ROWMAJOR) {
-    row = idx / array.cols;
-    col = idx % array.cols;
+    row = it / array.cols;
+    col = it % array.cols;
   } else {
-    row = idx % array.rows;
-    col = idx / array.rows;
+    row = it % array.rows;
+    col = it / array.rows;
   }
   info.taxel_origin.position.x = row * array.spacing.x - array.offset.x;
   info.taxel_origin.position.y = col * array.spacing.y - array.offset.y;
   info.taxel_origin.position.z = 0;
 
-  finish(info);
-  return info;
+  info.geometry_origin.position = const_cast<urdf::Vector3&>(sensor->origin_.position)
+      + sensor->origin_.rotation * info.taxel_origin.position;
+  finishInfo(info);
 }
 
+
 /******************************************************************************
- * explicit template instantiations
+ * implementation of wrapper class TaxelInfoIterator
+ * We need to wrap a TaxelInfoIteratorI* to allow for cloning of derived classes.
+ * http://www.ocoudert.com/blog/2010/07/07/how-to-write-abstract-iterators-in-c
  ******************************************************************************/
-template class TaxelInfoIterator<std::vector<TactileTaxelSharedPtr>::const_iterator>;
-template class TaxelInfoIterator<boost::counting_iterator<size_t> >;
+TaxelInfoIterator::TaxelInfoIterator(const TaxelInfoIterator &other)
+  : impl_(other.impl_ ? other.impl_->clone() : NULL)
+  , valid_(false)
+{
+  info_ = other.info_;
+}
+
+TaxelInfoIterator::~TaxelInfoIterator() {
+  if (impl_) delete impl_;
+}
+
+TaxelInfoIterator& TaxelInfoIterator::operator=(const TaxelInfoIterator& other) {
+  if (impl_ != other.impl_) {
+    delete impl_;
+    impl_ = other.impl_->clone();
+  }
+  info_ = other.info_;
+  valid_ = other.valid_;
+  return *this;
+}
+
+TaxelInfoIterator &TaxelInfoIterator::operator++() {
+  if (impl_) { ++(*impl_); valid_ = false; }
+  return *this;
+}
+
+TaxelInfoIterator TaxelInfoIterator::operator++(int)
+{
+  TaxelInfoIterator tmp(*this);
+  ++(*this);
+  return tmp;
+}
+
+TaxelInfoIterator &TaxelInfoIterator::operator--() {
+  if (impl_) { --(*impl_); valid_ = false; }
+  return *this;
+}
+
+TaxelInfoIterator TaxelInfoIterator::operator--(int)
+{
+  TaxelInfoIterator tmp(*this);
+  --(*this);
+  return tmp;
+}
+
+bool TaxelInfoIterator::operator==(const TaxelInfoIterator &other) const {
+  return (impl_ == other.impl_) || (impl_ && other.impl_ && *impl_ == *other.impl_);
+}
+
+TaxelInfoIterator::TaxelInfoIterator(TaxelInfoIteratorI *impl, bool valid)
+  : impl_(impl), valid_(valid)
+{
+  // THIS SHOULD BE THE ONE AND ONLY PLACE WHERE initInfo() IS CALLED
+  impl->initInfo(info_);
+  if (valid) impl->updateInfo(info_);
+}
+
+void TaxelInfoIterator::validate() const
+{
+  if (!valid_) {
+    assert(impl_);
+    impl_->updateInfo(const_cast<TaxelInfo&>(info_));
+    valid_ = true;
+  }
+}
+
+TaxelInfoIterator TaxelInfoIterator::begin(const urdf::SensorConstSharedPtr &sensor)
+{
+  const TactileSensor &tactile = tactile_sensor_cast(*sensor);
+  TaxelInfoIteratorI *impl = 0;
+
+  if (tactile.taxels_.size())
+    impl = new TaxelInfoIteratorBase<VectorBaseIterator>(sensor, tactile.taxels_.begin());
+  else
+    impl = new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor, 0);
+  return TaxelInfoIterator(impl, true);
+}
+
+TaxelInfoIterator TaxelInfoIterator::end(const urdf::SensorConstSharedPtr &sensor)
+{
+  const TactileSensor &tactile = tactile_sensor_cast(*sensor);
+  TaxelInfoIteratorI *impl = 0;
+
+  if (tactile.taxels_.size())
+    impl = new TaxelInfoIteratorBase<VectorBaseIterator>(sensor, tactile.taxels_.end());
+  else
+    impl = new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor, tactile.array_->rows * tactile.array_->cols);
+  return TaxelInfoIterator(impl, false);
+}
 
 } // end namespace tactile

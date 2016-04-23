@@ -30,38 +30,44 @@
 
 #include <urdf_tactile/tactile.h>
 #include "taxel_info.h"
-#include <boost/iterator/transform_iterator.hpp>
-#include <boost/iterator/counting_iterator.hpp>
-#include <boost/bind.hpp>
 
 namespace tactile {
 
-/// class to iterator over all taxels in a TactileSensor providing the corresponding TaxelInfo
-template<typename Iterator>
-class TaxelInfoIterator : public boost::transform_iterator<
-    boost::function<TaxelInfo(const typename std::iterator_traits<Iterator>::reference)>,
-    Iterator
->
-{
-public:
-  typedef boost::function<TaxelInfo(const typename std::iterator_traits<Iterator>::reference)> Function;
+/// common interface class for TaxelInfoIterator for vector of taxels or array
+class TaxelInfoIteratorI;
 
+/// common iterator for vector of taxels or taxel array
+class TaxelInfoIterator
+{
+  TaxelInfoIteratorI* impl_;  // iterator
+  TaxelInfo info_;            // lazily evaluated
+  mutable bool valid_;        // is info valid?
+
+public:
   static TaxelInfoIterator begin(const urdf::SensorConstSharedPtr &sensor);
   static TaxelInfoIterator end(const urdf::SensorConstSharedPtr &sensor);
 
-protected:
-  explicit TaxelInfoIterator(const urdf::SensorConstSharedPtr &sensor, const Iterator &it);
-  const TaxelInfo& transform(typename std::iterator_traits<Iterator>::reference value);
+  TaxelInfoIterator() : impl_(0), valid_(false) {}
+  TaxelInfoIterator(const TaxelInfoIterator &other);
+  ~TaxelInfoIterator();
+  TaxelInfoIterator &operator=(const TaxelInfoIterator &other);
+
+  TaxelInfoIterator& operator++();
+  TaxelInfoIterator operator++(int);
+
+  TaxelInfoIterator& operator--();
+  TaxelInfoIterator operator--(int);
+
+  bool operator==(const TaxelInfoIterator& other) const;
+  bool operator!=(const TaxelInfoIterator& other) const {return !(*this == other);}
+
+  const TaxelInfo& operator*() const { validate(); return info_; }
+  const TaxelInfo* operator->() const { validate(); return &info_; }
 
 private:
-  urdf::SensorConstSharedPtr sensor;
-  TaxelInfo info;
+  explicit TaxelInfoIterator(TaxelInfoIteratorI* impl_, bool valid);
+  void validate() const;
 };
-
-// convenience typedefs
-typedef TaxelInfoIterator<std::vector<urdf::tactile::TactileTaxelSharedPtr>::const_iterator> TaxelVectorIterator;
-typedef TaxelInfoIterator<boost::counting_iterator<size_t> > TaxelArrayIterator;
-
 
 const urdf::tactile::TactileSensor&
 tactile_sensor_cast(const urdf::Sensor &sensor) {
