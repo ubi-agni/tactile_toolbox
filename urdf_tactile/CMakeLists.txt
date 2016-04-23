@@ -29,6 +29,7 @@ catkin_package(
 ## sub dir ##
 #############
 include_directories(include ${catkin_INCLUDE_DIRS})
+file(GLOB_RECURSE PROJECT_INCLUDES *.h)
 
 add_subdirectory(src)
 if(CATKIN_ENABLE_TESTING)

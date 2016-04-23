@@ -1,5 +1,14 @@
-add_library(${PROJECT_NAME} SHARED parser.cpp)
+add_library(${PROJECT_NAME} SHARED
+	parser.cpp
+	${PROJECT_INCLUDES}
+)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+add_library(${PROJECT_NAME}_tools SHARED
+	taxel_info_iterator.cpp
+	${PROJECT_INCLUDES}
+)
+target_link_libraries(${PROJECT_NAME}_tools ${catkin_LIBRARIES})
 
 # Install rules
 install(TARGETS

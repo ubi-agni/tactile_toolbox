@@ -120,11 +120,13 @@ public:
   TactileSensor() { this->clear(); }
   std::vector<TactileTaxelSharedPtr> taxels_;
   TactileArraySharedPtr array_;
+  std::string channel_;
 
   void clear()
   {
     taxels_.clear();
     array_.reset();
+    channel_ = "";
   }
 };
 typedef boost::shared_ptr<TactileSensor> TactileSensorSharedPtr;
