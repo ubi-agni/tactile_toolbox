@@ -23,29 +23,29 @@
 
 class TactileStatePublisher
 {
+  ros::NodeHandle nh_;
+  std::vector<std::string> source_list_; //! names of source topics
+  std::vector<boost::shared_ptr<ros::Subscriber> > tactile_subs_; //! source subscribers
+
+  ros::Publisher tactile_pub_; //! publisher
+  ros::Rate publish_rate_; //! publishing rate
+
+  /// unique output msg
+  tactile_msgs::TactileState tactile_msg_;
+  /// mutex on tactile_msgs_ allowing multiple reads, single write
+  mutable boost::shared_mutex msg_mutex_;
+  /// mapping channel names to indices into tactile_msgs_.sensors
+  std::map<std::string, size_t> sensor_data_map_;
+
 public:
   TactileStatePublisher();
 
-  /**
-   * publish the current tactile values
-   */
+  /// publish the current tactile values
   void publish();
+
   bool valid() const;
 
 private:
-
-  ros::NodeHandle nh_;
-  ros::Rate publish_rate_;
-  ros::Publisher tactile_pub_;
-  std::vector<std::string> source_list_; // to store the source list
-  std::vector<boost::shared_ptr<ros::Subscriber> > tactile_subs_;
-  tactile_msgs::TactileState tactile_msg_;
-
-protected:
-  mutable boost::shared_mutex mutex_; // multiple reads / one write mutex
-
-  std::map<std::string, size_t> sensor_data_map_;
-
   /**
    * initiliaze subscribers and publisher
    */
@@ -57,5 +57,4 @@ protected:
    * generic tactile callback
    */
   void tactile_state_cb(const tactile_msgs::TactileStateConstPtr& msg);
-
 };

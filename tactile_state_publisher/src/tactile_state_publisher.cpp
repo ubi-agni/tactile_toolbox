@@ -31,6 +31,10 @@ TactileStatePublisher::TactileStatePublisher():
 
 void TactileStatePublisher::config()
 {
+  /* avoid throwing of two exceptions in a row:
+     http://stackoverflow.com/questions/17838830/throwing-an-exception-while-handling-an-exception
+     Due to a bug in pluginlib, the unloading of the lib might throw on destruction of SensorParserMap.
+  */
   try {
     urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
     createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
@@ -132,7 +136,7 @@ void TactileStatePublisher::tactile_state_cb(const tactile_msgs::TactileStateCon
     sensor_msgs::ChannelFloat32::_values_type &dst = tactile_msg_.sensors[it->second].values;
     if (dst.size() <= src.size())
     {
-      boost::unique_lock<boost::shared_mutex> lock(mutex_);
+      boost::unique_lock<boost::shared_mutex> lock(msg_mutex_);
       std::copy(src.begin(), src.begin() + dst.size(), dst.begin());
     }
   }
@@ -141,7 +145,7 @@ void TactileStatePublisher::tactile_state_cb(const tactile_msgs::TactileStateCon
 void TactileStatePublisher::publish()
 {
   {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> lock(msg_mutex_);
     tactile_msg_.header.stamp = ros::Time::now();
     tactile_pub_.publish(tactile_msg_);
   }
