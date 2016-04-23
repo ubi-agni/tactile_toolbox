@@ -5,9 +5,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
 include_directories(
-  ${QT_HEADERS_DIR}
-  ${QT_QTCORE_INCLUDE_DIR}
-  ${QT_QTGUI_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
   ${tactile_filters_INCLUDE_DIRS}
 )
@@ -25,7 +22,11 @@ add_library(${PROJECT_NAME} MODULE
   plugin_init.cpp
 )
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${tactile_filters_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${tactile_filters_LIBRARIES}
+  ${QT_LIBRARIES}
+)
 
 add_definitions(-std=c++11)
 # only works since cmake 3.1:

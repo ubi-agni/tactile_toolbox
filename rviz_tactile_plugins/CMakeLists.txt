@@ -5,7 +5,13 @@ project(rviz_tactile_plugins)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED rviz urdf_tactile tactile_msgs)
-find_package(Qt4 REQUIRED)
+if(rviz_QT_VERSION VERSION_LESS "5")
+  find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
+  include(${QT_USE_FILE})
+else()
+  find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
+  set(QT_LIBRARIES Qt5::Widgets)
+endif()
 find_package(tactile_filters REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
