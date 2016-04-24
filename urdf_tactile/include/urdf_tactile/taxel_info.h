@@ -31,6 +31,7 @@
 #include <urdf_sensor/types.h>
 #include <urdf_tactile/tactile.h>
 
+namespace urdf {
 namespace tactile {
 
 struct TaxelInfo
@@ -49,4 +50,5 @@ struct TaxelInfo
   urdf::Vector3 normal;             /// z-axis of taxel_origin
 };
 
-} // namespace tactile
+} // end namespace tactile
+} // end namespace urdf

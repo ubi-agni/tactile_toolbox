@@ -31,8 +31,7 @@
 
 #include <urdf_tactile/taxel_info_iterator.h>
 
-using namespace urdf::tactile;
-
+namespace urdf {
 namespace tactile {
 
 namespace {
@@ -266,3 +265,4 @@ TaxelInfoIterator TaxelInfoIterator::end(const urdf::SensorConstSharedPtr &senso
 }
 
 } // end namespace tactile
+} // end namespace urdf

@@ -31,6 +31,7 @@
 #include <urdf_tactile/tactile.h>
 #include "taxel_info.h"
 
+namespace urdf {
 namespace tactile {
 
 /// common interface class for TaxelInfoIterator for vector of taxels or array
@@ -74,4 +75,5 @@ tactile_sensor_cast(const urdf::Sensor &sensor) {
   return dynamic_cast<const urdf::tactile::TactileSensor&>(*sensor.sensor_);
 }
 
-}
+} // end namespace tactile
+} // end namespace urdf

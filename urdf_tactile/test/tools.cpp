@@ -2,7 +2,6 @@
 #include "urdf_tactile/tactile.h"
 
 using namespace urdf::tactile;
-using namespace tactile;
 
 // the name of our test module
 #define BOOST_TEST_MODULE URDF_TACTILE_TOOLS_TEST
