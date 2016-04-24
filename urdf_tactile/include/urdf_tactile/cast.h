@@ -29,47 +29,14 @@
 #pragma once
 
 #include <urdf_tactile/tactile.h>
-#include "taxel_info.h"
 
 namespace urdf {
 namespace tactile {
 
-/// common interface class for TaxelInfoIterator for vector of taxels or array
-class TaxelInfoIteratorI;
-typedef boost::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
-
-/// common iterator for vector of taxels or taxel array
-class TaxelInfoIterator
-{
-  TaxelInfoIteratorIPtr impl_;  //! iterator
-  TaxelInfo info_;              //! lazily evaluated
-  mutable bool valid_;          //! is info valid?
-
-public:
-  static TaxelInfoIterator begin(const urdf::SensorConstSharedPtr &sensor);
-  static TaxelInfoIterator end(const urdf::SensorConstSharedPtr &sensor);
-
-  TaxelInfoIterator() : impl_(0), valid_(false) {}
-  TaxelInfoIterator(const TaxelInfoIterator &other);
-  ~TaxelInfoIterator();
-  TaxelInfoIterator &operator=(const TaxelInfoIterator &other);
-
-  TaxelInfoIterator& operator++();
-  TaxelInfoIterator operator++(int);
-
-  TaxelInfoIterator& operator--();
-  TaxelInfoIterator operator--(int);
-
-  bool operator==(const TaxelInfoIterator& other) const;
-  bool operator!=(const TaxelInfoIterator& other) const {return !(*this == other);}
-
-  const TaxelInfo& operator*() const { validate(); return info_; }
-  const TaxelInfo* operator->() const { validate(); return &info_; }
-
-private:
-  explicit TaxelInfoIterator(TaxelInfoIteratorIPtr impl_, bool valid);
-  void validate() const;
-};
+inline const urdf::tactile::TactileSensor&
+tactile_sensor_cast(const urdf::Sensor &sensor) {
+  return dynamic_cast<const urdf::tactile::TactileSensor&>(*sensor.sensor_);
+}
 
 } // end namespace tactile
 } // end namespace urdf
