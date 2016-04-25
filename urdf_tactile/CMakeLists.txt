@@ -3,6 +3,8 @@ project(urdf_tactile)
 set (${PROJECT_NAME}_VERSION_MAJOR 0)
 set (${PROJECT_NAME}_VERSION_MINOR 1)
 
+add_definitions(-std=c++11)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -20,7 +22,7 @@ find_package(catkin REQUIRED pluginlib urdf)
 catkin_package(
   INCLUDE_DIRS include
   # Don't export the plugin-lib! This should be loaded dynamically only.
-#  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME}_tools
   CATKIN_DEPENDS urdf
 #  DEPENDS system_lib
 )
@@ -46,3 +48,7 @@ endif()
 install(FILES
   plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY
+  include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

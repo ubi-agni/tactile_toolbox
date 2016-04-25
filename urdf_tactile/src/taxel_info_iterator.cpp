@@ -63,6 +63,8 @@ public:
   virtual TaxelInfoIteratorI& operator--() = 0;
   virtual bool operator==(const TaxelInfoIteratorI& other) const = 0;
 
+  virtual size_t index() const = 0;
+
   virtual void initInfo(TaxelInfo &info);
   virtual void updateInfo(TaxelInfo &info) = 0;
   void finishInfo(TaxelInfo &info);
@@ -108,6 +110,8 @@ public:
     // if sensors are equal, iterator types are actually identical and we can safely static_cast
     return (sensor == other.sensor) && (it == static_cast<const TaxelInfoIteratorBase&>(other).it);
   }
+
+  size_t index() const;
   void initInfo(TaxelInfo& info);
   void updateInfo(TaxelInfo& info);
 };
@@ -117,10 +121,17 @@ public:
  ******************************************************************************/
 typedef std::vector<TactileTaxelSharedPtr>::const_iterator VectorBaseIterator;
 template <>
+size_t TaxelInfoIteratorBase<VectorBaseIterator>::index() const {
+  const TactileTaxel &taxel = **it;
+  return taxel.idx;
+}
+
+template <>
 void TaxelInfoIteratorBase<VectorBaseIterator>::initInfo(TaxelInfo& info) {
   TaxelInfoIteratorI::initInfo(info);
   info.geometry_origin = sensor->origin_;
 }
+
 template <>
 void TaxelInfoIteratorBase<VectorBaseIterator>::updateInfo(TaxelInfo& info) {
   const TactileTaxel &taxel = **it;
@@ -134,6 +145,11 @@ void TaxelInfoIteratorBase<VectorBaseIterator>::updateInfo(TaxelInfo& info) {
  * TaxelInfoIterator for 2D taxel array
  ******************************************************************************/
 typedef size_t ArrayBaseIterator;
+template <>
+size_t TaxelInfoIteratorBase<ArrayBaseIterator>::index() const {
+  return it;
+}
+
 template <>
 void TaxelInfoIteratorBase<ArrayBaseIterator>::initInfo(TaxelInfo& info) {
   TaxelInfoIteratorI::initInfo(info);
@@ -221,6 +237,11 @@ bool TaxelInfoIterator::operator==(const TaxelInfoIterator &other) const {
   return (impl_ == other.impl_) || (impl_ && other.impl_ && *impl_ == *other.impl_);
 }
 
+TaxelInfoIterator::operator TaxelInfoIteratorIPtr() {
+  // this is like a operator=() and thus should clone a new copy
+  return TaxelInfoIteratorIPtr(impl_->clone());
+}
+
 TaxelInfoIterator::TaxelInfoIterator(TaxelInfoIteratorIPtr impl, bool valid)
   : impl_(impl), valid_(valid)
 {
@@ -260,6 +281,19 @@ TaxelInfoIterator TaxelInfoIterator::end(const urdf::SensorConstSharedPtr &senso
   else
     impl.reset(new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor, tactile.array_->rows * tactile.array_->cols));
   return TaxelInfoIterator(impl, false);
+}
+
+/******************************************************************************
+ * direct access from TaxelInfoIteratorIPtr
+ ******************************************************************************/
+size_t index(const TaxelInfoIteratorIPtr &impl)
+{
+  return impl->index();
+}
+
+TaxelInfo::TaxelInfo(const TaxelInfoIteratorIPtr& it) {
+  it->initInfo(*this);
+  it->updateInfo(*this);
 }
 
 } // end namespace tactile

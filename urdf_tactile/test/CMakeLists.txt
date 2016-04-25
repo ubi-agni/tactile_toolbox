@@ -2,8 +2,6 @@ find_package(Boost REQUIRED unit_test_framework)
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
-add_definitions(-std=c++11)
-
 # unit tests
 add_executable(test_parser parser.cpp)
 target_link_libraries(test_parser ${PROJECT_NAME} ${Boost_LIBRARIES})

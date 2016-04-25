@@ -34,8 +34,14 @@
 namespace urdf {
 namespace tactile {
 
+class TaxelInfoIteratorI;
+typedef boost::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
+
 struct TaxelInfo
 {
+  TaxelInfo() {}
+  TaxelInfo(const TaxelInfoIteratorIPtr& it);
+
   std::string group;
   std::string link;
 

@@ -66,10 +66,15 @@ public:
   const TaxelInfo& operator*() const { validate(); return info_; }
   const TaxelInfo* operator->() const { validate(); return &info_; }
 
+  /// allow implicit type conversion to TaxelInfoIteratorIPtr
+  operator TaxelInfoIteratorIPtr();
+
 private:
   explicit TaxelInfoIterator(TaxelInfoIteratorIPtr impl_, bool valid);
   void validate() const;
 };
+
+size_t index(const TaxelInfoIteratorIPtr &it);
 
 } // end namespace tactile
 } // end namespace urdf
