@@ -213,6 +213,7 @@ void TactileStateDisplay::onRobotDescriptionChanged()
   }
 
   sensors_.clear();
+  channels_.clear();
   urdf::SensorMap sensors;
   try {
     sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(),
@@ -239,8 +240,9 @@ void TactileStateDisplay::onRobotDescriptionChanged()
         group_property->addChild(visual);
         visual->setGroup(QString::fromStdString(it->second->group_));
         sensors_[it->first] = visual;
+        channels_[sensor->channel_].push_back(visual);
 
-        // copy sensor settings
+        // restore sensor settings (if available)
         auto config = configs.find(it->first);
         if (config != configs.end())
           visual->load(config->second);
@@ -319,9 +321,12 @@ void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::Const
 {
   for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
   {
-    auto it = sensors_.find(sensor->name);
-    if (it == sensors_.end()) continue;
-    it->second->update(msg->header.stamp, sensor->values);
+    const std::string &channel = sensor->name;
+    auto ch = channels_.find(channel);
+    if (ch == channels_.end()) continue;
+    // update all sensors monitoring this channel
+    for (auto s = ch->second.begin(), end = ch->second.end(); s != end; ++s)
+      (*s)->update(msg->header.stamp, sensor->values);
   }
 }
 

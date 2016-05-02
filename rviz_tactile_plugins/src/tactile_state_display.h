@@ -99,7 +99,10 @@ private:
 
   ros::NodeHandle  nh_;
   ros::Subscriber  sub_;
+  /// list of all sensors, accessible by sensor name
   std::map<std::string, TactileVisualBase*> sensors_;
+  /// map from channel name to sensors monitoring this channel
+  std::map<std::string, std::vector<TactileVisualBase*> > channels_;
 
   ::tactile::TactileValue::Mode mode_;
   ColorMap abs_color_map_;
