@@ -80,6 +80,12 @@ TactileContactDisplay::TactileContactDisplay()
   topic_property_ = new TactileContactTopicProperty
       ("Topic", "tactile_contact_states", "", this, SLOT(onTopicChanged()));
 
+  tf_prefix_property_ = new StringProperty
+      ("TF Prefix", "",
+       "Usually the robot link names are the same as the tf frame names. "
+       "This option allows you to set a prefix. Mainly useful for multi-robot situations.",
+       this, SLOT(onTFPrefixChanged()));
+
   at_contact_point_property_ = new rviz::BoolProperty
       ("Display wrench in contact frame?", true, "", this);
 
@@ -185,6 +191,12 @@ void TactileContactDisplay::onTopicChanged()
   context_->queueRender();
 }
 
+void TactileContactDisplay::onTFPrefixChanged()
+{
+  clearStatuses();
+  context_->queueRender();
+}
+
 void TactileContactDisplay::triggerFullUpdate()
 {
   full_update_ = true;
@@ -240,16 +252,20 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
     // Update pose of visual
     Ogre::Vector3 position;
     Ogre::Quaternion orientation;
+
+    const std::string& tf_prefix = tf_prefix_property_->getStdString();
+    const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
+                                                 : tf::resolve(tf_prefix, msg.header.frame_id);
     // use zeroStamp to fetch most recent frame (tf is lacking behind our timestamps which caused issues)
-    if (!context_->getFrameManager()->getTransform(msg.header.frame_id, zeroStamp,
+    if (!context_->getFrameManager()->getTransform(frame, zeroStamp,
                                                    position, orientation)) {
       std::string error;
-      context_->getFrameManager()->transformHasProblems(msg.header.frame_id, msg.header.stamp, error);
-      setStatusStd(StatusProperty::Error, msg.header.frame_id, error);
+      context_->getFrameManager()->transformHasProblems(frame, msg.header.stamp, error);
+      setStatusStd(StatusProperty::Error, frame, error);
       if (visual) visual->setVisible(false);
       continue;
     } else {
-      setStatusStd(StatusProperty::Ok, msg.header.frame_id, "");
+      setStatusStd(StatusProperty::Ok, frame, "");
     }
 
     // create visual if not yet done

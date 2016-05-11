@@ -85,10 +85,12 @@ protected:
 
 protected Q_SLOTS:
   void onTopicChanged();
+  void onTFPrefixChanged();
   void triggerFullUpdate();
 
 private:
   TactileContactTopicProperty* topic_property_;
+  rviz::StringProperty* tf_prefix_property_;
   rviz::BoolProperty* at_contact_point_property_;
   rviz::FloatProperty* timeout_property_;
   rviz::ColorProperty *force_color_property_, *torque_color_property_;
