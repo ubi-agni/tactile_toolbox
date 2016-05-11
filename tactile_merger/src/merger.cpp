@@ -77,7 +77,7 @@ void Merger::update(const ros::Time &stamp, const std::string &sensor_name,
                     Iterator begin, Iterator end) {
 	auto s = sensors_.find(sensor_name);
 	if (s == sensors_.end()) {
-		ROS_ERROR_STREAM("unknown sensor: " << sensor_name);
+		ROS_ERROR_STREAM_ONCE("unknown sensor: " << sensor_name);
 		return;
 	}
 
