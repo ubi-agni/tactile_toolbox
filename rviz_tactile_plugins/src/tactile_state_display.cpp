@@ -215,6 +215,8 @@ void TactileStateDisplay::onRobotDescriptionChanged()
   sensors_.clear();
   channels_.clear();
   urdf::SensorMap sensors;
+  const std::string &tf_prefix = tf_prefix_property_->getStdString();
+
   try {
     sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(),
                                           urdf::getSensorParser("tactile"));
@@ -239,6 +241,7 @@ void TactileStateDisplay::onRobotDescriptionChanged()
             = getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
         group_property->addChild(visual);
         visual->setGroup(QString::fromStdString(it->second->group_));
+        visual->setTFPrefix(tf_prefix);
         sensors_[it->first] = visual;
         channels_[sensor->channel_].push_back(visual);
 
