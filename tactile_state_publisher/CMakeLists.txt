@@ -6,7 +6,6 @@ find_package(catkin REQUIRED COMPONENTS
   urdf_tactile
 )
 
-message("${urdf_DIR}")
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES

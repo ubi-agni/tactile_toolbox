@@ -6,7 +6,6 @@ set(CMAKE_AUTOMOC ON)
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${tactile_filters_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME} MODULE
@@ -24,7 +23,7 @@ add_library(${PROJECT_NAME} MODULE
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${tactile_filters_LIBRARIES}
+  tactile_filters
   ${QT_LIBRARIES}
 )
 
