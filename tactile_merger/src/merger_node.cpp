@@ -32,22 +32,11 @@
 #include <tactile_msgs/TactileState.h>
 #include <boost/bind.hpp>
 
-typedef std::vector<ros::Subscriber> SubscriberList;
-
 void message_handler(tactile::Merger &merger,
                      const tactile_msgs::TactileStateConstPtr &msg) {
 	for (auto it = msg->sensors.begin(), end = msg->sensors.end(); it != end; ++it) {
 		merger.update(msg->header.stamp, it->name, it->values.begin(), it->values.end());
 	}
-}
-
-SubscriberList subscribe(ros::NodeHandle &nh, const std::vector<std::string> &topics,
-                         const boost::function<void (const tactile_msgs::TactileStateConstPtr&)>& callback) {
-	SubscriberList subs;
-	for (auto it = topics.begin(), end = topics.end(); it != end; ++it) {
-		subs.push_back(nh.subscribe(*it, 1, callback));
-	}
-	return subs;
 }
 
 int main(int argc, char *argv[])
@@ -61,8 +50,9 @@ int main(int argc, char *argv[])
 
 	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
 
-	std::vector<std::string> topics; topics.push_back("tactile_states");
-	SubscriberList subs = subscribe(nh, topics, boost::bind(message_handler, boost::ref(merger), _1));
+	const boost::function<void (const tactile_msgs::TactileStateConstPtr&)>
+	      callback = boost::bind(message_handler, boost::ref(merger), _1);
+	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
 	ros::Rate rate(nh_priv.param("rate", 100.));
 	while (ros::ok())
