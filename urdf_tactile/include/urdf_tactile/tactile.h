@@ -130,6 +130,7 @@ public:
   }
 };
 typedef boost::shared_ptr<TactileSensor> TactileSensorSharedPtr;
+typedef boost::shared_ptr<const TactileSensor> TactileSensorConstSharedPtr;
 
 }
 }
