@@ -34,7 +34,7 @@ namespace tactile {
 
 struct Taxel
 {
-	Taxel(const urdf::Pose &sensor_frame, const urdf::Pose &taxel_frame);
+	Taxel(const urdf::Vector3 &position, const urdf::Vector3 &normal);
 
 	Eigen::Vector3d position;
 	Eigen::Vector3d normal;

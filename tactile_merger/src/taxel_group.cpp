@@ -30,6 +30,8 @@
 
 #include <urdf/sensor.h>
 #include <ros/console.h>
+#include <urdf_tactile/taxel_info_iterator.h>
+#include <urdf_tactile/cast.h>
 
 namespace tactile {
 
@@ -51,21 +53,16 @@ getGroup(TaxelGroupMap &groups, const std::string &frame) {
 	return res.first->second;
 }
 
-void TaxelGroup::addTaxels(const std::string &sensor_name,
-                           const urdf::tactile::TactileArraySharedPtr &array,
-                           const urdf::Pose &sensor_origin) {
-	ROS_FATAL_STREAM(__FUNCTION__ << " not yet implemented.");
-}
-
-void TaxelGroup::addTaxels(const std::string &sensor_name,
-                           const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels,
-                           const urdf::Pose &sensor_origin) {
+void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor) {
 	TaxelGroup::TaxelMapping mapping;
-	for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
-		mapping[(*taxel)->idx] = size();
-		addTaxel(Taxel(sensor_origin, (*taxel)->origin));
+	const urdf::tactile::TactileSensor& tactile = urdf::tactile::tactile_sensor_cast(*sensor);
+
+	for (auto taxel = urdf::tactile::TaxelInfoIterator::begin(sensor),
+	     end = urdf::tactile::TaxelInfoIterator::end(sensor); taxel != end; ++taxel) {
+		mapping[taxel->idx] = size();
+		addTaxel(Taxel(taxel->position, taxel->normal));
 	}
-	mappings_.insert(std::make_pair(sensor_name, mapping));
+	mappings_.insert(std::make_pair(sensor->name_, mapping));
 }
 
 /** Create a TaxelGroup for each link for which we have a tactile sensor
@@ -78,16 +75,11 @@ TaxelGroupMap TaxelGroup::load (const std::string &desc_param) {
 	urdf::SensorMap sensors = urdf::parseSensorsFromParam(desc_param, urdf::getSensorParser("tactile"));
 	// create a TaxelGroup for each tactile sensor
 	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-		boost::shared_ptr<urdf::tactile::TactileSensor> sensor
-		      = boost::dynamic_pointer_cast<urdf::tactile::TactileSensor>(it->second->sensor_);
+		urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
 		if (!sensor) continue;  // some other sensor than tactile
 
 		TaxelGroupPtr &group = getGroup(result, it->second->parent_link_);
-		if (sensor->array_) {
-			group->addTaxels(it->first, sensor->array_, it->second->origin_);
-		} else if (sensor->taxels_.size()) {
-			group->addTaxels(it->first, sensor->taxels_, it->second->origin_);
-		}
+		group->addTaxels(it->second);
 	}
 	return result;
 }

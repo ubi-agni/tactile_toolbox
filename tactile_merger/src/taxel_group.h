@@ -53,8 +53,7 @@ public:
 	static TaxelGroupMap load(const std::string &desc_param);
 
 	TaxelGroup(const std::string &frame);
-	void addTaxels(const std::string &sensor_name, const urdf::tactile::TactileArraySharedPtr &array, const urdf::Pose &sensor_origin);
-	void addTaxels(const std::string &sensor_name, const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels, const urdf::Pose &sensor_origin);
+	void addTaxels(const urdf::SensorConstSharedPtr &sensor);
 
 	const std::string& frame() const {return frame_;}
 	const std::vector<Taxel>& taxels() const {return taxels_;}
