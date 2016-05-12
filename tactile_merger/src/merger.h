@@ -40,7 +40,7 @@ public:
 	void init(const std::string &param="robot_description");
 
 	template <typename Iterator>
-	void update(const ros::Time &stamp, const std::string &sensor_name,
+	void update(const ros::Time &stamp, const std::string &channel,
 	            Iterator begin, Iterator end);
 	tactile_msgs::TactileContacts getContacts();
 
@@ -49,7 +49,7 @@ private:
 	typedef boost::shared_ptr<GroupData> GroupDataPtr;
 
 	std::map<std::string, GroupDataPtr> groups_;
-	std::map<std::string, std::pair<GroupDataPtr, const TaxelGroup::TaxelMapping*> > sensors_;
+	std::multimap<std::string, std::pair<GroupDataPtr, const TaxelGroup::TaxelMapping*> > sensors_;
 };
 
 } // namespace tactile

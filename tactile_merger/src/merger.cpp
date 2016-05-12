@@ -65,7 +65,7 @@ void Merger::init(const std::string &param)
 		groups_.insert(std::make_pair(it->first, data));
 		const TaxelGroup::SensorToTaxelMapping& m = group->mappings();
 		for (auto sit = m.begin(), send = m.end(); sit != send; ++sit) {
-			// create mapping from sensor name to (data, m)
+			// create mapping from channel name to (data, m)
 			auto pair = std::make_pair(data, &sit->second);
 			sensors_.insert(std::make_pair(sit->first, pair));
 		}
@@ -73,21 +73,23 @@ void Merger::init(const std::string &param)
 }
 
 template <typename Iterator>
-void Merger::update(const ros::Time &stamp, const std::string &sensor_name,
+void Merger::update(const ros::Time &stamp, const std::string &channel,
                     Iterator begin, Iterator end) {
-	auto s = sensors_.find(sensor_name);
-	if (s == sensors_.end()) {
-		ROS_ERROR_STREAM_ONCE("unknown sensor: " << sensor_name);
+	auto range = sensors_.equal_range(channel);
+	if (range.first == range.second) {
+		ROS_ERROR_STREAM_ONCE("unknown channel: " << channel);
 		return;
 	}
 
-	GroupDataPtr &data = s->second.first;
-	TaxelGroupPtr &group = data->group;
-	const TaxelGroup::TaxelMapping &mapping = *s->second.second;
-	{
-		boost::unique_lock<boost::mutex> lock(data->mutex);
-		data->timestamp = stamp;
-		group->update(mapping, begin, end);
+	for (auto ch = range.first, range_end = range.second; ch != range_end; ++ch) {
+		GroupDataPtr &data = ch->second.first;
+		TaxelGroupPtr &group = data->group;
+		const TaxelGroup::TaxelMapping &mapping = *ch->second.second;
+		{
+			boost::unique_lock<boost::mutex> lock(data->mutex);
+			data->timestamp = stamp;
+			group->update(mapping, begin, end);
+		}
 	}
 }
 template void Merger::update<std::vector<float>::const_iterator>

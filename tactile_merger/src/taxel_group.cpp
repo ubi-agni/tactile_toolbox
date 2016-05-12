@@ -62,7 +62,7 @@ void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor) {
 		mapping[taxel->idx] = size();
 		addTaxel(Taxel(taxel->position, taxel->normal));
 	}
-	mappings_.insert(std::make_pair(sensor->name_, mapping));
+	mappings_.insert(std::make_pair(tactile.channel_, mapping));
 }
 
 /** Create a TaxelGroup for each link for which we have a tactile sensor

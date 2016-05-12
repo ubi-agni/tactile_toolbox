@@ -37,6 +37,8 @@ namespace tactile {
 
 class TaxelGroup;
 typedef boost::shared_ptr<TaxelGroup> TaxelGroupPtr;
+
+/// map from group names to group pointers (group name = parent link name)
 typedef std::map<std::string, TaxelGroupPtr> TaxelGroupMap;
 
 class TaxelGroup
@@ -44,12 +46,12 @@ class TaxelGroup
 public:
 	typedef size_t index_t;
 
-	/// mapping an index of a TactileState.msg onto the taxel index
+	/// mapping an index of a TactileState.msg's channel onto the index in taxels_
 	typedef std::map<index_t, index_t> TaxelMapping;
-	/// mapping a (unique) sensor name onto its TaxelMapping
+	/// mapping from a channel name onto its TaxelMapping
 	typedef std::map<std::string, TaxelMapping> SensorToTaxelMapping;
 
-	/// load TaxelGroups from robot_description
+	/// load TaxelGroups from robot_description, identified by group name
 	static TaxelGroupMap load(const std::string &desc_param);
 
 	TaxelGroup(const std::string &frame);
@@ -72,7 +74,7 @@ private:
 	std::string frame_;
 	/// taxels within this group
 	std::vector<Taxel> taxels_;
-	/// mapping from sensor name onto its TaxelMapping
+	/// mapping from channel name onto its TaxelMapping
 	SensorToTaxelMapping mappings_;
 };
 
