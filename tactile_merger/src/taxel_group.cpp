@@ -101,6 +101,7 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 {
 	double sum = 0;
 	Eigen::Vector3d pos, normal, force, torque;
+	pos = normal = force = torque = Eigen::Vector3d::Zero();
 	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
 		double w = it->weight;
 		sum += w;
