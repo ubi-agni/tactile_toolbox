@@ -77,11 +77,10 @@ Result sort(const SensorMap &sensors)
     boost::shared_ptr<TactileSensor> tactile
         = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
     if (!tactile) continue;  // some other sensor than tactile
-    assert (tactile->array_ || tactile->taxels_.size());
 
     Sensors &g = getOrInsertEntry<Result>(result, get<key>(it->second));
     if (tactile->array_) g.arrays.push_back(it);
-    else g.taxels.push_back(it);
+    else if (tactile->taxels_.size() > 0) g.taxels.push_back(it);
   }
   return result;
 }
