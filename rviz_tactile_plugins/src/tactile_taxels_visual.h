@@ -67,7 +67,7 @@ protected Q_SLOTS:
 #endif
 
 protected:
-  std::vector<unsigned int> mapping_;  /// mapping raw data indeces to values_
+  std::vector<unsigned int> mapping_;  /// mapping raw data indeces to taxels_
   std::vector<TaxelEntityPtr> taxels_;
 
 #if ENABLE_ARROWS

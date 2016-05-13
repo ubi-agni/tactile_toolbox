@@ -36,6 +36,7 @@
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
+#include <urdf_tactile/cast.h>
 
 #include <rviz/visualization_manager.h>
 #include <rviz/frame_manager.h>
@@ -204,16 +205,15 @@ GroupProperty* TactileStateDisplay::getGroupProperty(const QString &path, GroupP
 void TactileStateDisplay::onRobotDescriptionChanged()
 {
   // save settings of old sensors to restore them later
-  std::map<std::string, rviz::Config> configs;
+  std::map<QString, rviz::Config> configs;
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
     rviz::Config config;
     it->second->save(config);
-    configs[it->first] = config;
+    configs[it->second->getName()] = config;
     delete it->second;
   }
 
   sensors_.clear();
-  channels_.clear();
   urdf::SensorMap sensors;
   const std::string &tf_prefix = tf_prefix_property_->getStdString();
 
@@ -224,8 +224,7 @@ void TactileStateDisplay::onRobotDescriptionChanged()
     // create a TactileVisual for each tactile sensor listed in the URDF model
     for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
     {
-      boost::shared_ptr<TactileSensor> sensor
-          = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
+      urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
       if (!sensor) continue;  // some other sensor than tactile
 
       TactileVisualBase *visual=0;
@@ -242,11 +241,10 @@ void TactileStateDisplay::onRobotDescriptionChanged()
         group_property->addChild(visual);
         visual->setGroup(QString::fromStdString(it->second->group_));
         visual->setTFPrefix(tf_prefix);
-        sensors_[it->first] = visual;
-        channels_[sensor->channel_].push_back(visual);
+        sensors_.insert(std::make_pair(sensor->channel_,visual));
 
         // restore sensor settings (if available)
-        auto config = configs.find(it->first);
+        auto config = configs.find(visual->getName());
         if (config != configs.end())
           visual->load(config->second);
       }
@@ -325,11 +323,10 @@ void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::Const
   for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
   {
     const std::string &channel = sensor->name;
-    auto ch = channels_.find(channel);
-    if (ch == channels_.end()) continue;
-    // update all sensors monitoring this channel
-    for (auto s = ch->second.begin(), end = ch->second.end(); s != end; ++s)
-      (*s)->update(msg->header.stamp, sensor->values);
+    auto range = sensors_.equal_range(channel);
+    for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
+      s->second->update(msg->header.stamp, sensor->values);
+    }
   }
 }
 
