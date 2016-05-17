@@ -1,0 +1,4 @@
+- git: {local-name: console_bridge, uri: 'https://github.com/ros/console_bridge', version: master}
+- git: {local-name: urdfdom_headers, uri: 'https://github.com/ubi-agni/urdfdom_headers', version: master}
+- git: {local-name: urdfdom, uri: 'https://github.com/ubi-agni/urdfdom', version: sensor-refactoring}
+- git: {local-name: urdf, uri: 'https://github.com/ubi-agni/robot_model', version: indigo-devel}
