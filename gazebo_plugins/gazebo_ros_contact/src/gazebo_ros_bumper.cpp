@@ -109,7 +109,7 @@ void GazeboRosBumper::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->rosnode_->getParam(std::string("tf_prefix"), prefix);
   this->frame_name_ = tf::resolve(prefix, this->frame_name_);
 
-  this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(
+  this->contact_pub_ = this->rosnode_->advertise<tactile_msgs::TactileContact>(
     std::string(this->bumper_topic_name_), 1);
 
   // Initialize
@@ -136,9 +136,13 @@ void GazeboRosBumper::OnContact()
   msgs::Contacts contacts;
   contacts = this->parentSensor->GetContacts();
   /// \TODO: need a time for each Contact in i-loop, they may differ
-  this->contact_state_msg_.header.frame_id = this->frame_name_;
-  this->contact_state_msg_.header.stamp = ros::Time(contacts.time().sec(),
-                               contacts.time().nsec());
+//  this->contact_state_msg_.header.frame_id = this->frame_name_;
+//  this->contact_state_msg_.header.stamp = ros::Time(contacts.time().sec(),
+//                               contacts.time().nsec());
+
+  this->tactile_contact_msg.header.frame_id = this->frame_name_;
+  this->tactile_contact_msg.header.stamp = ros::Time(contacts.time().sec(),
+                              contacts.time().nsec());
 
 /*
   /// \TODO: get frame_name_ transforms from tf or gazebo
@@ -195,45 +199,55 @@ void GazeboRosBumper::OnContact()
     frame_pose = math::Pose(frame_pos, frame_rot);
   }
 
+  geometry_msgs::Wrench total_wrench;
+  total_wrench.force.x = 0;
+  total_wrench.force.y = 0;
+  total_wrench.force.z = 0;
+  total_wrench.torque.x = 0;
+  total_wrench.torque.y = 0;
+  total_wrench.torque.z = 0;
 
+  geometry_msgs::Point total_position;
+  total_position.x = 0;
+  total_position.y = 0;
+  total_position.z = 0;
+  double total_normal_lengths = 0;
 
-  // set contact states size
-  this->contact_state_msg_.states.clear();
+  geometry_msgs::Point average_position;
+  average_position.x = 0;
+  average_position.y = 0;
+  average_position.z = 0;
+  geometry_msgs::Vector3 total_normal;
+  total_normal.x = 0;
+  total_normal.x = 0;
+  total_normal.x = 0;
+
+//  this->contact_state_msg_.states.clear();
 
   // GetContacts returns all contacts on the collision body
   unsigned int contactsPacketSize = contacts.contact_size();
   for (unsigned int i = 0; i < contactsPacketSize; ++i)
   {
 
-    // For each collision contact
-    // Create a ContactState
-    gazebo_msgs::ContactState state;
-    /// \TODO: 
+//    gazebo_msgs::ContactState state;
     gazebo::msgs::Contact contact = contacts.contact(i);
 
-    state.collision1_name = contact.collision1();
-    state.collision2_name = contact.collision2();
-    std::ostringstream stream;
-    stream << "Debug:  i:(" << i << "/" << contactsPacketSize
-      << ")     my geom:" << state.collision1_name
-      << "   other geom:" << state.collision2_name
-      << "         time:" << ros::Time(contact.time().sec(), contact.time().nsec())
-      << std::endl;
-    state.info = stream.str();
+//    state.collision1_name = contact.collision1();
+//    state.collision2_name = contact.collision2();
+//    std::ostringstream stream;
+//    stream << "Debug:  i:(" << i << "/" << contactsPacketSize
+//      << ")     my geom:" << state.collision1_name
+//      << "   other geom:" << state.collision2_name
+//      << "         time:" << ros::Time(contact.time().sec(), contact.time().nsec())
+//      << std::endl;
+//    state.info = stream.str();
 
-    state.wrenches.clear();
-    state.contact_positions.clear();
-    state.contact_normals.clear();
-    state.depths.clear();
+//    state.wrenches.clear();
+//    state.contact_positions.clear();
+//    state.contact_normals.clear();
+//    state.depths.clear();
 
     // sum up all wrenches for each DOF
-    geometry_msgs::Wrench total_wrench;
-    total_wrench.force.x = 0;
-    total_wrench.force.y = 0;
-    total_wrench.force.z = 0;
-    total_wrench.torque.x = 0;
-    total_wrench.torque.y = 0;
-    total_wrench.torque.z = 0;
 
     unsigned int contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
@@ -260,34 +274,12 @@ void GazeboRosBumper::OnContact()
                             contact.wrench(j).body_1_wrench().torque().y(),
                             contact.wrench(j).body_1_wrench().torque().z()));
 
-      // set wrenches
-      geometry_msgs::Wrench wrench;
-      wrench.force.x  = force.x;
-      wrench.force.y  = force.y;
-      wrench.force.z  = force.z;
-      wrench.torque.x = torque.x;
-      wrench.torque.y = torque.y;
-      wrench.torque.z = torque.z;
-      state.wrenches.push_back(wrench);
-
-      total_wrench.force.x  += wrench.force.x;
-      total_wrench.force.y  += wrench.force.y;
-      total_wrench.force.z  += wrench.force.z;
-      total_wrench.torque.x += wrench.torque.x;
-      total_wrench.torque.y += wrench.torque.y;
-      total_wrench.torque.z += wrench.torque.z;
-
-      // transform contact positions into relative frame
-      // set contact positions
-      gazebo::math::Vector3 position = frame_rot.RotateVectorReverse(
-          math::Vector3(contact.position(j).x(),
-                        contact.position(j).y(),
-                        contact.position(j).z()) - frame_pos);
-      geometry_msgs::Vector3 contact_position;
-      contact_position.x = position.x;
-      contact_position.y = position.y;
-      contact_position.z = position.z;
-      state.contact_positions.push_back(contact_position);
+      total_wrench.force.x  += force.x;
+      total_wrench.force.y  += force.y;
+      total_wrench.force.z  += force.z;
+      total_wrench.torque.x += torque.x;
+      total_wrench.torque.y += torque.y;
+      total_wrench.torque.z += torque.z;
 
       // rotate normal into user specified frame.
       // frame_rot is identity if world is used.
@@ -296,21 +288,48 @@ void GazeboRosBumper::OnContact()
                         contact.normal(j).y(),
                         contact.normal(j).z()));
       // set contact normals
-      geometry_msgs::Vector3 contact_normal;
-      contact_normal.x = normal.x;
-      contact_normal.y = normal.y;
-      contact_normal.z = normal.z;
-      state.contact_normals.push_back(contact_normal);
+
+
+      total_normal.x += normal.x;
+      total_normal.y += normal.y;
+      total_normal.z += normal.z;
+//      state.contact_normals.push_back(contact_normal);
+
+      double normal_length = normal.GetLength();
+
+      // transform contact positions into relative frame
+      // set contact positions
+      gazebo::math::Vector3 position = frame_rot.RotateVectorReverse(
+          math::Vector3(contact.position(j).x(),
+                        contact.position(j).y(),
+                        contact.position(j).z()) - frame_pos);
+
+
+      total_position.x = position.x * normal_length;
+      total_position.y = position.y * normal_length;
+      total_position.z = position.z * normal_length;
+
+      total_normal_lengths += normal_length;
+
+//      state.contact_positions.push_back(contact_position);
 
       // set contact depth, interpenetration
-      state.depths.push_back(contact.depth(j));
-    }
+//      state.depths.push_back(contact.depth(j));
 
-    state.total_wrench = total_wrench;
-    this->contact_state_msg_.states.push_back(state);
+    }
   }
 
-  this->contact_pub_.publish(this->contact_state_msg_);
+  average_position.x = total_position.x / total_normal_lengths;
+  average_position.y = total_position.y / total_normal_lengths;
+  average_position.z = total_position.z / total_normal_lengths;
+
+  tactile_contact_msg.name = bumper_topic_name_;
+  tactile_contact_msg.position = average_position;
+  tactile_contact_msg.normal = total_normal;
+  tactile_contact_msg.wrench = total_wrench;
+
+
+  this->contact_pub_.publish(this->tactile_contact_msg);
 }
 
 

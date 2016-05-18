@@ -31,19 +31,16 @@
 
 #include <std_msgs/String.h>
 
-#include <gazebo_msgs/ContactState.h>
-#include <gazebo_msgs/ContactsState.h>
-
 #include <gazebo/sensors/sensors.hh>
-#include <gazebo/msgs/msgs.hh>
 #include <gazebo/physics/physics.hh>
 #include <sdf/sdf.hh>
 #include <gazebo/transport/TransportTypes.hh>
-#include <gazebo/msgs/MessageTypes.hh>
 #include <gazebo/common/Time.hh>
 #include <gazebo/sensors/SensorTypes.hh>
 #include <gazebo/sensors/ContactSensor.hh>
 #include <gazebo/common/Plugin.hh>
+
+#include <tactile_msgs/TactileContact.h>
 
 namespace gazebo
 {
@@ -75,7 +72,7 @@ namespace gazebo
     private: std::string frame_name_;
 
     /// \brief broadcast some string for now.
-    private: gazebo_msgs::ContactsState contact_state_msg_;
+    private: tactile_msgs::TactileContact tactile_contact_msg;
 
     /// \brief for setting ROS name space
     private: std::string robot_namespace_;
