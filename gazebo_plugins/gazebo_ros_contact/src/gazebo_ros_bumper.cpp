@@ -135,54 +135,18 @@ void GazeboRosBumper::OnContact()
 
   msgs::Contacts contacts;
   contacts = this->parentSensor->GetContacts();
-  /// \TODO: need a time for each Contact in i-loop, they may differ
-//  this->contact_state_msg_.header.frame_id = this->frame_name_;
-//  this->contact_state_msg_.header.stamp = ros::Time(contacts.time().sec(),
-//                               contacts.time().nsec());
 
+  // define frame_name and stamp
   this->tactile_contact_msg.header.frame_id = this->frame_name_;
   this->tactile_contact_msg.header.stamp = ros::Time(contacts.time().sec(),
                               contacts.time().nsec());
 
-/*
-  /// \TODO: get frame_name_ transforms from tf or gazebo
-  /// and rotate results to local frame.  for now, results are reported in world frame.
-
-  // if frameName specified is "world", "/map" or "map" report back
-  // inertial values in the gazebo world
-  physics::LinkPtr myFrame;
-  if (myFrame == NULL && this->frame_name_ != "world" &&
-    this->frame_name_ != "/map" && this->frame_name_ != "map")
-  {
-    // lock in case a model is being spawned
-    boost::recursive_mutex::scoped_lock lock(
-      *Simulator::Instance()->GetMRMutex());
-    // look through all models in the world, search for body
-    // name that matches frameName
-    phyaics::Model_V all_models = World::Instance()->GetModels();
-    for (physics::Model_V::iterator iter = all_models.begin();
-      iter != all_models.end(); iter++)
-    {
-      if (*iter) myFrame =
-        boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->frame_name_));
-      if (myFrame) break;
-    }
-
-    // not found
-    if (!myFrame)
-    {
-      ROS_INFO("gazebo_ros_bumper plugin: frameName: %s does not exist"
-                " yet, will not publish\n",this->frame_name_.c_str());
-      return;
-    }
-  }
-*/
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
   math::Pose pose, frame_pose;
   math::Quaternion rot, frame_rot;
   math::Vector3 pos, frame_pos;
-  /*
+  /* This code was commented out by gazebo. Do we need this?
   if (myFrame)
   {
     frame_pose = myFrame->GetWorldPose();  //-this->myBody->GetCoMPose();
@@ -222,46 +186,19 @@ void GazeboRosBumper::OnContact()
   total_normal.x = 0;
   total_normal.x = 0;
 
-//  this->contact_state_msg_.states.clear();
 
+  // Loop over Collisions
   // GetContacts returns all contacts on the collision body
   unsigned int contactsPacketSize = contacts.contact_size();
   for (unsigned int i = 0; i < contactsPacketSize; ++i)
   {
 
-//    gazebo_msgs::ContactState state;
     gazebo::msgs::Contact contact = contacts.contact(i);
 
-//    state.collision1_name = contact.collision1();
-//    state.collision2_name = contact.collision2();
-//    std::ostringstream stream;
-//    stream << "Debug:  i:(" << i << "/" << contactsPacketSize
-//      << ")     my geom:" << state.collision1_name
-//      << "   other geom:" << state.collision2_name
-//      << "         time:" << ros::Time(contact.time().sec(), contact.time().nsec())
-//      << std::endl;
-//    state.info = stream.str();
-
-//    state.wrenches.clear();
-//    state.contact_positions.clear();
-//    state.contact_normals.clear();
-//    state.depths.clear();
-
-    // sum up all wrenches for each DOF
-
+    // Loop over Contacts
     unsigned int contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
     {
-      // loop through individual contacts between collision1 and collision2
-      // gzerr << j << "  Position:"
-      //       << contact.position(j).x() << " "
-      //       << contact.position(j).y() << " "
-      //       << contact.position(j).z() << "\n";
-      // gzerr << "   Normal:"
-      //       << contact.normal(j).x() << " "
-      //       << contact.normal(j).y() << " "
-      //       << contact.normal(j).z() << "\n";
-      // gzerr << "   Depth:" << contact.depth(j) << "\n";
 
       // Get force, torque and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
@@ -274,6 +211,7 @@ void GazeboRosBumper::OnContact()
                             contact.wrench(j).body_1_wrench().torque().y(),
                             contact.wrench(j).body_1_wrench().torque().z()));
 
+      // vector sum of forces and torques
       total_wrench.force.x  += force.x;
       total_wrench.force.y  += force.y;
       total_wrench.force.z  += force.z;
@@ -287,13 +225,12 @@ void GazeboRosBumper::OnContact()
           math::Vector3(contact.normal(j).x(),
                         contact.normal(j).y(),
                         contact.normal(j).z()));
-      // set contact normals
 
 
+      // vector sum of normals
       total_normal.x += normal.x;
       total_normal.y += normal.y;
       total_normal.z += normal.z;
-//      state.contact_normals.push_back(contact_normal);
 
       double normal_length = normal.GetLength();
 
@@ -305,24 +242,24 @@ void GazeboRosBumper::OnContact()
                         contact.position(j).z()) - frame_pos);
 
 
+      // average position weighted on normal length
       total_position.x = position.x * normal_length;
       total_position.y = position.y * normal_length;
       total_position.z = position.z * normal_length;
 
       total_normal_lengths += normal_length;
 
-//      state.contact_positions.push_back(contact_position);
-
-      // set contact depth, interpenetration
-//      state.depths.push_back(contact.depth(j));
-
     }
   }
 
-  average_position.x = total_position.x / total_normal_lengths;
-  average_position.y = total_position.y / total_normal_lengths;
-  average_position.z = total_position.z / total_normal_lengths;
+  // compute average but avoid division by zero
+  if(total_normal_lengths != 0) {
+      average_position.x = total_position.x / total_normal_lengths;
+      average_position.y = total_position.y / total_normal_lengths;
+      average_position.z = total_position.z / total_normal_lengths;
+  }
 
+  // fill and publish message
   tactile_contact_msg.name = bumper_topic_name_;
   tactile_contact_msg.position = average_position;
   tactile_contact_msg.normal = total_normal;
