@@ -81,13 +81,30 @@ void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
     boost::shared_ptr<TactileSensor> tactile_sensor_ptr
         = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
     if (!tactile_sensor_ptr) continue;  // some other sensor than tactile
-
-    sensor_msgs::ChannelFloat32 sensor_data;
-    sensor_data.name = it->second->name_;
+    
+    int sensor_idx = -1;
+    
+    // find if the channel exists in the map
+    std::map<std::string, size_t>::iterator sensor_it = sensor_data_map_.find(tactile_sensor_ptr->channel_);
+    if (sensor_it == sensor_data_map_.end())
+    {
+      // if not, create a sensor_msgs for this channel.
+      sensor_msgs::ChannelFloat32 sensor_data;
+      sensor_data.name = tactile_sensor_ptr->channel_;  // size will be updated later
+      tactile_msg_.sensors.push_back(sensor_data);
+      sensor_idx = tactile_msg_.sensors.size() - 1;
+      // add the index to sensor_data_map
+      sensor_data_map_[sensor_data.name] = sensor_idx;
+    }
+    else
+    {
+      sensor_idx = sensor_it->second;
+    }
 
     if (tactile_sensor_ptr->array_)
     {
-      sensor_data.values.resize(tactile_sensor_ptr->array_->rows * tactile_sensor_ptr->array_->cols);
+      //TODO: Guillaume handle the fact that only one array can exist per tactile channel
+      tactile_msg_.sensors[sensor_idx].values.resize(tactile_sensor_ptr->array_->rows * tactile_sensor_ptr->array_->cols);
     }
     else if (tactile_sensor_ptr->taxels_.size())
     {
@@ -99,12 +116,10 @@ void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
         if (maxIdx < (*it)->idx)
           maxIdx = (*it)->idx;
       }
-      sensor_data.values.resize(maxIdx+1);
+      // resize only if this channel was smaller
+      if (tactile_msg_.sensors[sensor_idx].values.size() < maxIdx + 1)
+        tactile_msg_.sensors[sensor_idx].values.resize(maxIdx+1);
     }
-
-    tactile_msg_.sensors.push_back(sensor_data);
-    // add the index to sensor_data_map
-    sensor_data_map_[sensor_data.name] = tactile_msg_.sensors.size() - 1;
   }
 }
 
