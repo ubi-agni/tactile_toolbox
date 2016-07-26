@@ -3,5 +3,6 @@
 
   <node name="tactile_state_merger" pkg="tactile_state_publisher" type="tactile_state_publisher">
     <param name="publish_rate" value="$(arg publish_rate)"/>
+    <rosparam param="source_list" >['tactile']</rosparam>  
   </node>
 </launch>
