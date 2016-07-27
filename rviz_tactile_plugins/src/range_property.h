@@ -63,7 +63,7 @@ protected:
    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option);
 
 protected Q_SLOTS:
-   void setManuallyEdited();
+   void setManuallyEditedFlag();
 
 Q_SIGNALS:
    void edited();

@@ -152,7 +152,10 @@ bool TactileVisualBase::updatePose()
 
 void TactileVisualBase::setRawRangeFromProperty()
 {
-  raw_range_.init(range_property_->min(), range_property_->max());
+  float fmin = range_property_->min(), fmax = range_property_->max();
+  for (auto &&v : values_)
+    v.init(fmin, fmax);
+  raw_range_.init(fmin, fmax);
 }
 
 void TactileVisualBase::updateRangeProperty()

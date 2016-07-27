@@ -46,7 +46,8 @@ RangeFloatProperty::RangeFloatProperty(const QString &name, float fallback_value
   setValue(fallback_value);
 }
 
-void RangeFloatProperty::setManuallyEdited()
+// Call this before a call to setValue() to let it know, that this was manually edited.
+void RangeFloatProperty::setManuallyEditedFlag()
 {
   manually_edited_ = true;
 }
@@ -86,7 +87,7 @@ QWidget *RangeFloatProperty::createEditor(QWidget *parent, const QStyleOptionVie
   editor->setValidator(new EmptyOrDoubleValidator(editor));
 
   // allow to distinguish manual changes from programmatical ones in setValue()
-  connect(editor, SIGNAL(editingFinished()), this, SLOT(setManuallyEdited()));
+  connect(editor, SIGNAL(editingFinished()), this, SLOT(setManuallyEditedFlag()));
   return editor;
 }
 
@@ -118,8 +119,10 @@ void RangeProperty::reset()
 
 void RangeProperty::update(const ::tactile::Range &range)
 {
-  min_property_->setFloat(range.min());
-  max_property_->setFloat(range.max());
+  if (range.min() != min_property_->getFloat())
+    min_property_->setFloat(range.min());
+  if (range.max() != max_property_->getFloat())
+    max_property_->setFloat(range.max());
 }
 
 bool RangeProperty::updateFromChildren()
@@ -136,9 +139,9 @@ bool RangeProperty::setValue(const QVariant &new_value)
     values.clear(); values << "" << "";
   }
   ignore_children_updates_ = true;
-  min_property_->setManuallyEdited();
+  min_property_->setManuallyEditedFlag();
   min_property_->setValue(values[0]);
-  max_property_->setManuallyEdited();
+  max_property_->setManuallyEditedFlag();
   max_property_->setValue(values[1]);
   ignore_children_updates_ = false;
   return updateFromChildren();
