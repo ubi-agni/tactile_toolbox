@@ -16,8 +16,9 @@
 */
 
 /*
- * Desc: Bumper controller
- * Author: Nate Koenig
+ * Desc: Contact controller
+ * Author: Lars Oetermann
+ * original of bumper controller Author: Nate Koenig
  * Date: 09 Sept. 2008
  */
 
@@ -38,22 +39,22 @@
 
 #include <tf/tf.h>
 
-#include <gazebo_ros_contact/gazebo_ros_bumper.h>
+#include <gazebo_ros_contact/gazebo_ros_contact.h>
 
 namespace gazebo
 {
 // Register this plugin with the simulator
-GZ_REGISTER_SENSOR_PLUGIN(GazeboRosBumper)
+GZ_REGISTER_SENSOR_PLUGIN(GazeboRosContact)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
-GazeboRosBumper::GazeboRosBumper() : SensorPlugin()
+GazeboRosContact::GazeboRosContact() : SensorPlugin()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
-GazeboRosBumper::~GazeboRosBumper()
+GazeboRosContact::~GazeboRosContact()
 {
   this->rosnode_->shutdown();
   this->callback_queue_thread_.join();
@@ -63,7 +64,7 @@ GazeboRosBumper::~GazeboRosBumper()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Load the controller
-void GazeboRosBumper::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
+void GazeboRosContact::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 {
   this->parentSensor = boost::dynamic_pointer_cast<sensors::ContactSensor>(_parent);
   if (!this->parentSensor)
@@ -115,12 +116,12 @@ void GazeboRosBumper::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   // Initialize
   // start custom queue for contact bumper
   this->callback_queue_thread_ = boost::thread(
-      boost::bind(&GazeboRosBumper::ContactQueueThread, this));
+      boost::bind(&GazeboRosContact::ContactQueueThread, this));
 
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   this->update_connection_ = this->parentSensor->ConnectUpdated(
-     boost::bind(&GazeboRosBumper::OnContact, this));
+     boost::bind(&GazeboRosContact::OnContact, this));
 
   // Make sure the parent sensor is active.
   this->parentSensor->SetActive(true);
@@ -128,7 +129,7 @@ void GazeboRosBumper::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Update the controller
-void GazeboRosBumper::OnContact()
+void GazeboRosContact::OnContact()
 {
   if (this->contact_pub_.getNumSubscribers() <= 0)
     return;
@@ -272,7 +273,7 @@ void GazeboRosBumper::OnContact()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Put laser data to the interface
-void GazeboRosBumper::ContactQueueThread()
+void GazeboRosContact::ContactQueueThread()
 {
   static const double timeout = 0.01;
 
