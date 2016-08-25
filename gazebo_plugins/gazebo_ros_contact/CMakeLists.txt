@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 find_package(gazebo REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 ###################################
 ## catkin specific configuration ##
@@ -23,6 +24,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES gazebo_ros_contact
