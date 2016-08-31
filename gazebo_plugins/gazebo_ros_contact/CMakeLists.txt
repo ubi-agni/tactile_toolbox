@@ -50,7 +50,7 @@ link_directories(
 
 ## Declare a C++ library
 add_library(gazebo_ros_contact src/gazebo_ros_contact.cpp)
-add_dependencies(gazebo_ros_contact gazebo_msgs_gencpp)
+add_dependencies(gazebo_ros_contact ${gazebo_msgs_EXPORTED_TARGETS})
 target_link_libraries(gazebo_ros_contact ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ContactPlugin ${catkin_LIBRARIES})
 
 #############
