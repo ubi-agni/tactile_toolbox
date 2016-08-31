@@ -4,9 +4,9 @@ project(tactile_merger)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED urdf_tactile tactile_msgs cmake_modules)
+find_package(catkin REQUIRED urdf_tactile tactile_msgs)
 find_package(tactile_filters REQUIRED)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
