@@ -35,6 +35,8 @@
 
 #include <urdf_tactile/taxel_info_iterator.h>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
 
 namespace urdf {
 namespace tactile {

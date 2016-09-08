@@ -39,6 +39,8 @@
 #include <urdf_parser/utils.h>
 #include <urdf_parser/pose.h>
 #include <urdf_parser/link.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <console_bridge/console.h>
 
 namespace urdf {

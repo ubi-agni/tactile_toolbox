@@ -8,6 +8,7 @@ add_definitions(-std=c++11)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+find_package(Boost REQUIRED system)
 find_package(catkin REQUIRED pluginlib urdf)
 
 ###################################
@@ -24,12 +25,15 @@ catkin_package(
   # Don't export the plugin-lib! This should be loaded dynamically only.
   LIBRARIES ${PROJECT_NAME}_tools
   CATKIN_DEPENDS urdf
-#  DEPENDS system_lib
+  DEPENDS Boost
 )
 
 #############
 ## sub dir ##
 #############
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIRS})
+
 include_directories(include ${catkin_INCLUDE_DIRS})
 file(GLOB_RECURSE PROJECT_INCLUDES *.h)
 

@@ -31,6 +31,7 @@
 
 #include <urdf_tactile/taxel_info_iterator.h>
 #include <urdf_tactile/cast.h>
+#include <cassert>
 
 namespace urdf {
 namespace tactile {
