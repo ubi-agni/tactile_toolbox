@@ -74,8 +74,7 @@ Result sort(const SensorMap &sensors)
 
   for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
   {
-    boost::shared_ptr<TactileSensor> tactile
-        = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
+    TactileSensorSharedPtr tactile = tactile_sensor_cast(it->second);
     if (!tactile) continue;  // some other sensor than tactile
 
     Sensors &g = getOrInsertEntry<Result>(result, get<key>(it->second));

@@ -37,9 +37,27 @@ inline const urdf::tactile::TactileSensor&
 tactile_sensor_cast(const urdf::Sensor &sensor) {
   return dynamic_cast<const urdf::tactile::TactileSensor&>(*sensor.sensor_);
 }
+inline urdf::tactile::TactileSensor&
+tactile_sensor_cast(urdf::Sensor &sensor) {
+  return dynamic_cast<urdf::tactile::TactileSensor&>(*sensor.sensor_);
+}
+
+inline TactileSensorSharedPtr
+tactile_sensor_cast(const urdf::SensorBaseSharedPtr& sensor) {
+  return boost::dynamic_pointer_cast<urdf::tactile::TactileSensor>(sensor);
+}
+inline TactileSensorConstSharedPtr
+tactile_sensor_cast(const urdf::SensorBaseConstSharedPtr& sensor) {
+  return boost::dynamic_pointer_cast<const urdf::tactile::TactileSensor>(sensor);
+}
+
+inline TactileSensorSharedPtr
+tactile_sensor_cast(const urdf::SensorSharedPtr& sensor) {
+  return tactile_sensor_cast(sensor->sensor_);
+}
 inline TactileSensorConstSharedPtr
 tactile_sensor_cast(const urdf::SensorConstSharedPtr& sensor) {
-  return boost::dynamic_pointer_cast<const urdf::tactile::TactileSensor>(sensor->sensor_);
+  return tactile_sensor_cast(sensor->sensor_);
 }
 
 } // end namespace tactile

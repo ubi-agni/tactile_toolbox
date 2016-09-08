@@ -129,8 +129,7 @@ public:
     channel_ = "";
   }
 };
-typedef boost::shared_ptr<TactileSensor> TactileSensorSharedPtr;
-typedef boost::shared_ptr<const TactileSensor> TactileSensorConstSharedPtr;
+URDF_TYPEDEF_CLASS_POINTER(TactileSensor);
 
 }
 }

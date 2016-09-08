@@ -10,6 +10,7 @@
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
+#include <urdf_tactile/cast.h>
 
 #include <boost/thread/locks.hpp>
 #include <map>
@@ -78,8 +79,7 @@ void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
   // loop over all the sensor found in the URDF
   for (auto it = sensors.begin(); it != sensors.end(); it++)
   {
-    boost::shared_ptr<TactileSensor> tactile_sensor_ptr
-        = boost::dynamic_pointer_cast<TactileSensor>(it->second->sensor_);
+    TactileSensorSharedPtr tactile_sensor_ptr = tactile_sensor_cast(it->second);
     if (!tactile_sensor_ptr) continue;  // some other sensor than tactile
     
     int sensor_idx = -1;
@@ -128,7 +128,7 @@ void TactileStatePublisher::init()
   // initialize publisher
   tactile_pub_ = nh_.advertise<tactile_msgs::TactileState>("tactile_states", 5);
 
-  // intialize subscribers from source list if any
+  // initialize subscribers from source list if any
   for (size_t i = 0; i < source_list_.size(); ++i)
   {
     boost::shared_ptr<ros::Subscriber> tactile_subscriber(new ros::Subscriber(nh_.subscribe(source_list_[i], 1,
