@@ -131,7 +131,7 @@ void TactileStatePublisher::init()
   // initialize subscribers from source list if any
   for (size_t i = 0; i < source_list_.size(); ++i)
   {
-    boost::shared_ptr<ros::Subscriber> tactile_subscriber(new ros::Subscriber(nh_.subscribe(source_list_[i], 1,
+    std::shared_ptr<ros::Subscriber> tactile_subscriber(new ros::Subscriber(nh_.subscribe(source_list_[i], 1,
                                                                              &TactileStatePublisher::tactile_state_cb, this)));
     tactile_subs_.push_back(tactile_subscriber);
   }

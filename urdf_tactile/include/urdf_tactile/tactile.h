@@ -39,6 +39,7 @@
 #include <urdf_sensor/types.h>
 #include <urdf_model/pose.h>
 #include <urdf_model/link.h>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -111,8 +112,8 @@ public:
   }
 };
 
-typedef boost::shared_ptr<TactileTaxel> TactileTaxelSharedPtr;
-typedef boost::shared_ptr<TactileArray> TactileArraySharedPtr;
+typedef std::shared_ptr<TactileTaxel> TactileTaxelSharedPtr;
+typedef std::shared_ptr<TactileArray> TactileArraySharedPtr;
 
 class TactileSensor: public urdf::SensorBase
 {

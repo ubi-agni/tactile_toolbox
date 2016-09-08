@@ -11,7 +11,7 @@ using namespace urdf::tactile;
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-static boost::shared_ptr<TiXmlDocument> loadFromFile(const std::string &path)
+static std::shared_ptr<TiXmlDocument> loadFromFile(const std::string &path)
 {
   std::ifstream stream(path.c_str());
   BOOST_REQUIRE_MESSAGE(stream, "failed to open file: " + path);
@@ -19,7 +19,7 @@ static boost::shared_ptr<TiXmlDocument> loadFromFile(const std::string &path)
   std::string xml_str((std::istreambuf_iterator<char>(stream)),
                       std::istreambuf_iterator<char>());
 
-  boost::shared_ptr<TiXmlDocument> xml_doc(new TiXmlDocument());
+  std::shared_ptr<TiXmlDocument> xml_doc(new TiXmlDocument());
   xml_doc->Parse(xml_str.c_str());
   BOOST_REQUIRE(!xml_doc->Error());
 
@@ -60,7 +60,7 @@ void change_and_check_order_mode(const urdf::SensorParserSharedPtr &parser,
 BOOST_AUTO_TEST_CASE(test_tactile_array)
 {
   urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
-  boost::shared_ptr<TiXmlDocument> root = loadFromFile("tactile.urdf");
+  std::shared_ptr<TiXmlDocument> root = loadFromFile("tactile.urdf");
   BOOST_REQUIRE(root);
 
   TiXmlElement *tactile_xml = root->RootElement()->FirstChildElement("sensor")->FirstChildElement("tactile");

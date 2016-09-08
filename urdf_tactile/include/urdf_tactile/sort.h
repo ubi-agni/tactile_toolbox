@@ -29,6 +29,8 @@
 #pragma once
 
 #include <urdf_parser/sensor_parser.h>
+#include <deque>
+#include <memory>
 
 namespace urdf {
 namespace tactile {
@@ -60,7 +62,7 @@ SensorsMap  sortByChannels(const urdf::SensorMap &sensors);
  * retrieving taxels
  ******************************************************************************/
 class TaxelInfoIteratorI;
-typedef boost::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
+typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
 typedef std::deque<TaxelInfoIteratorIPtr> taxel_list;
 typedef std::map<std::string, taxel_list> TaxelsMap;
 /// retrieve all taxels

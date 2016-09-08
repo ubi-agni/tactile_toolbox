@@ -32,6 +32,7 @@
 #include <urdf_tactile/tactile.h>
 #include <urdf_tactile/sort.h>
 #include <urdf_tactile/cast.h>
+#include <memory>
 
 #include <urdf_tactile/taxel_info_iterator.h>
 #include <boost/algorithm/string/split.hpp>

@@ -30,12 +30,13 @@
 
 #include <urdf_sensor/types.h>
 #include <urdf_tactile/tactile.h>
+#include <memory>
 
 namespace urdf {
 namespace tactile {
 
 class TaxelInfoIteratorI;
-typedef boost::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
+typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
 
 struct TaxelInfo
 {

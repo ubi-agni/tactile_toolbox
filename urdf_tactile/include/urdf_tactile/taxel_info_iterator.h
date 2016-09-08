@@ -29,6 +29,7 @@
 #pragma once
 
 #include <urdf_tactile/tactile.h>
+#include <memory>
 #include "taxel_info.h"
 
 namespace urdf {
@@ -36,7 +37,7 @@ namespace tactile {
 
 /// common interface class for TaxelInfoIterator for vector of taxels or array
 class TaxelInfoIteratorI;
-typedef boost::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
+typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
 
 /// common iterator for vector of taxels or taxel array
 class TaxelInfoIterator

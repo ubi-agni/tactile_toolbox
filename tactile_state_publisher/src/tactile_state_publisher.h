@@ -9,7 +9,7 @@
 #pragma once
 #include <ros/ros.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/thread/shared_mutex.hpp>
 #include <tactile_msgs/TactileState.h>
 #include <sensor_msgs/ChannelFloat32.h>
@@ -25,7 +25,7 @@ class TactileStatePublisher
 {
   ros::NodeHandle nh_;
   std::vector<std::string> source_list_; //! names of source topics
-  std::vector<boost::shared_ptr<ros::Subscriber> > tactile_subs_; //! source subscribers
+  std::vector<std::shared_ptr<ros::Subscriber> > tactile_subs_; //! source subscribers
 
   ros::Publisher tactile_pub_; //! publisher
   ros::Rate publish_rate_; //! publishing rate
