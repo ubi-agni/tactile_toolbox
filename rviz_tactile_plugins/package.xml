@@ -38,12 +38,14 @@
   <build_depend>rviz</build_depend>
   <build_depend>urdf_tactile</build_depend>
   <build_depend>tactile_msgs</build_depend>
+  <build_depend>tactile_filters</build_depend>
 
   <!-- Use run_depend for packages you need at runtime: -->
   <run_depend>roscpp</run_depend>
   <run_depend>rviz</run_depend>
   <run_depend>urdf_tactile</run_depend>
   <run_depend>tactile_msgs</run_depend>
+  <run_depend>tactile_filters</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
