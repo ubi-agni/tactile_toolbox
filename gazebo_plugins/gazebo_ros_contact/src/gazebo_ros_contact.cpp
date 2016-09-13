@@ -176,6 +176,7 @@ void GazeboRosContact::OnContact()
   total_position.x = 0;
   total_position.y = 0;
   total_position.z = 0;
+  double total_force_lengths = 0;
   double total_normal_lengths = 0;
 
   geometry_msgs::Point average_position;
@@ -233,7 +234,7 @@ void GazeboRosContact::OnContact()
       total_normal.y += normal.y;
       total_normal.z += normal.z;
 
-      double normal_length = normal.GetLength();
+      double force_length = force.GetLength();
 
       // transform contact positions into relative frame
       // set contact positions
@@ -242,22 +243,36 @@ void GazeboRosContact::OnContact()
                         contact.position(j).y(),
                         contact.position(j).z()) - frame_pos);
 
+      // average position weighted on force amplitude
+      total_position.x = position.x * force_length;
+      total_position.y = position.y * force_length;
+      total_position.z = position.z * force_length;
 
-      // average position weighted on normal length
-      total_position.x = position.x * normal_length;
-      total_position.y = position.y * normal_length;
-      total_position.z = position.z * normal_length;
-
-      total_normal_lengths += normal_length;
+      total_force_lengths += force_length;
+      total_normal_lengths += normal.GetLength();
 
     }
   }
 
-  // compute average but avoid division by zero
+  // normalize the normal
   if(total_normal_lengths != 0) {
-      average_position.x = total_position.x / total_normal_lengths;
-      average_position.y = total_position.y / total_normal_lengths;
-      average_position.z = total_position.z / total_normal_lengths;
+    total_normal.x = total_normal.x / total_normal_lengths;
+    total_normal.y = total_normal.y / total_normal_lengths;
+    total_normal.z = total_normal.z / total_normal_lengths;
+  }
+
+  // compute average but avoid division by zero
+
+  if(total_force_lengths != 0) {
+    average_position.x = total_position.x / total_force_lengths;
+    average_position.y = total_position.y / total_force_lengths;
+    average_position.z = total_position.z / total_force_lengths;
+  }
+  else
+  {
+    average_position.x = 0.0;
+    average_position.y = 0.0;
+    average_position.z = 0.0;
   }
 
   // fill and publish message
