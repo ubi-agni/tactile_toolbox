@@ -173,8 +173,17 @@ void GazeboRosContact::OnContact()
 
   // define frame_name and stamp
   this->tactile_contact_msg.header.frame_id = this->frame_name_;
-  this->tactile_contact_msg.header.stamp = ros::Time(contacts.time().sec(),
-                              contacts.time().nsec());
+
+  ros::Time contact_time;
+  common::Time gazebotime = this->world_->GetSimTime();
+  common::Time meastime = this->parentSensor->GetLastMeasurementTime();
+  ROS_DEBUG_STREAM("sim time " << gazebotime.sec << "," <<gazebotime.nsec);
+  ROS_DEBUG_STREAM("measurement time " << meastime.sec << "," <<meastime.nsec);
+  msgs::Time contacts_time = contacts.time();
+  ROS_DEBUG_STREAM("contacts time via msgs " << contacts_time.sec() << "," <<contacts_time.nsec());
+  ROS_DEBUG_STREAM("global contact time " << contacts.time().sec() << "," <<contacts.time().nsec());
+  contact_time = ros::Time(meastime.sec, meastime.nsec);
+
 
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
@@ -230,7 +239,8 @@ void GazeboRosContact::OnContact()
   {
 
     gazebo::msgs::Contact contact = contacts.contact(i);
-
+    //contact_time = ros::Time(contact.time().sec(), contact.time().nsec());
+    ROS_DEBUG_STREAM("local contact time " << contact.time().sec() << "," <<contact.time().nsec());
     // Loop over Contacts
     unsigned int contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
@@ -314,6 +324,7 @@ void GazeboRosContact::OnContact()
   tactile_contact_msg.position = average_position;
   tactile_contact_msg.normal = total_normal;
   tactile_contact_msg.wrench = total_wrench;
+  this->tactile_contact_msg.header.stamp = contact_time;
 
 
   this->contact_pub_.publish(this->tactile_contact_msg);
