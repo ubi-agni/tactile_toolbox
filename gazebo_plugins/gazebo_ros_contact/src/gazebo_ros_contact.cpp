@@ -75,6 +75,13 @@ void GazeboRosContact::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     return;
   }
 
+# if GAZEBO_MAJOR_VERSION >= 7
+  std::string worldName = _parent->WorldName();
+# else
+  std::string worldName = _parent->GetWorldName();
+# endif
+  this->world_ = physics::get_world(worldName);
+
   this->robot_namespace_ = "";
   if (_sdf->HasElement("robotNamespace"))
     this->robot_namespace_ =
@@ -96,6 +103,33 @@ void GazeboRosContact::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   }
   else
     this->frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
+
+  // if frameName specified is "world", "/map" or "map" report back
+  // inertial values in the gazebo world
+  if (this->local_link_ == NULL && this->frame_name_ != "world" &&
+    this->frame_name_ != "/map" && this->frame_name_ != "map")
+  {
+    // lock in case a model is being spawned
+    //boost::recursive_mutex::scoped_lock lock(*gazebo::Simulator::Instance()->GetMRMutex());
+    // look through all models in the world, search for body
+    // name that matches frameName
+    physics::Model_V all_models = world_->GetModels();
+    for (physics::Model_V::iterator iter = all_models.begin();
+      iter != all_models.end(); iter++)
+    {
+      if (*iter) this->local_link_ =
+        boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->frame_name_));
+      if (this->local_link_) break;
+    }
+
+      // not found
+    if (!this->local_link_)
+    {
+      ROS_INFO("gazebo_ros_bumper plugin: frameName: %s does not exist"
+                " using world",this->frame_name_.c_str());
+    }
+  }
+
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -149,15 +183,15 @@ void GazeboRosContact::OnContact()
   math::Pose pose, frame_pose;
   math::Quaternion rot, frame_rot;
   math::Vector3 pos, frame_pos;
-  /* This code was commented out by gazebo. Do we need this?
-  if (myFrame)
+
+  // Get frame orientation if frame_id is given */
+  if (local_link_)
   {
-    frame_pose = myFrame->GetWorldPose();  //-this->myBody->GetCoMPose();
+    frame_pose = local_link_->GetWorldPose();  //-this->myBody->GetCoMPose();->GetDirtyPose();
     frame_pos = frame_pose.pos;
     frame_rot = frame_pose.rot;
   }
   else
-  */
   {
     // no specific frames specified, use identity pose, keeping
     // relative frame at inertial origin
