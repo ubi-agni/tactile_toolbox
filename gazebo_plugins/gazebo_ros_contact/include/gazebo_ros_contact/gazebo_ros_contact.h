@@ -40,6 +40,8 @@
 #include <gazebo/sensors/ContactSensor.hh>
 #include <gazebo/common/Plugin.hh>
 
+#include <gazebo_msgs/ContactState.h>
+#include <gazebo_msgs/ContactsState.h>
 #include <tactile_msgs/TactileContact.h>
 
 namespace gazebo
@@ -63,18 +65,22 @@ namespace gazebo
     /// \brief pointer to ros node
     private: ros::NodeHandle* rosnode_;
     private: ros::Publisher contact_pub_;
+    private: ros::Publisher tactile_pub_;
 
     private: sensors::ContactSensorPtr parentSensor;
 
     /// \brief set topic name of broadcast
     private: std::string bumper_topic_name_;
+    private: std::string tactile_topic_name_;
 
     private: physics::WorldPtr world_;
     private: physics::LinkPtr local_link_;
     private: std::string frame_name_;
 
-    /// \brief broadcast some string for now.
-    private: tactile_msgs::TactileContact tactile_contact_msg;
+    /// \brief tactile message
+    private: tactile_msgs::TactileContact tactile_contact_msg_;
+    /// \brief contact message
+    private: gazebo_msgs::ContactsState contact_state_msg_;
 
     /// \brief for setting ROS name space
     private: std::string robot_namespace_;
