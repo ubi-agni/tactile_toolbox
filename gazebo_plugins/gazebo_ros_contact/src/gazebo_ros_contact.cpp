@@ -287,11 +287,11 @@ void GazeboRosContact::OnContact()
                         contact.position(j).y(),
                         contact.position(j).z()) - frame_pos);
 
-      // average position weighted on force amplitude
-      total_position.x = position.x * force_length;
-      total_position.y = position.y * force_length;
-      total_position.z = position.z * force_length;
 
+      // average position weighted on force amplitude
+      total_position.x += position.x * force_length;
+      total_position.y += position.y * force_length;
+      total_position.z += position.z * force_length;
       total_force_lengths += force_length;
       total_normal_lengths += normal.GetLength();
 
