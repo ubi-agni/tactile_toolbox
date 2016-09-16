@@ -173,10 +173,10 @@ void GazeboRosTactile::OnContact()
   contacts = this->parentSensor->Contacts();
   /// \TODO: need a time for each Contact in i-loop, they may differ
   this->contact_state_msg_.header.frame_id = this->frame_name_;
-  this->contact_state_msg_.header.stamp = ros::Time(contacts.time().sec(),
-                               contacts.time().nsec());
-
-/*
+  common::Time meastime = this->parentSensor->GetLastMeasurementTime();
+  this->contact_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
+  //this->contact_state_msg_.header.stamp = ros::Time(contacts.time().sec(),
+  //                             contacts.time().nsec());
 
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
