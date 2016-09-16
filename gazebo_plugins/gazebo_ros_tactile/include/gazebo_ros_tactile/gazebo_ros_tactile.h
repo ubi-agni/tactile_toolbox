@@ -72,6 +72,8 @@ namespace gazebo
     /// \brief set topic name of broadcast
     private: std::string bumper_topic_name_;
 
+    private: physics::WorldPtr world_;
+    private: physics::LinkPtr local_link_;
     private: std::string frame_name_;
 
     /// \brief broadcast some string for now.

@@ -74,6 +74,13 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     return;
   }
 
+# if GAZEBO_MAJOR_VERSION >= 7
+  std::string worldName = _parent->WorldName();
+# else
+  std::string worldName = _parent->GetWorldName();
+# endif
+  this->world_ = physics::get_world(worldName);
+
   this->robot_namespace_ = "";
   if (_sdf->HasElement("robotNamespace"))
     this->robot_namespace_ =
@@ -95,6 +102,33 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   }
   else
     this->frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
+
+  // if frameName specified is "world", "/map" or "map" report back
+  // inertial values in the gazebo world
+  if (this->local_link_ == NULL && this->frame_name_ != "world" &&
+    this->frame_name_ != "/map" && this->frame_name_ != "map")
+  {
+    // lock in case a model is being spawned
+    //boost::recursive_mutex::scoped_lock lock(*gazebo::Simulator::Instance()->GetMRMutex());
+    // look through all models in the world, search for body
+    // name that matches frameName
+    physics::Model_V all_models = world_->GetModels();
+    for (physics::Model_V::iterator iter = all_models.begin();
+      iter != all_models.end(); iter++)
+    {
+      if (*iter) this->local_link_ =
+        boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->frame_name_));
+      if (this->local_link_) break;
+    }
+
+      // not found
+    if (!this->local_link_)
+    {
+      ROS_INFO("gazebo_ros_bumper plugin: frameName: %s does not exist"
+                " using world",this->frame_name_.c_str());
+    }
+  }
+
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -143,52 +177,21 @@ void GazeboRosTactile::OnContact()
                                contacts.time().nsec());
 
 /*
-  /// \TODO: get frame_name_ transforms from tf or gazebo
-  /// and rotate results to local frame.  for now, results are reported in world frame.
 
-  // if frameName specified is "world", "/map" or "map" report back
-  // inertial values in the gazebo world
-  physics::LinkPtr myFrame;
-  if (myFrame == NULL && this->frame_name_ != "world" &&
-    this->frame_name_ != "/map" && this->frame_name_ != "map")
-  {
-    // lock in case a model is being spawned
-    boost::recursive_mutex::scoped_lock lock(
-      *Simulator::Instance()->GetMRMutex());
-    // look through all models in the world, search for body
-    // name that matches frameName
-    phyaics::Model_V all_models = World::Instance()->GetModels();
-    for (physics::Model_V::iterator iter = all_models.begin();
-      iter != all_models.end(); iter++)
-    {
-      if (*iter) myFrame =
-        boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->frame_name_));
-      if (myFrame) break;
-    }
-
-    // not found
-    if (!myFrame)
-    {
-      ROS_INFO("gazebo_ros_bumper plugin: frameName: %s does not exist"
-                " yet, will not publish\n",this->frame_name_.c_str());
-      return;
-    }
-  }
-*/
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
   math::Pose pose, frame_pose;
   math::Quaternion rot, frame_rot;
   math::Vector3 pos, frame_pos;
-  /*
-  if (myFrame)
+
+  // Get frame orientation if frame_id is given */
+  if (local_link_)
   {
-    frame_pose = myFrame->GetWorldPose();  //-this->myBody->GetCoMPose();
+    frame_pose = local_link_->GetWorldPose();  //-this->myBody->GetCoMPose();->GetDirtyPose();
     frame_pos = frame_pose.pos;
     frame_rot = frame_pose.rot;
   }
   else
-  */
   {
     // no specific frames specified, use identity pose, keeping
     // relative frame at inertial origin
@@ -202,15 +205,13 @@ void GazeboRosTactile::OnContact()
   // set contact states size
   this->contact_state_msg_.states.clear();
 
+  // Loop over Collisions
   // GetContacts returns all contacts on the collision body
   unsigned int contactsPacketSize = contacts.contact_size();
   for (unsigned int i = 0; i < contactsPacketSize; ++i)
   {
-
-    // For each collision contact
     // Create a ContactState
     gazebo_msgs::ContactState state;
-    /// \TODO: 
     gazebo::msgs::Contact contact = contacts.contact(i);
 
     state.collision1_name = contact.collision1();
@@ -240,16 +241,6 @@ void GazeboRosTactile::OnContact()
     unsigned int contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
     {
-      // loop through individual contacts between collision1 and collision2
-      // gzerr << j << "  Position:"
-      //       << contact.position(j).x() << " "
-      //       << contact.position(j).y() << " "
-      //       << contact.position(j).z() << "\n";
-      // gzerr << "   Normal:"
-      //       << contact.normal(j).x() << " "
-      //       << contact.normal(j).y() << " "
-      //       << contact.normal(j).z() << "\n";
-      // gzerr << "   Depth:" << contact.depth(j) << "\n";
 
       // Get force, torque and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
