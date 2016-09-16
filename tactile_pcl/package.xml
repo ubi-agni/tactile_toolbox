@@ -23,7 +23,7 @@
   <run_depend>tactile_msgs</run_depend>
   <run_depend>pcl_conversions</run_depend>
   <run_depend>tf2_ros</run_depend>
-  <run_depend>urdf</run_depend>
+  <run_depend>urdf_tactile</run_depend>
 
   <export>
   </export>
