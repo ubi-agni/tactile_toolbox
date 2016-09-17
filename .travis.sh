@@ -25,6 +25,7 @@ function travis_run_true() {
   let "TRAVIS_FOLD_COUNTER += 1"
 }
 
+
 REPO="${BASH_SOURCE[0]%/*}"
 
 ### setup catkin workspace
@@ -42,6 +43,7 @@ rm -rf robot_model
 # link in source
 ln -s $REPO .
 
+
 ### fetch system packages
 travis_run apt-get -qq update
 travis_run apt-get -qq install -y sudo python-rosdep python-catkin-tools
@@ -49,8 +51,16 @@ travis_run apt-get -qq install -y sudo python-rosdep python-catkin-tools
 travis_run rosdep update
 travis_run rosdep install -r -y -q -n --from-paths . --ignore-src --rosdistro $ROS_DISTRO
 
+
+### build console_bridge
+travis_run git clone https://github.com/ros/console_bridge /tmp/console_bridge
+cd /tmp/console_bridge
+travis_run cmake .
+travis_run make install
+
+
 ### build with catkin
-cd ..
+cd /tmp/catkin
 export PYTHONIOENCODING=UTF-8
 export TERM=xterm
 
