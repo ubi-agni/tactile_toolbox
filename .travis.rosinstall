@@ -1,5 +1,5 @@
 # As tactile-toolbox relies on new, not yet released urdf features, we need to pull in those for travis testing
 - git: {local-name: urdfdom_headers, uri: 'https://github.com/ubi-agni/urdfdom_headers', version: 0.5}
 - git: {local-name: urdfdom, uri: 'https://github.com/ubi-agni/urdfdom', version: 0.5}
-- git: {local-name: robot_model, uri: 'https://github.com/ubi-agni/robot_model', version: indigo-devel}
+- git: {local-name: robot_model, uri: 'https://github.com/ubi-agni/robot_model', version: kinetic-devel}
 - git: {local-name: tactile_filters, uri: 'https://github.com/ubi-agni/tactile_filters', version: master}

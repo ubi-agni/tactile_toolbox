@@ -9,7 +9,7 @@ notifications:
       - rhaschke@techfak.uni-bielefeld.de
 env:
   matrix:
-    - ROS_DISTRO="indigo"
+    - ROS_DISTRO="kinetic"
 
 before_script:
   - docker pull ros:$ROS_DISTRO-ros-base
