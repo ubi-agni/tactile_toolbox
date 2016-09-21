@@ -51,7 +51,7 @@ link_directories(
 
 ## Declare a C++ library
 add_library(gazebo_ros_tactile src/gazebo_ros_tactile.cpp)
-add_dependencies(gazebo_ros_tactile gazebo_msgs_gencpp)
+add_dependencies(gazebo_ros_tactile ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gazebo_ros_tactile ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ContactPlugin ${catkin_LIBRARIES})
 
 #############
