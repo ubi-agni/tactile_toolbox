@@ -201,6 +201,7 @@ void GazeboRosTactile::OnContact()
   }
 
 
+  ROS_INFO_STREAM_THROTTLE(1.0, "frame_pos" << frame_pos.x << "frame_rot" << frame_rot.x);
 
   // set contact states size
   this->contact_state_msg_.states.clear();
@@ -238,9 +239,73 @@ void GazeboRosTactile::OnContact()
     total_wrench.torque.y = 0;
     total_wrench.torque.z = 0;
 
+
+	//Deklarationen
+	math::Vector3 transformedForceAP;
+	math::Vector3 normalVector;
+	math::Vector3 transformedForce;
+	math::Vector3 normalForce;
+	double normalForceScalar;
+	double stdDev=2.0;
+	double distance;
+	double critDist=1.0;
+	double finalProjectedForce=0.0;
+	double p=1.0;	//Multiplicator
+	const double pi= 3.14159265359;
+	
     unsigned int contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
     {
+
+	  //Kraft AP ermitteln
+      
+      //Kraftvektor ins richtige Koordinatensystem übertragen
+		//KraftAP
+		transformedForceAP=(1.0,1.0,1.0);
+      
+      //Distanzbestimmen zwischen Kraft und Taxelzentrum
+     
+		distance=sqrt(transformedForceAP.x*transformedForceAP.x + transformedForceAP.y*transformedForceAP.y + transformedForceAP.z*transformedForceAP.z);
+		//double distance=sqrt(transformedForceAP*transformedForceAP);//skalarprodukt?
+		//
+		if(distance>critDist)
+		{
+			finalProjectedForce+=0.0; // bzw +=0;
+			//nächster Durchlauf
+		}
+		else
+		{
+		  //fortfahren
+		  //
+		  //extract normal
+		  //
+		  normalVector=(1.0,0.0,0.0);
+		  //
+		  //transform Force Vector
+		
+		  transformedForce=(1.0,1.0,0.0);
+		  //project Force on normal
+		  
+		  //normalForce=(0.0,0.0,0.0);
+		  normalForceScalar=normalVector.x*transformedForce.x + normalVector.y*transformedForce.y + normalVector.z*transformedForce.z;	//Evtl als Funktion/Vorhandene Funktion?
+		  normalForce=normalForceScalar*normalVector; //projected
+		  
+		  //
+		  //Normalverteilung erzeugen
+		  p=exp(-(distance*distance/(2*stdDev*stdDev)))/sqrt(2*pi*stdDev*stdDev);
+		  finalProjectedForce+=p*normalForceScalar;
+		  //std::normal_distribution<double> distribution(0.0,stdDev);	//First argument has to be zero, parameter will be the distance, minimal distance is zero
+		  //Gaussmultiplication(normalForce,distance); //Kraft der aktiven Zelle hinzufügen/aufaddieren
+		  //finalProjectedForce=distribution(+=distance);//*normalForceScalar;
+		  
+		  
+		  
+        }
+      //math::Pose frame_pose;
+      //frame_pos = math::Vector3(0, 0, 0);
+      //
+      ROS_INFO_STREAM_THROTTLE(1.0,"state.contact_positions.x:" << frame_pos.x);
+      //double distance= sqrt((frame_pos.x-state.contact_positions.x)*(frame_pos.x-state.contact_positions.x));//sqrt((frame_pos.x-state.contact_positions.x)*(frame_pos.x-state.contact_positions.x)+(frame_pos.y-state.contact_positions.y)*(frame_pos.y-state.contact_positions.y)+(frame_pos.z-state.contact_positions.z)*(frame_pos.z-state.contact_positions.z)); 
 
       // Get force, torque and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
@@ -298,7 +363,9 @@ void GazeboRosTactile::OnContact()
       // set contact depth, interpenetration
       state.depths.push_back(contact.depth(j));
     }
-
+	
+	//fill
+	//publish (für jede Zelle?)
     state.total_wrench = total_wrench;
     this->contact_state_msg_.states.push_back(state);
   }
