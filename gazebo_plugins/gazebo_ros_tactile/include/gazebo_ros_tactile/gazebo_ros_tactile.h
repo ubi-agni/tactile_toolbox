@@ -33,6 +33,7 @@
 
 #include <gazebo_msgs/ContactState.h>
 #include <gazebo_msgs/ContactsState.h>
+#include <tactile_msgs/TactileState.h>
 
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/msgs/msgs.hh>
@@ -44,6 +45,9 @@
 #include <gazebo/sensors/SensorTypes.hh>
 #include <gazebo/sensors/ContactSensor.hh>
 #include <gazebo/common/Plugin.hh>
+
+#include <urdf_tactile/tactile.h>
+#include <urdf/sensor.h>
 
 namespace gazebo
 {
@@ -65,7 +69,10 @@ namespace gazebo
 
     /// \brief pointer to ros node
     private: ros::NodeHandle* rosnode_;
-    private: ros::Publisher contact_pub_;
+    private: ros::Publisher contact_pub_; //TODO delete?
+    
+    //my publisher
+    private: ros::Publisher tactile_pub_;
 
     private: sensors::ContactSensorPtr parentSensor;
 
@@ -78,6 +85,8 @@ namespace gazebo
 
     /// \brief broadcast some string for now.
     private: gazebo_msgs::ContactsState contact_state_msg_;
+    // new Message where to write in
+    private: tactile_msgs::TactileState tactile_state_msg_;
 
     /// \brief for setting ROS name space
     private: std::string robot_namespace_;
@@ -88,6 +97,16 @@ namespace gazebo
 
     // Pointer to the update event connection
     private: event::ConnectionPtr update_connection_;
+    
+    //for Parsing
+    
+    private: urdf::SensorMap sensors;
+    
+    std::vector<std::vector<gazebo::math::Vector3>> taxelNormals;
+    std::vector<std::vector<gazebo::math::Vector3>> taxelPositions;
+    
+    unsigned int numOfSensors;
+    std::vector<unsigned int> numOfTaxels;
   };
 }
 
