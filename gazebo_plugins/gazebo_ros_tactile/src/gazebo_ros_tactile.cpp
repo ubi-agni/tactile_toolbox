@@ -41,6 +41,10 @@
 #include <gazebo_ros_tactile/gazebo_ros_tactile.h>
 #include <gazebo_plugins/gazebo_ros_utils.h>
 
+#include <urdf_tactile/tactile.h>
+#include <urdf/sensor.h>
+
+
 namespace gazebo
 {
 // Register this plugin with the simulator
@@ -50,6 +54,9 @@ GZ_REGISTER_SENSOR_PLUGIN(GazeboRosTactile)
 // Constructor
 GazeboRosTactile::GazeboRosTactile() : SensorPlugin()
 {
+	//std Vector befüllen mit gz Vector3, der alleCenter und Normals enthält
+	//sinnlos? Positionen können sich ändern
+	//parsen im Constructor? Sprich Vektor mit Pointern? Sensoren oder Texels?
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,8 +151,39 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   std::string prefix;
   this->rosnode_->getParam(std::string("tf_prefix"), prefix);
   this->frame_name_ = tf::resolve(prefix, this->frame_name_);
+  
+  //TODO Parse here
+  // class TactileSensor : urdf::SensorBase
+  
+  this-> sensors = urdf::parseSensorsFromParam("robot_description", urdf::getSensorParser("tactile"));
+  this-> numOfSensors=sensors.size();
+  this->tactile_state_msg_.sensors.resize(numOfSensors); //or place it at ##? //implement it in the initiliazation, less memory allocating operations
+  
+  //this-> numOfTaxels=12;//taxels_.size();
+  this->taxelPositions.resize(numOfSensors);//, std::vector<gazebo::math::Vector3>(numOfTaxels, gazebo::math::Vector3(0, 0, 0)));
+  this->taxelNormals.resize(numOfSensors);//, std::vector<gazebo::math::Vector3>(numOfTaxels, gazebo::math::Vector3(0, 0, 0)));
+  //unsigned int w=12;
+  this->numOfTaxels.resize(numOfSensors,12);
+  
+  for(unsigned int i=0; i < numOfSensors; i++){
+	  this->numOfTaxels[i]=12;
+	  this->tactile_state_msg_.sensors[i].values.resize(numOfTaxels[i]);
+	  this->taxelPositions[i].resize(numOfTaxels[i]);
+	  this->taxelNormals[i].resize(numOfTaxels[i]);
+	  // slso resize taxelpos and taxel normal
+	  for(unsigned int j=0; j < numOfTaxels[i]; j++){
+		  this->taxelNormals[i][j]=gazebo::math::Vector3(i, j, 0);
+		  this->taxelPositions[i][j]=gazebo::math::Vector3(0, i, j);
+		  
+	  }
+	  
+  }
 
+/*
   this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(
+    std::string(this->bumper_topic_name_), 1);*/
+    
+  this->tactile_pub_ = this->rosnode_->advertise<tactile_msgs::TactileState>(
     std::string(this->bumper_topic_name_), 1);
 
   // Initialize
@@ -166,17 +204,18 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 // Update the controller
 void GazeboRosTactile::OnContact()
 {
-  if (this->contact_pub_.getNumSubscribers() <= 0)
+  if (this->tactile_pub_.getNumSubscribers() <=0) //contact_pub_.getNumSubscribers() <= 0)
     return;
 
   msgs::Contacts contacts;
   contacts = this->parentSensor->Contacts();
   /// \TODO: need a time for each Contact in i-loop, they may differ
-  this->contact_state_msg_.header.frame_id = this->frame_name_;
+  this->tactile_state_msg_.header.frame_id = this->frame_name_;
   common::Time meastime = this->parentSensor->GetLastMeasurementTime();
-  this->contact_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
+  this->tactile_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
   //this->contact_state_msg_.header.stamp = ros::Time(contacts.time().sec(),
   //                             contacts.time().nsec());
+  //TODO this->tactile_state_msg_.header.seq=?
 
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
@@ -205,184 +244,183 @@ void GazeboRosTactile::OnContact()
 
   // set contact states size
   this->contact_state_msg_.states.clear();
+  
+  //this->tactile_state_msg_.sensors.clear(); //is this the right way? //std::vector assign or close, to put zeros for values, now: implicitly done
 
-  // Loop over Collisions
-  // GetContacts returns all contacts on the collision body
-  unsigned int contactsPacketSize = contacts.contact_size();
-  for (unsigned int i = 0; i < contactsPacketSize; ++i)
+  
+  //tactile::urdf::SensorMap sensors;
+for (unsigned int m=0; m < this->numOfSensors; m++){	//Loop over Sensors
+  for (unsigned int k =0; k < this->numOfTaxels[m]; k++) //Loop over taxels //taxelpos.size();k++)
   {
-    // Create a ContactState
-    gazebo_msgs::ContactState state;
-    gazebo::msgs::Contact contact = contacts.contact(i);
+  
+    sensor_msgs::ChannelFloat32 &tSensor = this->tactile_state_msg_.sensors[m];
+	 
+	 
+	 
+	 double finalProjectedForce=0.0; //same
+	  
+	  
+	  
+	  // Loop over Collisions
+	  // GetContacts returns all contacts on the collision body
+	  unsigned int contactsPacketSize = contacts.contact_size();
+	  for (unsigned int i = 0; i < contactsPacketSize; ++i)
+	  {
+		  // Create a ContactState
+		  //gazebo_msgs::ContactState state;
+		  gazebo::msgs::Contact contact = contacts.contact(i);
+		  /*
+		  state.collision1_name = contact.collision1();
+		  state.collision2_name = contact.collision2();
+		  std::ostringstream stream;
+		  stream << "Debug:  i:(" << i << "/" << contactsPacketSize
+		  << ")     my geom:" << state.collision1_name
+		  << "   other geom:" << state.collision2_name
+		  << "         time:" << ros::Time(contact.time().sec(), contact.time().nsec())
+		  << std::endl;
+		  state.info = stream.str();
+		  
+		  state.wrenches.clear();
+		  state.contact_positions.clear();
+		  state.contact_normals.clear();
+		  state.depths.clear();
+		  
+		  //create a tactile state
+		  tactile_msgs::TactileState tState;
+		  
+		  //sensor_msgs::ChannelFloat32 tSensors;##
 
-    state.collision1_name = contact.collision1();
-    state.collision2_name = contact.collision2();
-    std::ostringstream stream;
-    stream << "Debug:  i:(" << i << "/" << contactsPacketSize
-      << ")     my geom:" << state.collision1_name
-      << "   other geom:" << state.collision2_name
-      << "         time:" << ros::Time(contact.time().sec(), contact.time().nsec())
-      << std::endl;
-    state.info = stream.str();
+		  
+		  // sum up all wrenches for each DOF
+		  geometry_msgs::Wrench total_wrench;
+		  total_wrench.force.x = 0;
+		  total_wrench.force.y = 0;
+		  total_wrench.force.z = 0;
+		  total_wrench.torque.x = 0;
+		  total_wrench.torque.y = 0;
+		  total_wrench.torque.z = 0;
+		  */
+		  
+		  //Deklarationen
+		  unsigned int contactGroupSize = contact.position_size();
+		  double normalForceScalar;
+		  double stdDev=2.0;
+		  double distance;
+		  double critDist=1.0;
+		  //double finalProjectedForce=0.0;
+		  double p=1.0;	//Multiplicator
+		  const double pi= 3.14159265359;
+		  
+		  
+		  for (unsigned int j = 0; j < contactGroupSize; ++j)
+		  {
+		  
+		  
+		  //math::Pose frame_pose;
+		  //frame_pos = math::Vector3(0, 0, 0);
+		  //
+		  ROS_INFO_STREAM_THROTTLE(1.0,"state.contact_positions.x:" << frame_pos.x);
+		  //double distance= sqrt((frame_pos.x-state.contact_positions.x)*(frame_pos.x-state.contact_positions.x));//sqrt((frame_pos.x-state.contact_positions.x)*(frame_pos.x-state.contact_positions.x)+(frame_pos.y-state.contact_positions.y)*(frame_pos.y-state.contact_positions.y)+(frame_pos.z-state.contact_positions.z)*(frame_pos.z-state.contact_positions.z)); 
+		  
+		  // Get force, torque and rotate into user specified frame.
+		  // frame_rot is identity if world is used (default for now)
+		  math::Vector3 force = frame_rot.RotateVectorReverse(math::Vector3(
+		  contact.wrench(j).body_1_wrench().force().x(),
+		  contact.wrench(j).body_1_wrench().force().y(),
+		  contact.wrench(j).body_1_wrench().force().z()));
+		  math::Vector3 torque = frame_rot.RotateVectorReverse(math::Vector3(
+		  contact.wrench(j).body_1_wrench().torque().x(),
+		  contact.wrench(j).body_1_wrench().torque().y(),
+		  contact.wrench(j).body_1_wrench().torque().z()));
+		  
+		  
+		  
+		  //////////////////////////BEGIN OF FORCE TRANSFORMTION
+		  // transform contact positions into relative frame
+		  // set contact positions
+		  gazebo::math::Vector3 position = frame_rot.RotateVectorReverse(
+		  math::Vector3(contact.position(j).x(),
+		  contact.position(j).y(),
+		  contact.position(j).z()) - frame_pos);
+		  geometry_msgs::Vector3 contact_position;
+		  contact_position.x = position.x;
+		  contact_position.y = position.y;
+		  contact_position.z = position.z;
+		  //state.contact_positions.push_back(contact_position);
+		  
+		  // rotate normal into user specified frame.
+		  // frame_rot is identity if world is used.
+		  math::Vector3 normal = frame_rot.RotateVectorReverse(
+		  math::Vector3(contact.normal(j).x(),
+		  contact.normal(j).y(),
+		  contact.normal(j).z()));
+		  // set contact normals
+		  geometry_msgs::Vector3 contact_normal;
+		  contact_normal.x = normal.x;
+		  contact_normal.y = normal.y;
+		  contact_normal.z = normal.z;
+		  //state.contact_normals.push_back(contact_normal);
+		  
+		  ////////////////////////////////////END OF FORCE TRANSFORMATION
+		  
+		  
+		  
+		  
+		  //TEST Dotproduct
+		  //distance=math::Vector3::Dot(transformedForceAP, transformedForceAP)const;
+		  
+		  
+		  //Distanzbestimmen zwischen Kraft und Taxelzentrum
+		  distance=sqrt(pow((position.x-taxelPositions[m][k].x),2)+pow((position.y-taxelPositions[m][k].y),2)+pow((position.z-taxelPositions[m][k].z),2));
 
-    state.wrenches.clear();
-    state.contact_positions.clear();
-    state.contact_normals.clear();
-    state.depths.clear();
-
-    // sum up all wrenches for each DOF
-    geometry_msgs::Wrench total_wrench;
-    total_wrench.force.x = 0;
-    total_wrench.force.y = 0;
-    total_wrench.force.z = 0;
-    total_wrench.torque.x = 0;
-    total_wrench.torque.y = 0;
-    total_wrench.torque.z = 0;
-
-
-	//Deklarationen
-	math::Vector3 transformedForceAP;
-	math::Vector3 normalVector;
-	math::Vector3 transformedForce;
-	math::Vector3 normalForce;
-	double normalForceScalar;
-	double stdDev=2.0;
-	double distance;
-	double critDist=1.0;
-	double finalProjectedForce=0.0;
-	double p=1.0;	//Multiplicator
-	const double pi= 3.14159265359;
-	
-    unsigned int contactGroupSize = contact.position_size();
-    for (unsigned int j = 0; j < contactGroupSize; ++j)
-    {
-
-	  //Kraft AP ermitteln
-      
-      //Kraftvektor ins richtige Koordinatensystem übertragen
-		//KraftAP
-		transformedForceAP=(1.0,1.0,1.0);
-      
-      //Distanzbestimmen zwischen Kraft und Taxelzentrum
-     
-		distance=sqrt(transformedForceAP.x*transformedForceAP.x + transformedForceAP.y*transformedForceAP.y + transformedForceAP.z*transformedForceAP.z);
-		//double distance=sqrt(transformedForceAP*transformedForceAP);//skalarprodukt?
-		//
-		if(distance>critDist)
-		{
-			finalProjectedForce+=0.0; // bzw +=0;
+		  if(distance>critDist){
+			finalProjectedForce+=0.0; // bzw continue;
 			//nächster Durchlauf
-		}
-		else
-		{
-		  //fortfahren
-		  //
-		  //extract normal
-		  //
-		  normalVector=(1.0,0.0,0.0);
-		  //
-		  //transform Force Vector
-		
-		  transformedForce=(1.0,1.0,0.0);
-		  //project Force on normal
+		  }
+		  else{
+			//project Force on normal
+			normalForceScalar=(this->taxelNormals[m][k].x*force.x+this->taxelNormals[m][k].y*force.y+this->taxelNormals[m][k].z*force.z)/sqrt(pow(this->taxelNormals[m][k].x,2)+pow(this->taxelNormals[m][k].y,2)+pow(this->taxelNormals[m][k].z,2)); //Normalize the taxelNormals, lookup if it norm.
 		  
-		  //normalForce=(0.0,0.0,0.0);
-		  normalForceScalar=normalVector.x*transformedForce.x + normalVector.y*transformedForce.y + normalVector.z*transformedForce.z;	//Evtl als Funktion/Vorhandene Funktion?
-		  normalForce=normalForceScalar*normalVector; //projected
+			if(normalForceScalar > 0){
+				//Normalverteilung erzeugen
+				p=exp(-(distance*distance/(2*stdDev*stdDev)))/sqrt(2*pi*stdDev*stdDev);
+				finalProjectedForce+=p*normalForceScalar;
+			}
 		  
-		  //
-		  //Normalverteilung erzeugen
-		  p=exp(-(distance*distance/(2*stdDev*stdDev)))/sqrt(2*pi*stdDev*stdDev);
-		  finalProjectedForce+=p*normalForceScalar;
-		  //std::normal_distribution<double> distribution(0.0,stdDev);	//First argument has to be zero, parameter will be the distance, minimal distance is zero
-		  //Gaussmultiplication(normalForce,distance); //Kraft der aktiven Zelle hinzufügen/aufaddieren
-		  //finalProjectedForce=distribution(+=distance);//*normalForceScalar;
+		  }
 		  
 		  
 		  
-        }
-      //math::Pose frame_pose;
-      //frame_pos = math::Vector3(0, 0, 0);
-      //
-      ROS_INFO_STREAM_THROTTLE(1.0,"state.contact_positions.x:" << frame_pos.x);
-      //double distance= sqrt((frame_pos.x-state.contact_positions.x)*(frame_pos.x-state.contact_positions.x));//sqrt((frame_pos.x-state.contact_positions.x)*(frame_pos.x-state.contact_positions.x)+(frame_pos.y-state.contact_positions.y)*(frame_pos.y-state.contact_positions.y)+(frame_pos.z-state.contact_positions.z)*(frame_pos.z-state.contact_positions.z)); 
-
-      // Get force, torque and rotate into user specified frame.
-      // frame_rot is identity if world is used (default for now)
-      math::Vector3 force = frame_rot.RotateVectorReverse(math::Vector3(
-                              contact.wrench(j).body_1_wrench().force().x(),
-                            contact.wrench(j).body_1_wrench().force().y(),
-                            contact.wrench(j).body_1_wrench().force().z()));
-      math::Vector3 torque = frame_rot.RotateVectorReverse(math::Vector3(
-                            contact.wrench(j).body_1_wrench().torque().x(),
-                            contact.wrench(j).body_1_wrench().torque().y(),
-                            contact.wrench(j).body_1_wrench().torque().z()));
-
-      // set wrenches
-      geometry_msgs::Wrench wrench;
-      wrench.force.x  = force.x;
-      wrench.force.y  = force.y;
-      wrench.force.z  = force.z;
-      wrench.torque.x = torque.x;
-      wrench.torque.y = torque.y;
-      wrench.torque.z = torque.z;
-      state.wrenches.push_back(wrench);
-
-      total_wrench.force.x  += wrench.force.x;
-      total_wrench.force.y  += wrench.force.y;
-      total_wrench.force.z  += wrench.force.z;
-      total_wrench.torque.x += wrench.torque.x;
-      total_wrench.torque.y += wrench.torque.y;
-      total_wrench.torque.z += wrench.torque.z;
-
-      // transform contact positions into relative frame
-      // set contact positions
-      gazebo::math::Vector3 position = frame_rot.RotateVectorReverse(
-          math::Vector3(contact.position(j).x(),
-                        contact.position(j).y(),
-                        contact.position(j).z()) - frame_pos);
-      geometry_msgs::Vector3 contact_position;
-      contact_position.x = position.x;
-      contact_position.y = position.y;
-      contact_position.z = position.z;
-      state.contact_positions.push_back(contact_position);
-
-      // rotate normal into user specified frame.
-      // frame_rot is identity if world is used.
-      math::Vector3 normal = frame_rot.RotateVectorReverse(
-          math::Vector3(contact.normal(j).x(),
-                        contact.normal(j).y(),
-                        contact.normal(j).z()));
-      // set contact normals
-      geometry_msgs::Vector3 contact_normal;
-      contact_normal.x = normal.x;
-      contact_normal.y = normal.y;
-      contact_normal.z = normal.z;
-      state.contact_normals.push_back(contact_normal);
-
-      // set contact depth, interpenetration
-      state.depths.push_back(contact.depth(j));
-    }
-	
-	//fill
-	//publish (für jede Zelle?)
-    state.total_wrench = total_wrench;
-    this->contact_state_msg_.states.push_back(state);
+		  
+		  
+		  // set contact depth, interpenetration
+		  //state.depths.push_back(contact.depth(j));
+		  }//END FOR contactGroupSize
+		  
+		  
+		  //state.total_wrench = total_wrench;
+		  //this->contact_state_msg_.states.push_back(state);
+		  
+	  }// END FOR contactsPacketSize (What does this mean?)
+	  
+	  //is the force to small first contact thershold
+	  tSensor.values.push_back(finalProjectedForce); //if changed above, access, not pubsh_back
+  }//END FOR Taxels
+  this->tactile_pub_.publish(this->tactile_state_msg_);
+}//END FOR Sensors
+  
   }
-
-  this->contact_pub_.publish(this->contact_state_msg_);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Put laser data to the interface
-void GazeboRosTactile::ContactQueueThread()
-{
+  
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  // Put laser data to the interface
+  void GazeboRosTactile::ContactQueueThread()
+  {
   static const double timeout = 0.01;
-
+  
   while (this->rosnode_->ok())
   {
-    this->contact_queue_.callAvailable(ros::WallDuration(timeout));
+  this->contact_queue_.callAvailable(ros::WallDuration(timeout));
   }
-}
-}
+  }
+  }
