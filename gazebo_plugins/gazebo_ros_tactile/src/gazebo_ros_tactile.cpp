@@ -404,7 +404,7 @@ for (unsigned int m=0; m < this->numOfSensors; m++){	//Loop over Sensors
 	  }// END FOR contactsPacketSize (What does this mean?)
 	  
 	  //is the force to small first contact thershold
-	  tSensor.values.push_back(finalProjectedForce); //if changed above, access, not pubsh_back
+	  this->tactile_state_msg_.sensors[m].values[k]=finalProjectedForce;//tSensor.values.push_back(finalProjectedForce); //if changed above, access, not pubsh_back
   }//END FOR Taxels
   this->tactile_pub_.publish(this->tactile_state_msg_);
 }//END FOR Sensors
