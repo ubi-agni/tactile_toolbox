@@ -7,6 +7,8 @@ project(gazebo_ros_tactile)
 find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   roscpp
+  urdf
+  urdf_tactile
   tactile_msgs
 )
 
