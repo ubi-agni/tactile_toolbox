@@ -190,7 +190,7 @@ void GazeboRosContact::OnContact()
 
   ros::Time contact_time;
   common::Time gazebotime = this->world_->GetSimTime();
-  common::Time meastime = this->parentSensor->GetLastMeasurementTime();
+  common::Time meastime = this->parentSensor->LastMeasurementTime();
   ROS_DEBUG_STREAM("sim time " << gazebotime.sec << "," <<gazebotime.nsec);
   ROS_DEBUG_STREAM("measurement time " << meastime.sec << "," <<meastime.nsec);
   msgs::Time contacts_time = contacts.time();
