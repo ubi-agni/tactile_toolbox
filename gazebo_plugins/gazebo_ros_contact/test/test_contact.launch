@@ -1,0 +1,10 @@
+<launch>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" default="$(find gazebo_ros_contact)/test/contact_test.world" />
+    <arg name="gui" value="true"/>
+  </include>
+
+  <test test-name="test_contact" pkg="gazebo_ros_contact" type="test_contact.py">
+    <param name="contact_topic_name" value="/test_contact"/>
+  </test>
+</launch>
