@@ -21,6 +21,12 @@
  * Date: 09 Sept. 2008
  */
 
+/*
+ * FRAME info
+ * Gazebo provides positions and normals of contact in world frame
+ * BUT Gazebo provides force and torques in link frame
+ */
+
 #include <map>
 #include <string>
 
@@ -82,8 +88,7 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
 
   this->robot_namespace_ = "";
   if (_sdf->HasElement("robotNamespace"))
-    this->robot_namespace_ =
-        _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
+    this->robot_namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
 
   // "publishing contact/collisions to this topic name: "
   //   << this->bumper_topic_name_ << std::endl;
@@ -96,6 +101,15 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
     this->tactile_topic_name_ =
         _sdf->GetElement("tactileTopicName")->Get<std::string>();
 
+// "get the body (link) name to which the sensor is attached"
+#if GAZEBO_MAJOR_VERSION >= 7
+  std::string parentName = _parent->ParentName();
+#else
+  std::string parentName = _parent->GetParentName();
+#endif
+  local_name_ = parentName.substr(parentName.find_last_of(':') + 1);
+  ROS_DEBUG_STREAM("contact plugin belongs to link named: " << local_name_);
+  
   // "transform contact/collisions pose, forces to this body (link) name: "
   //   << this->frame_name_ << std::endl;
   if (!_sdf->HasElement("frameName")) {
@@ -104,40 +118,65 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
   } else
     this->frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
 
+  // Because forces and torques are in local frame, a transformation is needed
+  // Because position and normals are given in world another transformation is needed
+
+  // Two frames are needed. The local frame, of the current link
+  // and the frame of the user selected frame
+
+  // lock in case a model is being spawned
+  // boost::recursive_mutex::scoped_lock lock(*gazebo::Simulator::Instance()->GetMRMutex());
+  physics::Model_V all_models = world_->GetModels();
+
   // if frameName specified is "world", "/map" or "map" report back
-  // inertial values in the gazebo world
-  if (this->local_link_ == NULL && this->frame_name_ != "world" &&
-      this->frame_name_ != "/map" && this->frame_name_ != "map") {
-    // lock in case a model is being spawned
-    // boost::recursive_mutex::scoped_lock
-    // lock(*gazebo::Simulator::Instance()->GetMRMutex());
+  // inertial values in the gazebo world.
+  if (this->my_link_ == NULL && this->frame_name_ != "world" && this->frame_name_ != "/map" &&
+      this->frame_name_ != "map")
+  {
     // look through all models in the world, search for body
     // name that matches frameName
-    physics::Model_V all_models = world_->GetModels();
-    for (physics::Model_V::iterator iter = all_models.begin();
-         iter != all_models.end(); iter++) {
+    for (physics::Model_V::iterator iter = all_models.begin(); iter != all_models.end(); iter++)
+    {
       if (*iter)
-        this->local_link_ = boost::dynamic_pointer_cast<physics::Link>(
-            (*iter)->GetLink(this->frame_name_));
-      if (this->local_link_)
+        this->my_link_ = boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->frame_name_));
+      if (this->my_link_)
         break;
     }
 
     // not found
-    if (!this->local_link_) {
+    if (!this->my_link_)
+    {
       ROS_INFO("gazebo_ros_bumper plugin: frameName: %s does not exist"
                " using world",
                this->frame_name_.c_str());
     }
   }
 
+  if (this->local_link_ == NULL)
+  {
+    // look through all models in the world, search for body
+    // name that matches local link name
+    for (physics::Model_V::iterator iter = all_models.begin(); iter != all_models.end(); iter++)
+    {
+      if (*iter)
+        this->local_link_ = boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->local_name_));
+      if (this->local_link_)
+        break;
+    }
+
+    // not found
+    if (!this->local_link_)
+    {
+      ROS_FATAL("gazebo_ros_bumper plugin: local link: %s does not exist", this->local_name_.c_str());
+      return;
+    }
+  }
+
   // Make sure the ROS node for Gazebo has already been initialized
-  if (!ros::isInitialized()) {
-    ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable "
-                     "to load plugin. "
-                     << "Load the Gazebo system plugin "
-                        "'libgazebo_ros_api_plugin.so' in the gazebo_ros "
-                        "package)");
+  if (!ros::isInitialized())
+  {
+    ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
+                     << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
     return;
   }
 
@@ -232,24 +271,31 @@ void GazeboRosTactile::OnContact() {
 
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
-  math::Pose pose, frame_pose;
-  math::Quaternion rot, frame_rot;
-  math::Vector3 pos, frame_pos;
+  math::Pose pose, frame_pose, local_pose;
+  math::Quaternion rot, frame_rot, local_rot;
+  math::Vector3 pos, frame_pos, local_pos;
 
   float forceSensivity = 0.1f;
-
-  // Get frame orientation if frame_id is given */
-  if (local_link_) {
-    frame_pose =
-        local_link_
-            ->GetWorldPose(); //-this->myBody->GetCoMPose();->GetDirtyPose();
+  // Get local link orientation
+  if (local_link_)
+  {
+    local_pose = local_link_->GetWorldPose();
+    local_pos = local_pose.pos;
+    local_rot = local_pose.rot;
+  }
+  // Get frame orientation if frame_id is given
+  if (my_link_)
+  {
+    frame_pose = my_link_->GetWorldPose();  //-this->myBody->GetCoMPose();->GetDirtyPose();
     frame_pos = frame_pose.pos;
     frame_rot = frame_pose.rot;
-  } else {
+  }
+  else
+  {
     // no specific frames specified, use identity pose, keeping
     // relative frame at inertial origin
     frame_pos = math::Vector3(0, 0, 0);
-    frame_rot = math::Quaternion(1, 0, 0, 0); // gazebo u,x,y,z == identity
+    frame_rot = math::Quaternion(1, 0, 0, 0);  // gazebo u,x,y,z == identity
     frame_pose = math::Pose(frame_pos, frame_rot);
   }
 
@@ -313,16 +359,18 @@ void GazeboRosTactile::OnContact() {
       // ROS_INFO_STREAM_THROTTLE(1.0,"state.contact_positions.x:" <<
       // frame_pos.x);
 
-      // Get force, torque and rotate into user specified frame.
+      // Get force, torque. They are in local frame already.
+      // forward transform them to world and then
+      // and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
-      math::Vector3 force = frame_rot.RotateVectorReverse(
-          math::Vector3(contact.wrench(j).body_1_wrench().force().x(),
-                        contact.wrench(j).body_1_wrench().force().y(),
-                        contact.wrench(j).body_1_wrench().force().z()));
-      math::Vector3 torque = frame_rot.RotateVectorReverse(
-          math::Vector3(contact.wrench(j).body_1_wrench().torque().x(),
-                        contact.wrench(j).body_1_wrench().torque().y(),
-                        contact.wrench(j).body_1_wrench().torque().z()));
+
+      math::Vector3 force = frame_rot.RotateVectorReverse(local_rot.RotateVector(
+        math::Vector3(contact.wrench(j).body_1_wrench().force().x(), contact.wrench(j).body_1_wrench().force().y(),
+                      contact.wrench(j).body_1_wrench().force().z())));
+      math::Vector3 torque = frame_rot.RotateVectorReverse(local_rot.RotateVector(
+        math::Vector3(contact.wrench(j).body_1_wrench().torque().x(), contact.wrench(j).body_1_wrench().torque().y(),
+                      contact.wrench(j).body_1_wrench().torque().z())));
+
 
       // set wrenches
       geometry_msgs::Wrench wrench;
@@ -354,7 +402,7 @@ void GazeboRosTactile::OnContact() {
       contact_position.z = position.z;
       state.contact_positions.push_back(contact_position);
 
-      // rotate normal into user specified frame.
+      // rotate normal from world into user specified frame.
       // frame_rot is identity if world is used.
       math::Vector3 normal = frame_rot.RotateVectorReverse(math::Vector3(
           contact.normal(j).x(), contact.normal(j).y(), contact.normal(j).z()));

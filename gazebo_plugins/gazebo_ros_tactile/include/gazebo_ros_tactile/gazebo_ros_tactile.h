@@ -81,8 +81,10 @@ namespace gazebo
     private: std::string tactile_topic_name_;
 
     private: physics::WorldPtr world_;
-    private: physics::LinkPtr local_link_;
+    private: physics::LinkPtr local_link_;  //!< link to which the sensor is attached (and in which force and torques are given)
+    private: physics::LinkPtr my_link_; //!< user selected frame/link for the result in which all data should be transformed
     private: std::string frame_name_;
+    private: std::string local_name_;
 
     /// \brief broadcast some string for now.
     private: gazebo_msgs::ContactsState contact_state_msg_;
