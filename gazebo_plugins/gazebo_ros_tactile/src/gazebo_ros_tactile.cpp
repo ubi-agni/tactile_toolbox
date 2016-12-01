@@ -427,7 +427,7 @@ void GazeboRosTactile::OnContact() {
           // sensor_msgs::ChannelFloat32 &tSensor =
           // this->tactile_state_msg_.sensors[m];
 
-          finalProjectedForce = 0.0f; // not necessary here
+          //finalProjectedForce = 0.0f; // not necessary here
 
           // calc distance between force-ap and taxelcenter
           distance = sqrt(pow((position.x - taxelPositions[m][k].x), 2) +
@@ -452,9 +452,12 @@ void GazeboRosTactile::OnContact() {
 
             if (normalForceScalar > 0) {
               // Normalverteilung erzeugen
-              p = exp(-(distance * distance / (2 * stdDev * stdDev))) /
+              p = exp(-(distance * distance / (2 * stdDev * stdDev)))  /
                   sqrt(2 * pi * stdDev * stdDev);
               finalProjectedForce = p * normalForceScalar;
+            }
+            else  {
+              finalProjectedForce=0.0f;
             }
           }
 
@@ -473,7 +476,7 @@ void GazeboRosTactile::OnContact() {
 
     for (unsigned int f = 0; f < this->numOfTaxels[e]; f++) {
       if (this->tactile_state_msg_.sensors[e].values[f] < minForce) {
-        this->tactile_state_msg_.sensors[e].values[f] = 0;
+        this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
       }
     }
   }
@@ -482,7 +485,7 @@ void GazeboRosTactile::OnContact() {
 
   for (unsigned int e = 0; e < this->numOfSensors; e++) {
     for (unsigned int f = 0; f < this->numOfTaxels[e]; f++) {
-      this->tactile_state_msg_.sensors[e].values[f] = 0.0;
+      this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
     }
   }
 }
