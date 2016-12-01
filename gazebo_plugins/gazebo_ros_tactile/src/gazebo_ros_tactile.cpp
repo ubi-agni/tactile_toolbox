@@ -310,13 +310,13 @@ void GazeboRosTactile::OnContact() {
   unsigned int contactGroupSize;
   // ROS_INFO_STREAM_THROTTLE(1.0, "contactGroupSize" << contactGroupSize);
   double normalForceScalar;
-  double stdDev = 2.0;
+  double stdDev = 0.005;
   double distance;
   double critDist = 1.0;
 
   double p = 1.0; // Multiplicator
   const double pi = 3.14159265359;
-  double minForce = 0.1;
+  double minForce = 0;
 
   float finalProjectedForce;
 
