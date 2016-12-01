@@ -225,8 +225,8 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
       this->taxelNormals[this->numOfSensors][j] = gazebo::math::Vector3(
           urdfTaxelNormal.x, urdfTaxelNormal.y, urdfTaxelNormal.z);
     }
-    this->tactile_state_msg_.sensors[numOfSensors].name =
-        "Sensor_" + std::to_string(numOfSensors); // >> numOfSensors;
+    this->tactile_state_msg_.sensors[numOfSensors].name = "ffdistal";
+        //"Sensor_" + std::to_string(numOfSensors); // >> numOfSensors;
     this->numOfSensors++;
   }
 
