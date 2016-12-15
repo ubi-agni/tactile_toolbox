@@ -316,7 +316,8 @@ void GazeboRosTactile::OnContact() {
 
   double p = 1.0; // Multiplicator
   const double pi = 3.14159265359;
-  double minForce = 0;
+  double minForce = 0.0;
+  double p_sum=0.0;
 
   float finalProjectedForce;
 
@@ -455,6 +456,7 @@ void GazeboRosTactile::OnContact() {
               p = exp(-(distance * distance / (2 * stdDev * stdDev)))  /
                   sqrt(2 * pi * stdDev * stdDev);
               finalProjectedForce = p * normalForceScalar;
+              p_sum += p;
             }
             else  {
               finalProjectedForce=0.0f;
@@ -477,6 +479,9 @@ void GazeboRosTactile::OnContact() {
     for (unsigned int f = 0; f < this->numOfTaxels[e]; f++) {
       if (this->tactile_state_msg_.sensors[e].values[f] < minForce) {
         this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
+      }
+      else  {
+        this->tactile_state_msg_.sensors[e].values[f] /= p_sum;
       }
     }
   }
