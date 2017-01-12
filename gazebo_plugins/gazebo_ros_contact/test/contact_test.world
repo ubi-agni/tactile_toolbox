@@ -56,11 +56,11 @@
             <static>1</static>
         </model>
         <model name="simple_box">
-            <pose>1.0000 0.000000 0.00 0.000000 -1.570800 0.000000</pose>
+            <pose>1.0000 0.000000 0.5  0.0 -3.14 0.000000</pose>
             <link name="my_box">
                 <pose>0.00000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
                 <inertial>
-                    <pose>0.250000 0.000000 0.000 0.000000 -0.000000 0.000000</pose>
+                    <pose>0.15000 0.000000 0.250 0.000000 -0.000000 0.000000</pose>
                     <inertia>
                         <ixx>0.100000</ixx>
                         <ixy>0.000000</ixy>
@@ -74,10 +74,16 @@
                 <collision name="my_box_geom">
                     <pose>0.250000 0.000000 0.0000 0.000000 -0.000000 0.000000</pose>
                     <geometry>
-                        <cylinder>
+                        <polyline>
+                            <point>-0.2500000 0.2500000</point>
+                            <point>-0.2500000 -0.2500000</point>
+                            <point>0.2500000 0.00000</point>
+                            <height>0.5</height>
+                        </polyline>
+                        <!--cylinder>
                             <radius>0.25</radius>
                             <length>0.5</length>
-                        </cylinder>
+                        </cylinder-->
                         <!--box>
                             <size>0.500000 0.500000 0.500000</size>
                         </box-->
@@ -112,10 +118,16 @@
                 <visual name="my_box_geom_visual">
                     <pose>0.250000 0.000000 0.0000 0.000000 -0.000000 0.000000</pose>
                     <geometry>
-                        <cylinder>
+                        <polyline>
+                            <point>-0.2500000 0.2500000</point>
+                            <point>-0.2500000 -0.2500000</point>
+                            <point>0.2500000 0.00000</point>
+                            <height>0.5</height>
+                        </polyline>
+                        <!--cylinder>
                             <radius>0.25</radius>
                             <length>0.5</length>
-                        </cylinder>
+                        </cylinder-->
                         <!--box>
                             <size>0.500000 0.500000 0.500000</size>
                         </box-->
