@@ -394,11 +394,11 @@ void GazeboRosContact::OnContact()
       math::Vector3 normal = frame_rot.RotateVectorReverse(
         math::Vector3(contact.normal(j).x(), contact.normal(j).y(), contact.normal(j).z()));
 
-      // set contact normals
+      // set contact normals pointing outwards of the collision object
       geometry_msgs::Vector3 contact_normal;
-      contact_normal.x = normal.x;
-      contact_normal.y = normal.y;
-      contact_normal.z = normal.z;
+      contact_normal.x = (switch_body?1.0:-1.0) * normal.x;
+      contact_normal.y = (switch_body?1.0:-1.0) * normal.y;
+      contact_normal.z = (switch_body?1.0:-1.0) * normal.z;
       state.contact_normals.push_back(contact_normal);
 
       // vector sum of normals
