@@ -29,6 +29,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <gazebo/common/Exception.hh>
 #include <gazebo/math/Pose.hh>
@@ -48,33 +49,39 @@
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
-//#include <ros/console.h>
-//#include <urdf_tactile/taxel_info_iterator.h>
+// #include <ros/console.h>
+// #include <urdf_tactile/taxel_info_iterator.h>
 #include <urdf_tactile/cast.h>
 
-namespace gazebo {
+namespace gazebo
+{
 // Register this plugin with the simulator
 GZ_REGISTER_SENSOR_PLUGIN(GazeboRosTactile)
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Constructor
-GazeboRosTactile::GazeboRosTactile() : SensorPlugin() {}
+GazeboRosTactile::GazeboRosTactile() : SensorPlugin()
+{
+}
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Destructor
-GazeboRosTactile::~GazeboRosTactile() {
+GazeboRosTactile::~GazeboRosTactile()
+{
   this->rosnode_->shutdown();
   this->callback_queue_thread_.join();
 
   delete this->rosnode_;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 // Load the controller
-void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
+void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
+{
   GAZEBO_SENSORS_USING_DYNAMIC_POINTER_CAST;
   this->parentSensor = dynamic_pointer_cast<sensors::ContactSensor>(_parent);
-  if (!this->parentSensor) {
+  if (!this->parentSensor)
+  {
     ROS_ERROR("Contact sensor parent is not of type ContactSensor");
     return;
   }
@@ -95,11 +102,9 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
   this->bumper_topic_name_ = "bumper_states";
   this->tactile_topic_name_ = "tactile_states";
   if (_sdf->HasElement("bumperTopicName"))
-    this->bumper_topic_name_ =
-        _sdf->GetElement("bumperTopicName")->Get<std::string>();
+    this->bumper_topic_name_ = _sdf->GetElement("bumperTopicName")->Get<std::string>();
   if (_sdf->HasElement("tactileTopicName"))
-    this->tactile_topic_name_ =
-        _sdf->GetElement("tactileTopicName")->Get<std::string>();
+    this->tactile_topic_name_ = _sdf->GetElement("tactileTopicName")->Get<std::string>();
 
 // "get the body (link) name to which the sensor is attached"
 #if GAZEBO_MAJOR_VERSION >= 7
@@ -109,26 +114,28 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
 #endif
   local_name_ = parentName.substr(parentName.find_last_of(':') + 1);
   ROS_DEBUG_STREAM("contact plugin belongs to link named: " << local_name_);
-  
+
   // by default use collision_name as parentName:local_name_ _collision
   collision_name_ = parentName + "::" + local_name_ + "_collision";
 
   // try access the real collision name used for the contact sensor (one level up from the plugin sdf)
   if (_sdf->GetParent()->HasElement("contact"))
   {
-     if (_sdf->GetParent()->GetElement("contact")->HasElement("collision"))
-     {
-       collision_name_ = _sdf->GetParent()->GetElement("contact")->GetElement("collision")->Get<std::string>();
-       collision_name_ = parentName + "::" + collision_name_;
-     }
+    if (_sdf->GetParent()->GetElement("contact")->HasElement("collision"))
+    {
+      collision_name_ = _sdf->GetParent()->GetElement("contact")->GetElement("collision")->Get<std::string>();
+      collision_name_ = parentName + "::" + collision_name_;
+    }
   }
 
   // "transform contact/collisions pose, forces to this body (link) name: "
   //   << this->frame_name_ << std::endl;
-  if (!_sdf->HasElement("frameName")) {
+  if (!_sdf->HasElement("frameName"))
+  {
     ROS_INFO("bumper plugin missing <frameName>, defaults to world");
     this->frame_name_ = "world";
-  } else
+  }
+  else
     this->frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
 
   // Because forces and torques are in local frame, a transformation is needed
@@ -143,8 +150,8 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
 
   // if frameName specified is "world", "/map" or "map" report back
   // inertial values in the gazebo world.
-  if (this->my_link_ == NULL && this->frame_name_ != "world" && this->frame_name_ != "/map" &&
-      this->frame_name_ != "map")
+  if (this->my_link_ == NULL && this->frame_name_ != "world" && this->frame_name_ != "/map" && this->frame_name_ != "ma"
+                                                                                                                    "p")
   {
     // look through all models in the world, search for body
     // name that matches frameName
@@ -207,63 +214,55 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
 
   // Begin parsing
   ROS_INFO_STREAM_ONCE("bumper_topic_name_" << bumper_topic_name_);
-  this->sensors = urdf::parseSensorsFromParam("robot_description",
-                                              urdf::getSensorParser("tactile"));
+  this->sensors = urdf::parseSensorsFromParam("robot_description", urdf::getSensorParser("tactile"));
 
   this->taxelPositions.clear();
   this->taxelNormals.clear();
 
   this->numOfSensors = 0;
-  for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-    urdf::tactile::TactileSensorConstSharedPtr sensor =
-        urdf::tactile::tactile_sensor_cast(it->second);
+  for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
+  {
+    urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
     if (!sensor)
-      continue; // some other sensor than tactile
+      continue;  // some other sensor than tactile
 
     this->numOfTaxels.push_back(sensor->taxels_.size());
     this->taxelNormals.push_back(std::vector<gazebo::math::Vector3>(
-        numOfTaxels[this->numOfSensors],
-        gazebo::math::Vector3(0, 0, 0))); //[i].resize(numOfTaxels[i]);
+      numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
     this->taxelPositions.push_back(std::vector<gazebo::math::Vector3>(
-        numOfTaxels[this->numOfSensors],
-        gazebo::math::Vector3(0, 0, 0))); //[i].resize(numOfTaxels[i]);
+      numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
     sensor_msgs::ChannelFloat32 channel;
     channel.values.resize(numOfTaxels[this->numOfSensors]);
     this->tactile_state_msg_.sensors.push_back(channel);
-    for (unsigned int j = 0; j < numOfTaxels[this->numOfSensors]; j++) {
+    for (unsigned int j = 0; j < numOfTaxels[this->numOfSensors]; j++)
+    {
       this->taxelPositions[this->numOfSensors][j] =
-          gazebo::math::Vector3(sensor->taxels_[j]->origin.position.x,
-                                sensor->taxels_[j]->origin.position.y,
-                                sensor->taxels_[j]->origin.position.z);
+        gazebo::math::Vector3(sensor->taxels_[j]->origin.position.x, sensor->taxels_[j]->origin.position.y,
+                              sensor->taxels_[j]->origin.position.z);
 
       // normal=rotation times zAxis
       urdf::Vector3 zAxis(0, 0, 1);
-      urdf::Vector3 urdfTaxelNormal =
-          (sensor->taxels_[j]->origin.rotation) * zAxis;
-      this->taxelNormals[this->numOfSensors][j] = gazebo::math::Vector3(
-          urdfTaxelNormal.x, urdfTaxelNormal.y, urdfTaxelNormal.z);
+      urdf::Vector3 urdfTaxelNormal = (sensor->taxels_[j]->origin.rotation) * zAxis;
+      this->taxelNormals[this->numOfSensors][j] =
+        gazebo::math::Vector3(urdfTaxelNormal.x, urdfTaxelNormal.y, urdfTaxelNormal.z);
     }
     this->tactile_state_msg_.sensors[numOfSensors].name = "ffdistal";
-        //"Sensor_" + std::to_string(numOfSensors); // >> numOfSensors;
+    // "Sensor_" + std::to_string(numOfSensors); // >> numOfSensors;
     this->numOfSensors++;
   }
 
 
-  this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(
-      std::string(this->bumper_topic_name_), 1);
+  this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(std::string(this->bumper_topic_name_), 1);
 
-  this->tactile_pub_ = this->rosnode_->advertise<tactile_msgs::TactileState>(
-      std::string(this->tactile_topic_name_), 1);
+  this->tactile_pub_ = this->rosnode_->advertise<tactile_msgs::TactileState>(std::string(this->tactile_topic_name_), 1);
 
   // Initialize
   // start custom queue for contact bumper
-  this->callback_queue_thread_ =
-      boost::thread(boost::bind(&GazeboRosTactile::ContactQueueThread, this));
+  this->callback_queue_thread_ = boost::thread(boost::bind(&GazeboRosTactile::ContactQueueThread, this));
 
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
-  this->update_connection_ = this->parentSensor->ConnectUpdated(
-      boost::bind(&GazeboRosTactile::OnContact, this));
+  this->update_connection_ = this->parentSensor->ConnectUpdated(boost::bind(&GazeboRosTactile::OnContact, this));
 
   // Make sure the parent sensor is active.
   this->parentSensor->SetActive(true);
@@ -271,9 +270,9 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Update the controller
-void GazeboRosTactile::OnContact() {
-  if (this->tactile_pub_.getNumSubscribers() <= 0 &&
-      contact_pub_.getNumSubscribers() <= 0)
+void GazeboRosTactile::OnContact()
+{
+  if (this->tactile_pub_.getNumSubscribers() <= 0 && contact_pub_.getNumSubscribers() <= 0)
     return;
 
   msgs::Contacts contacts;
@@ -281,11 +280,9 @@ void GazeboRosTactile::OnContact() {
   /// \TODO: need a time for each Contact in i-loop, they may differ
   this->tactile_state_msg_.header.frame_id = this->frame_name_;
   common::Time meastime = this->parentSensor->GetLastMeasurementTime();
-  this->tactile_state_msg_.header.stamp =
-      ros::Time(meastime.sec, meastime.nsec);
+  this->tactile_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
   this->contact_state_msg_.header.frame_id = this->frame_name_;
-  this->contact_state_msg_.header.stamp =
-      ros::Time(meastime.sec, meastime.nsec);
+  this->contact_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
 
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
@@ -304,7 +301,7 @@ void GazeboRosTactile::OnContact() {
   // Get frame orientation if frame_id is given
   if (my_link_)
   {
-    frame_pose = my_link_->GetWorldPose();  //-this->myBody->GetCoMPose();->GetDirtyPose();
+    frame_pose = my_link_->GetWorldPose();  // -this->myBody->GetCoMPose();->GetDirtyPose();
     frame_pos = frame_pose.pos;
     frame_rot = frame_pose.rot;
   }
@@ -332,14 +329,15 @@ void GazeboRosTactile::OnContact() {
   double distance;
   double critDist = 1.0;
 
-  double p = 1.0; // Multiplicator
+  double p = 1.0;  // Multiplicator
   const double pi = 3.14159265359;
   double minForce = 0.0;
-  double p_sum=0.0;
+  double p_sum = 0.0;
 
   float finalProjectedForce;
 
-  for (unsigned int i = 0; i < contactsPacketSize; ++i) {
+  for (unsigned int i = 0; i < contactsPacketSize; ++i)
+  {
     // Create a ContactState
     gazebo_msgs::ContactState state;
 
@@ -375,8 +373,8 @@ void GazeboRosTactile::OnContact() {
     total_wrench.torque.z = 0;
 
     contactGroupSize = contact.position_size();
-    for (unsigned int j = 0; j < contactGroupSize; ++j) {
-
+    for (unsigned int j = 0; j < contactGroupSize; ++j)
+    {
       // math::Pose frame_pose;
       // frame_pos = math::Vector3(0, 0, 0);
       //
@@ -388,7 +386,8 @@ void GazeboRosTactile::OnContact() {
       // and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
 
-      ROS_DEBUG_STREAM("body1 name: " << contact.wrench(j).body_1_name() << ", body2 name: " << contact.wrench(j).body_2_name());
+      ROS_DEBUG_STREAM("body1 name: " << contact.wrench(j).body_1_name()
+                                      << ", body2 name: " << contact.wrench(j).body_2_name());
 
       // select the correct body
       gazebo::msgs::Wrench source_wrench;
@@ -410,8 +409,10 @@ void GazeboRosTactile::OnContact() {
       }
       else
       {
-        force= frame_rot.RotateVectorReverse(local_rot.RotateVector(math::Vector3(source_wrench.force().x(), source_wrench.force().y(), source_wrench.force().z())));
-        torque = frame_rot.RotateVectorReverse(local_rot.RotateVector(math::Vector3(source_wrench.torque().x(), source_wrench.torque().y(), source_wrench.torque().z())));
+        force = frame_rot.RotateVectorReverse(local_rot.RotateVector(
+          math::Vector3(source_wrench.force().x(), source_wrench.force().y(), source_wrench.force().z())));
+        torque = frame_rot.RotateVectorReverse(local_rot.RotateVector(
+          math::Vector3(source_wrench.torque().x(), source_wrench.torque().y(), source_wrench.torque().z())));
       }
 
       // set wrenches
@@ -431,13 +432,11 @@ void GazeboRosTactile::OnContact() {
       total_wrench.torque.y += wrench.torque.y;
       total_wrench.torque.z += wrench.torque.z;
 
-      //////////////////////////BEGIN OF FORCE TRANSFORMTION
+      // ///////////////////////BEGIN OF FORCE TRANSFORMTION
       // transform contact positions into relative frame
       // set contact positions
       gazebo::math::Vector3 position = frame_rot.RotateVectorReverse(
-          math::Vector3(contact.position(j).x(), contact.position(j).y(),
-                        contact.position(j).z()) -
-          frame_pos);
+        math::Vector3(contact.position(j).x(), contact.position(j).y(), contact.position(j).z()) - frame_pos);
       geometry_msgs::Vector3 contact_position;
       contact_position.x = position.x;
       contact_position.y = position.y;
@@ -446,8 +445,8 @@ void GazeboRosTactile::OnContact() {
 
       // rotate normal from world into user specified frame.
       // frame_rot is identity if world is used.
-      math::Vector3 normal = frame_rot.RotateVectorReverse(math::Vector3(
-          contact.normal(j).x(), contact.normal(j).y(), contact.normal(j).z()));
+      math::Vector3 normal = frame_rot.RotateVectorReverse(
+        math::Vector3(contact.normal(j).x(), contact.normal(j).y(), contact.normal(j).z()));
       // set contact normals
       geometry_msgs::Vector3 contact_normal;
       contact_normal.x = normal.x;
@@ -458,30 +457,30 @@ void GazeboRosTactile::OnContact() {
       // set contact depth, interpenetration
       state.depths.push_back(contact.depth(j));
 
-      ////////////////////////////////////END OF FORCE TRANSFORMATION
+      // /////////////////////////////////END OF FORCE TRANSFORMATION
 
-      for (unsigned int m = 0; m < this->numOfSensors;
-           m++) { // Loop over Sensors
-        for (unsigned int k = 0; k < this->numOfTaxels[m];
-             k++) // Loop over taxels
+      for (unsigned int m = 0; m < this->numOfSensors; m++)
+      {                                                          // Loop over Sensors
+        for (unsigned int k = 0; k < this->numOfTaxels[m]; k++)  // Loop over taxels
         {
-
           // sensor_msgs::ChannelFloat32 &tSensor =
           // this->tactile_state_msg_.sensors[m];
 
-          //finalProjectedForce = 0.0f; // not necessary here
+          // finalProjectedForce = 0.0f; // not necessary here
 
           // calc distance between force-ap and taxelcenter
-          distance = sqrt(pow((position.x - taxelPositions[m][k].x), 2) +
-                          pow((position.y - taxelPositions[m][k].y), 2) +
-                          pow((position.z - taxelPositions[m][k].z), 2));
+          distance =
+            sqrt(pow((position.x - taxelPositions[m][k].x), 2) + pow((position.y - taxelPositions[m][k].y), 2) +
+                 pow((position.z - taxelPositions[m][k].z), 2));
 
-          if (distance > critDist) {
-            finalProjectedForce = 0.0f; // bzw continue;
-                                        // nächster Durchlauf
+          if (distance > critDist)
+          {
+            finalProjectedForce = 0.0f;  // bzw continue;
+                                         // nächster Durchlauf
           }
 
-          else {
+          else
+          {
             // project Force on normal
             normalForceScalar =
                 (this->taxelNormals[m][k].x * force.x +
@@ -492,36 +491,39 @@ void GazeboRosTactile::OnContact() {
                      pow(this->taxelNormals[m][k].z,
                          2)); // Normalize the taxelNormals, lookup if it norm.
 
-            if (normalForceScalar > 0) {
+            if (normalForceScalar > 0)
+            {
               // Normalverteilung erzeugen
               p = exp(-(distance * distance / (2 * stdDev * stdDev)))  /
                   sqrt(2 * pi * stdDev * stdDev);
               finalProjectedForce = p * normalForceScalar;
               p_sum += p;
             }
-            else  {
-              finalProjectedForce=0.0f;
+            else
+            {
+              finalProjectedForce = 0.0f;
             }
           }
 
           this->tactile_state_msg_.sensors[m].values[k] += finalProjectedForce;
-
-        } // END FOR Taxels
-      }   // END FOR Sensors
-    }     // END FOR contactGroupSize
+        }  // END FOR Taxels
+      }    // END FOR Sensors
+    }      // END FOR contactGroupSize
 
     state.total_wrench = total_wrench;
     this->contact_state_msg_.states.push_back(state);
+  }  // END FOR contactsPacketSize
 
-  } // END FOR contactsPacketSize
-
-  for (unsigned int e = 0; e < this->numOfSensors; e++) {
-
-    for (unsigned int f = 0; f < this->numOfTaxels[e]; f++) {
-      if (this->tactile_state_msg_.sensors[e].values[f] < minForce) {
+  for (unsigned int e = 0; e < this->numOfSensors; e++)
+  {
+    for (unsigned int f = 0; f < this->numOfTaxels[e]; f++)
+    {
+      if (this->tactile_state_msg_.sensors[e].values[f] < minForce)
+      {
         this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
       }
-      else  {
+      else
+      {
         this->tactile_state_msg_.sensors[e].values[f] /= p_sum;
       }
     }
@@ -529,8 +531,10 @@ void GazeboRosTactile::OnContact() {
   this->contact_pub_.publish(this->contact_state_msg_);
   this->tactile_pub_.publish(this->tactile_state_msg_);
 
-  for (unsigned int e = 0; e < this->numOfSensors; e++) {
-    for (unsigned int f = 0; f < this->numOfTaxels[e]; f++) {
+  for (unsigned int e = 0; e < this->numOfSensors; e++)
+  {
+    for (unsigned int f = 0; f < this->numOfTaxels[e]; f++)
+    {
       this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
     }
   }
@@ -538,11 +542,13 @@ void GazeboRosTactile::OnContact() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Put laser data to the interface
-void GazeboRosTactile::ContactQueueThread() {
+void GazeboRosTactile::ContactQueueThread()
+{
   static const double timeout = 0.01;
 
-  while (this->rosnode_->ok()) {
+  while (this->rosnode_->ok())
+  {
     this->contact_queue_.callAvailable(ros::WallDuration(timeout));
   }
 }
-}
+}  // namespace gazebo
