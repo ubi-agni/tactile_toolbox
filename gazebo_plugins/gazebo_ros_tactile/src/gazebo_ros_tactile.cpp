@@ -110,6 +110,19 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
   local_name_ = parentName.substr(parentName.find_last_of(':') + 1);
   ROS_DEBUG_STREAM("contact plugin belongs to link named: " << local_name_);
   
+  // by default use collision_name as parentName:local_name_ _collision
+  collision_name_ = parentName + "::" + local_name_ + "_collision";
+
+  // try access the real collision name used for the contact sensor (one level up from the plugin sdf)
+  if (_sdf->GetParent()->HasElement("contact"))
+  {
+     if (_sdf->GetParent()->GetElement("contact")->HasElement("collision"))
+     {
+       collision_name_ = _sdf->GetParent()->GetElement("contact")->GetElement("collision")->Get<std::string>();
+       collision_name_ = parentName + "::" + collision_name_;
+     }
+  }
+
   // "transform contact/collisions pose, forces to this body (link) name: "
   //   << this->frame_name_ << std::endl;
   if (!_sdf->HasElement("frameName")) {
@@ -171,6 +184,11 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
       return;
     }
   }
+
+  // if local name is the same as the desired frame name, skip force/torque transform
+  skip_local_transform_ = false;
+  if (this->frame_name_ == this->local_name_)
+    skip_local_transform_ = true;
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -337,6 +355,11 @@ void GazeboRosTactile::OnContact() {
            << std::endl;
     state.info = stream.str();
 
+    // is body 1 the collision body attached to the sensor plugin ?
+    bool switch_body = false;
+    if (state.collision2_name == collision_name_)
+      switch_body = true;
+
     state.wrenches.clear();
     state.contact_positions.clear();
     state.contact_normals.clear();
@@ -365,13 +388,31 @@ void GazeboRosTactile::OnContact() {
       // and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
 
-      math::Vector3 force = frame_rot.RotateVectorReverse(local_rot.RotateVector(
-        math::Vector3(contact.wrench(j).body_1_wrench().force().x(), contact.wrench(j).body_1_wrench().force().y(),
-                      contact.wrench(j).body_1_wrench().force().z())));
-      math::Vector3 torque = frame_rot.RotateVectorReverse(local_rot.RotateVector(
-        math::Vector3(contact.wrench(j).body_1_wrench().torque().x(), contact.wrench(j).body_1_wrench().torque().y(),
-                      contact.wrench(j).body_1_wrench().torque().z())));
+      ROS_DEBUG_STREAM("body1 name: " << contact.wrench(j).body_1_name() << ", body2 name: " << contact.wrench(j).body_2_name());
 
+      // select the correct body
+      gazebo::msgs::Wrench source_wrench;
+      if (switch_body)
+      {
+        ROS_DEBUG("using body2");
+        source_wrench = contact.wrench(j).body_2_wrench();
+      }
+      else
+        source_wrench = contact.wrench(j).body_1_wrench();
+
+      math::Vector3 force;
+      math::Vector3 torque;
+      // apply transform to force/torque only if needed
+      if (skip_local_transform_)
+      {
+        force = math::Vector3(source_wrench.force().x(), source_wrench.force().y(), source_wrench.force().z());
+        torque = math::Vector3(source_wrench.torque().x(), source_wrench.torque().y(), source_wrench.torque().z());
+      }
+      else
+      {
+        force= frame_rot.RotateVectorReverse(local_rot.RotateVector(math::Vector3(source_wrench.force().x(), source_wrench.force().y(), source_wrench.force().z())));
+        torque = frame_rot.RotateVectorReverse(local_rot.RotateVector(math::Vector3(source_wrench.torque().x(), source_wrench.torque().y(), source_wrench.torque().z())));
+      }
 
       // set wrenches
       geometry_msgs::Wrench wrench;
