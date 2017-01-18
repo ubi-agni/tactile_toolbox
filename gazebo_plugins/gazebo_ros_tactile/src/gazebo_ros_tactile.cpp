@@ -279,7 +279,11 @@ void GazeboRosTactile::OnContact()
   contacts = this->parentSensor->Contacts();
   /// \TODO: need a time for each Contact in i-loop, they may differ
   this->tactile_state_msg_.header.frame_id = this->frame_name_;
+#if GAZEBO_MAJOR_VERSION >= 7
+  common::Time meastime = this->parentSensor->LastMeasurementTime();
+#else
   common::Time meastime = this->parentSensor->GetLastMeasurementTime();
+#endif
   this->tactile_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
   this->contact_state_msg_.header.frame_id = this->frame_name_;
   this->contact_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
