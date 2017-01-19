@@ -461,7 +461,12 @@ void GazeboRosTactile::OnContact()
       // set contact depth, interpenetration
       state.depths.push_back(contact.depth(j));
 
-      // /////////////////////////////////END OF FORCE TRANSFORMATION
+      // //////////////////////////////////END OF FORCE TRANSFORMATION
+      
+      normalForceScalar =
+                (contact_normal.x * force.x +
+                 contact_normal.y * force.y +
+                 contact_normal.z * force.z); //* (-1.0);
 
       for (unsigned int m = 0; m < this->numOfSensors; m++)
       {                                                          // Loop over Sensors
@@ -486,14 +491,14 @@ void GazeboRosTactile::OnContact()
           else
           {
             // project Force on normal
-            normalForceScalar =
-                (this->taxelNormals[m][k].x * force.x +
-                 this->taxelNormals[m][k].y * force.y +
-                 this->taxelNormals[m][k].z * force.z) /
-                sqrt(pow(this->taxelNormals[m][k].x, 2) +
-                     pow(this->taxelNormals[m][k].y, 2) +
-                     pow(this->taxelNormals[m][k].z,
-                         2)); // Normalize the taxelNormals, lookup if it norm.
+            // normalForceScalar =
+                // (this->taxelNormals[m][k].x * force.x +
+                 // this->taxelNormals[m][k].y * force.y +
+                 // this->taxelNormals[m][k].z * force.z) /
+                // sqrt(pow(this->taxelNormals[m][k].x, 2) +
+                     // pow(this->taxelNormals[m][k].y, 2) +
+                     // pow(this->taxelNormals[m][k].z,
+                         // 2)); //*(-1.0); // after fixing schould always be negative
 
             if (normalForceScalar > 0)
             {
