@@ -266,6 +266,9 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 
   // Make sure the parent sensor is active.
   this->parentSensor->SetActive(true);
+  
+  // Initialize sensitivity of Sensor
+  this->forceSensitivity = 0.1f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,7 +297,7 @@ void GazeboRosTactile::OnContact()
   math::Quaternion rot, frame_rot, local_rot;
   math::Vector3 pos, frame_pos, local_pos;
 
-  float forceSensivity = 0.1f;
+  //float forceSensitivity = 0.1f;
   // Get local link orientation
   if (local_link_)
   {

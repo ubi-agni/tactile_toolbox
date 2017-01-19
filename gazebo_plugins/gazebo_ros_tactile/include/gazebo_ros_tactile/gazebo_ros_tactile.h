@@ -145,6 +145,7 @@ private:
 
   unsigned int numOfSensors;
   std::vector<unsigned int> numOfTaxels;
+  float forceSensitivity;
 };
 }  // namespace gazebo
 
