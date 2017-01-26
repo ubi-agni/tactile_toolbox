@@ -519,18 +519,24 @@ void GazeboRosTactile::OnContact()
     state.total_wrench = total_wrench;
     this->contact_state_msg_.states.push_back(state);
   }  // END FOR contactsPacketSize
-
+  
+  //devide by sum of weights and check if sensed force is bigger minForce
   for (unsigned int e = 0; e < this->numOfSensors; e++)
   {
     for (unsigned int f = 0; f < this->numOfTaxels[e]; f++)
     {
-      if (this->tactile_state_msg_.sensors[e].values[f] < minForce)
-      {
-        this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
-      }
-      else
+      if (p_sum > 0)
       {
         this->tactile_state_msg_.sensors[e].values[f] /= p_sum;
+      
+        if (this->tactile_state_msg_.sensors[e].values[f] < minForce)
+        {
+          this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
+        }
+      } 
+      else
+      {
+        this->tactile_state_msg_.sensors[e].values[f] = 0.0;
       }
     }
   }
