@@ -343,6 +343,16 @@ void GazeboRosTactile::OnContact()
 
   float finalProjectedForce;
 
+  
+  //for every timestep init the sensor to zero
+   for (unsigned int m = 0; m < this->numOfSensors; m++)
+      {                                                          // Loop over Sensors
+        for (unsigned int k = 0; k < this->numOfTaxels[m]; k++)  // Loop over taxels
+        {
+          this->tactile_state_msg_.sensors[m].values[k] = 0.0f;
+        }
+      }
+  
   for (unsigned int i = 0; i < contactsPacketSize; ++i)
   {
     // Create a ContactState
@@ -382,12 +392,7 @@ void GazeboRosTactile::OnContact()
     contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
     {
-      // math::Pose frame_pose;
-      // frame_pos = math::Vector3(0, 0, 0);
-      //
-      // ROS_INFO_STREAM_THROTTLE(1.0,"state.contact_positions.x:" <<
-      // frame_pos.x);
-
+      
       // Get force, torque. They are in local frame already.
       // forward transform them to world and then
       // and rotate into user specified frame.
@@ -478,8 +483,6 @@ void GazeboRosTactile::OnContact()
           // sensor_msgs::ChannelFloat32 &tSensor =
           // this->tactile_state_msg_.sensors[m];
 
-          // finalProjectedForce = 0.0f; // not necessary here
-
           // calc distance between force-ap and taxelcenter
           distance =
             sqrt(pow((position.x - taxelPositions[m][k].x), 2) + pow((position.y - taxelPositions[m][k].y), 2) +
@@ -493,15 +496,6 @@ void GazeboRosTactile::OnContact()
 
           else
           {
-            // project Force on normal
-            // normalForceScalar =
-                // (this->taxelNormals[m][k].x * force.x +
-                 // this->taxelNormals[m][k].y * force.y +
-                 // this->taxelNormals[m][k].z * force.z) /
-                // sqrt(pow(this->taxelNormals[m][k].x, 2) +
-                     // pow(this->taxelNormals[m][k].y, 2) +
-                     // pow(this->taxelNormals[m][k].z,
-                         // 2)); //*(-1.0); // after fixing schould always be negative
 
             if (normalForceScalar > 0)
             {
@@ -543,13 +537,7 @@ void GazeboRosTactile::OnContact()
   this->contact_pub_.publish(this->contact_state_msg_);
   this->tactile_pub_.publish(this->tactile_state_msg_);
 
-  for (unsigned int e = 0; e < this->numOfSensors; e++)
-  {
-    for (unsigned int f = 0; f < this->numOfTaxels[e]; f++)
-    {
-      this->tactile_state_msg_.sensors[e].values[f] = 0.0f;
-    }
-  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
