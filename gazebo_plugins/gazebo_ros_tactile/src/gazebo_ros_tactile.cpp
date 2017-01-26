@@ -474,8 +474,7 @@ void GazeboRosTactile::OnContact()
       normalForceScalar =
                 (contact_normal.x * force.x +
                  contact_normal.y * force.y +
-                 contact_normal.z * force.z); //* (-1.0);
-
+                 contact_normal.z * force.z) * (-1.0);
       for (unsigned int m = 0; m < this->numOfSensors; m++)
       {                                                          // Loop over Sensors
         for (unsigned int k = 0; k < this->numOfTaxels[m]; k++)  // Loop over taxels
