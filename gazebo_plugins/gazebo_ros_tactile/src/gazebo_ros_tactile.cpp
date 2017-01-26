@@ -340,8 +340,8 @@ void GazeboRosTactile::OnContact()
   const double pi = 3.14159265359;
   double minForce = 0.0;
   double p_sum = 0.0;
+  double forceDirection=0.0;
 
-  float finalProjectedForce;
 
   
   //for every timestep init the sensor to zero
@@ -486,31 +486,22 @@ void GazeboRosTactile::OnContact()
           distance =
             sqrt(pow((position.x - taxelPositions[m][k].x), 2) + pow((position.y - taxelPositions[m][k].y), 2) +
                  pow((position.z - taxelPositions[m][k].z), 2));
+                 
+          forceDirection = 
+                (force.x * this->taxelNormals[m][k].x +
+                 force.y * this->taxelNormals[m][k].y +
+                 force.z * this->taxelNormals[m][k].z);
 
-          if (distance > critDist)
+          if ((distance < critDist) && (forceDirection < 0) && (normalForceScalar > 0)) //TODO Dennis: not nessecarry
           {
-            finalProjectedForce = 0.0f;  // bzw continue;
-                                         // nächster Durchlauf
-          }
-
-          else
-          {
-
-            if (normalForceScalar > 0)
-            {
+            
               // Normalverteilung erzeugen
-              p = exp(-(distance * distance / (2 * stdDev * stdDev)))  /
-                  sqrt(2 * pi * stdDev * stdDev);
-              finalProjectedForce = p * normalForceScalar;
+              p = exp(-(distance * distance / (2 * stdDev * stdDev))); // /
+                  //sqrt(2 * pi * stdDev * stdDev);
+              this->tactile_state_msg_.sensors[m].values[k] += p * normalForceScalar;
               p_sum += p;
-            }
-            else
-            {
-              finalProjectedForce = 0.0f;
-            }
+                        
           }
-
-          this->tactile_state_msg_.sensors[m].values[k] += finalProjectedForce;
         }  // END FOR Taxels
       }    // END FOR Sensors
     }      // END FOR contactGroupSize
