@@ -226,6 +226,61 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     if (!sensor)
       continue;  // some other sensor than tactile
 
+    if(sensor->taxels_.size() == 0){ //if the taxel has no size, sensor is assumed to be an array
+      
+      // if(sensor -> array_ -> rows != 0 && sensor -> array_ -> cols != 0) //test rows and cols
+      
+      // Get parameter form tactile array (urdf)
+      urdf::tactile::Vector2<double> spacing = sensor -> array_ -> spacing;
+      int rows = sensor -> array_ -> rows;
+      int cols = sensor -> array_ -> cols;
+      urdf::tactile::Vector2<double> taxelSize = sensor -> array_ -> size;
+      urdf::tactile::Vector2<double> offset = sensor -> array_ -> offset;
+      
+      // Intiaization: push back and resize
+      this->numOfTaxels.push_back((rows)*(cols));
+      this->taxelNormals.push_back(std::vector<gazebo::math::Vector3>(
+        numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));
+      this->taxelPositions.push_back(std::vector<gazebo::math::Vector3>(
+        numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));
+      sensor_msgs::ChannelFloat32 channel;
+      channel.values.resize(numOfTaxels[this->numOfSensors]);
+      this->tactile_state_msg_.sensors.push_back(channel);
+      
+      // Fill an array with the positions and normals of the grid cells of the sensor 
+      // if the order is col-major
+      if (sensor -> array_ -> order == 1){
+        for (int row_idx=0; row_idx < rows; row_idx++){
+          for (int col_idx=0; col_idx < cols; col_idx++){
+            this->taxelPositions[this->numOfSensors][cols*row_idx + col_idx] =
+              gazebo::math::Vector3((-offset.x + col_idx*(spacing.x )),
+                                    (-offset.y + row_idx*(spacing.y )),0);
+                                    
+            this->taxelNormals[this->numOfSensors][cols*row_idx + col_idx] = gazebo::math::Vector3(0, 0, 1.0);
+          }
+        }
+      }
+      // if the order is row-major
+      else if (sensor -> array_ -> order == 0){
+        for (int row_idx=0; row_idx < rows; row_idx++){
+          for (int col_idx=0; col_idx < cols; col_idx++){
+            this->taxelPositions[this->numOfSensors][rows*col_idx + row_idx] =
+              gazebo::math::Vector3((-offset.x + col_idx*(spacing.x )),
+                                    (-offset.y + row_idx*(spacing.y )),0);
+                                    
+            this->taxelNormals[this->numOfSensors][cols*row_idx + col_idx] = gazebo::math::Vector3(0, 0, 1.0);
+          }
+        }
+      }
+      // Incorrect order
+      else {
+        ROS_INFO_STREAM_ONCE("Undefined order (neither row-major nor col-major): \t" << sensor -> array_ -> order);
+      }
+    }
+    
+    else{
+    
+    // Intiaization: push back and resize
     this->numOfTaxels.push_back(sensor->taxels_.size());
     this->taxelNormals.push_back(std::vector<gazebo::math::Vector3>(
       numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
@@ -234,6 +289,8 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     sensor_msgs::ChannelFloat32 channel;
     channel.values.resize(numOfTaxels[this->numOfSensors]);
     this->tactile_state_msg_.sensors.push_back(channel);
+    
+    // Fill an array with the positions and normals of the taxels of the sensor
     for (unsigned int j = 0; j < numOfTaxels[this->numOfSensors]; j++)
     {
       this->taxelPositions[this->numOfSensors][j] =
@@ -246,11 +303,13 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
       this->taxelNormals[this->numOfSensors][j] =
         gazebo::math::Vector3(urdfTaxelNormal.x, urdfTaxelNormal.y, urdfTaxelNormal.z);
     }
-    this->tactile_state_msg_.sensors[numOfSensors].name = "ffdistal";
+    
+    }
+    this->tactile_state_msg_.sensors[numOfSensors].name = sensor -> channel_;//"ffdistal";
     // "Sensor_" + std::to_string(numOfSensors); // >> numOfSensors;
     this->numOfSensors++;
   }
-
+  
 
   this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(std::string(this->bumper_topic_name_), 1);
 
