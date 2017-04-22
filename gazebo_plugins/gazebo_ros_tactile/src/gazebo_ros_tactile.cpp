@@ -215,7 +215,10 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   // Begin parsing
   ROS_INFO_STREAM_ONCE("bumper_topic_name_" << bumper_topic_name_);
   try{
-    this->sensors = urdf::parseSensorsFromParam("robot_description", urdf::getSensorParser("tactile"));
+    if (robot_namespace_ != "")
+      this->sensors = urdf::parseSensorsFromParam(robot_namespace_ + "/robot_description", urdf::getSensorParser("tactile"));
+    else
+      this->sensors = urdf::parseSensorsFromParam("/robot_description", urdf::getSensorParser("tactile"));
   }
   catch (const std::runtime_error& e) {
     std::cout << " Tactile plugin loading failed with message '" << e.what() << "'\n";
