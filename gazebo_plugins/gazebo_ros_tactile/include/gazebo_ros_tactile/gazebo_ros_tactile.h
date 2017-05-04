@@ -136,8 +136,11 @@ private:
 private:
   event::ConnectionPtr update_connection_;
 
-  // for Parsing
 private:
+  bool is_initialized_;
+  void TransformFrameInit();
+
+  // for Parsing
   urdf::SensorMap sensors;
 
   std::vector<std::vector<gazebo::math::Vector3>> taxelNormals;
