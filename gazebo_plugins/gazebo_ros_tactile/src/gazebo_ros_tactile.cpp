@@ -181,6 +181,11 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     if (!sensor)
       continue;  // some other sensor than tactile
 
+    if (it->second->name_ != _parent->GetName())
+      continue;
+    
+    ROS_DEBUG_STREAM("Matching: " << _parent->GetName());
+    
     if(sensor->taxels_.size() == 0){ //if the taxel has no size, sensor is assumed to be an array
 
       // if(sensor -> array_ -> rows != 0 && sensor -> array_ -> cols != 0) //test rows and cols
