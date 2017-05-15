@@ -272,6 +272,16 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     this->numOfSensors++;
   }
 
+  if (numOfSensors == 0){
+    ROS_FATAL_STREAM("No matching for " << _parent->GetName());
+    return;
+  }
+  else if (numOfSensors > 1){
+    ROS_WARN_STREAM("Multiple matching for " << gzSensorName 
+                    << " count: " << numOfSensors 
+                    << "\n all matchings will be published");
+  }
+  
   this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(std::string(this->bumper_topic_name_), 1);
 
   this->tactile_pub_ = this->rosnode_->advertise<tactile_msgs::TactileState>(std::string(this->tactile_topic_name_), 1);
