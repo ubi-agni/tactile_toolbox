@@ -174,6 +174,7 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->taxelNormals.clear();
 
   this->numOfSensors = 0;
+  std::string gzSensorName = _parent->GetName();
   for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
   {
     ROS_DEBUG_STREAM("sensorName tactile " << it->second->name_);
@@ -182,10 +183,10 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     if (!sensor)
       continue;  // some other sensor than tactile
 
-    if (it->second->name_ != _parent->GetName())
+    if (it->second->name_ != gzSensorName)
       continue;
     
-    ROS_DEBUG_STREAM("Matching: " << _parent->GetName());
+    ROS_DEBUG_STREAM("Matching: " << gzSensorName);
     
     if(sensor->taxels_.size() == 0){ //if the taxel has no size, sensor is assumed to be an array
 
