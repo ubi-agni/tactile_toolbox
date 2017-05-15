@@ -437,9 +437,9 @@ void GazeboRosTactile::OnContact()
   unsigned int contactGroupSize;
 
   double normalForceScalar;
-  double stdDev = 0.005;
+  const double stdDev = 0.005;
   double distance;
-  double critDist = 1.0;
+  const double critDist = 1.0;
 
   double p = 1.0;  // Multiplicator
   const double pi = 3.14159265359;
