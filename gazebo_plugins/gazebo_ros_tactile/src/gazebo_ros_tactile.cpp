@@ -267,8 +267,8 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     }
 
     }
-    this->tactile_state_msg_.sensors[numOfSensors].name = sensor -> channel_;//"ffdistal";
-    // "Sensor_" + std::to_string(numOfSensors); // >> numOfSensors;
+    this->tactile_state_msg_.sensors[numOfSensors].name = sensor -> channel_;
+
     this->numOfSensors++;
   }
 
@@ -424,7 +424,6 @@ void GazeboRosTactile::OnContact()
   this->contact_state_msg_.states.clear();
 
   unsigned int contactsPacketSize = contacts.contact_size();
-  // Deklarationen
   unsigned int contactGroupSize;
 
   double normalForceScalar;
