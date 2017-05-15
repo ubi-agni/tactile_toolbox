@@ -133,7 +133,7 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   //   << this->frame_name_ << std::endl;
   if (!_sdf->HasElement("frameName"))
   {
-    ROS_INFO("bumper plugin missing <frameName>, defaults to world");
+    ROS_INFO("tactile plugin missing <frameName>, defaults to world");
     this->frame_name_ = "world";
   }
   else
@@ -159,7 +159,6 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->frame_name_ = tf::resolve(prefix, this->frame_name_);
 
   // Begin parsing
-  ROS_INFO_STREAM_ONCE("bumper_topic_name_" << bumper_topic_name_);
   try{
     if (robot_namespace_ != "")
       this->sensors = urdf::parseSensorsFromParam(robot_namespace_ + "/robot_description", urdf::getSensorParser("tactile"));
@@ -177,6 +176,8 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->numOfSensors = 0;
   for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
   {
+    ROS_DEBUG_STREAM("sensorName tactile " << it->second->name_);
+    ROS_DEBUG_STREAM("sensorName gz " << gzSensorName);
     urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
     if (!sensor)
       continue;  // some other sensor than tactile
@@ -234,7 +235,7 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
       }
       // Incorrect order
       else {
-        ROS_INFO_STREAM_ONCE("Undefined order (neither row-major nor col-major): \t" << sensor -> array_ -> order);
+        ROS_WARN_STREAM("Undefined order (neither row-major nor col-major): \t" << sensor -> array_ -> order);
       }
     }
 
@@ -424,7 +425,7 @@ void GazeboRosTactile::OnContact()
   unsigned int contactsPacketSize = contacts.contact_size();
   // Deklarationen
   unsigned int contactGroupSize;
-  // ROS_INFO_STREAM_THROTTLE(1.0, "contactGroupSize" << contactGroupSize);
+
   double normalForceScalar;
   double stdDev = 0.005;
   double distance;
