@@ -76,8 +76,10 @@ private:
 private:
   ros::NodeHandle* rosnode_;
 
+#ifdef PUB_DEBUG_CONTACT_STATE
 private:
-  ros::Publisher contact_pub_;  // TODO(???): delete?
+  ros::Publisher contact_pub_;
+#endif
 
   // my publisher
 private:
@@ -112,9 +114,11 @@ private:
 private:
   bool skip_local_transform_;
 
+#ifdef PUB_DEBUG_CONTACT_STATE
   /// \brief broadcast some string for now.
 private:
   gazebo_msgs::ContactsState contact_state_msg_;
+#endif
   // new Message where to write in
 private:
   tactile_msgs::TactileState tactile_state_msg_;

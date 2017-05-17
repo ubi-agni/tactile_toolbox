@@ -97,13 +97,12 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->robot_namespace_ = "";
   if (_sdf->HasElement("robotNamespace"))
     this->robot_namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
-
-  // "publishing contact/collisions to this topic name: "
-  //   << this->bumper_topic_name_ << std::endl;
+#ifdef PUB_DEBUG_CONTACT_STATE
   this->bumper_topic_name_ = "bumper_states";
-  this->tactile_topic_name_ = "tactile_states";
   if (_sdf->HasElement("bumperTopicName"))
     this->bumper_topic_name_ = _sdf->GetElement("bumperTopicName")->Get<std::string>();
+#endif
+  this->tactile_topic_name_ = "tactile_states";
   if (_sdf->HasElement("tactileTopicName"))
     this->tactile_topic_name_ = _sdf->GetElement("tactileTopicName")->Get<std::string>();
 
@@ -293,9 +292,9 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     ROS_WARN_STREAM("Multiple matching for " << gzSensorName << " count: " << numOfSensors << "\n all matchings will "
                                                                                               "be published");
   }
-
+#ifdef PUB_DEBUG_CONTACT_STATE
   this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(std::string(this->bumper_topic_name_), 1);
-
+#endif
   this->tactile_pub_ = this->rosnode_->advertise<tactile_msgs::TactileState>(std::string(this->tactile_topic_name_), 1);
 
   // Initialize
@@ -387,9 +386,13 @@ void GazeboRosTactile::TransformFrameInit()
 // Update the controller
 void GazeboRosTactile::OnContact()
 {
+#ifdef PUB_DEBUG_CONTACT_STATE
   if (this->tactile_pub_.getNumSubscribers() <= 0 && contact_pub_.getNumSubscribers() <= 0)
     return;
-
+#else
+  if (this->tactile_pub_.getNumSubscribers() <= 0)
+    return;
+#endif
   // initialize transform frames once
   if (!is_initialized_)
   {
@@ -406,8 +409,10 @@ void GazeboRosTactile::OnContact()
   common::Time meastime = this->parentSensor->GetLastMeasurementTime();
 #endif
   this->tactile_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
+#ifdef PUB_DEBUG_CONTACT_STATE
   this->contact_state_msg_.header.frame_id = this->frame_name_;
   this->contact_state_msg_.header.stamp = ros::Time(meastime.sec, meastime.nsec);
+#endif
 
   // get reference frame (body(link)) pose and subtract from it to get
   // relative force, torque, position and normal vectors
@@ -442,8 +447,10 @@ void GazeboRosTactile::OnContact()
   // ROS_INFO_STREAM_THROTTLE(1.0, "frame_pos" << frame_pos.x << "frame_rot" <<
   // frame_rot.x);
 
+#ifdef PUB_DEBUG_CONTACT_STATE
   // set contact states size
   this->contact_state_msg_.states.clear();
+#endif
 
   unsigned int contactsPacketSize = contacts.contact_size();
   unsigned int contactGroupSize;
@@ -489,12 +496,12 @@ void GazeboRosTactile::OnContact()
     bool switch_body = false;
     if (state.collision2_name == collision_name_)
       switch_body = true;
-
+#ifdef PUB_DEBUG_CONTACT_STATE
     state.wrenches.clear();
     state.contact_positions.clear();
     state.contact_normals.clear();
     state.depths.clear();
-
+#endif
     // sum up all wrenches for each DOF
     geometry_msgs::Wrench total_wrench;
     total_wrench.force.x = 0;
@@ -549,8 +556,9 @@ void GazeboRosTactile::OnContact()
       wrench.torque.x = torque.x;
       wrench.torque.y = torque.y;
       wrench.torque.z = torque.z;
+#ifdef PUB_DEBUG_CONTACT_STATE
       state.wrenches.push_back(wrench);
-
+#endif
       total_wrench.force.x += wrench.force.x;
       total_wrench.force.y += wrench.force.y;
       total_wrench.force.z += wrench.force.z;
@@ -567,7 +575,9 @@ void GazeboRosTactile::OnContact()
       contact_position.x = position.x;
       contact_position.y = position.y;
       contact_position.z = position.z;
+#ifdef PUB_DEBUG_CONTACT_STATE
       state.contact_positions.push_back(contact_position);
+#endif
 
       // rotate normal from world into user specified frame.
       // frame_rot is identity if world is used.
@@ -578,11 +588,12 @@ void GazeboRosTactile::OnContact()
       contact_normal.x = normal.x;
       contact_normal.y = normal.y;
       contact_normal.z = normal.z;
+#ifdef PUB_DEBUG_CONTACT_STATE
       state.contact_normals.push_back(contact_normal);
 
       // set contact depth, interpenetration
       state.depths.push_back(contact.depth(j));
-
+#endif
       // //////////////////////////////////END OF FORCE TRANSFORMATION
 
       normalForceScalar =
@@ -617,9 +628,10 @@ void GazeboRosTactile::OnContact()
         }  // END FOR Taxels
       }    // END FOR Sensors
     }      // END FOR contactGroupSize
-
+#ifdef PUB_DEBUG_CONTACT_STATE
     state.total_wrench = total_wrench;
     this->contact_state_msg_.states.push_back(state);
+#endif
   }  // END FOR contactsPacketSize
 
   // devide by sum of weights and check if sensed force is bigger minForce
@@ -642,7 +654,9 @@ void GazeboRosTactile::OnContact()
       }
     }
   }
+#ifdef PUB_DEBUG_CONTACT_STATE
   this->contact_pub_.publish(this->contact_state_msg_);
+#endif
   this->tactile_pub_.publish(this->tactile_state_msg_);
 }
 

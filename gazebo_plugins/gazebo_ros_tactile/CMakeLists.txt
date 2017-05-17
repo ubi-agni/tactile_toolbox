@@ -51,6 +51,13 @@ link_directories(
   ${GAZEBO_LIBRARY_DIRS}
 )
 
+option(PUB_DEBUG_CONTACT_STATE "Build with contact state publisher" OFF)
+
+if(PUB_DEBUG_CONTACT_STATE)
+  message( "Building with contact state publisher in addition to tactile_state.")
+  add_definitions( -DPUB_DEBUG_CONTACT_STATE )
+endif(PUB_DEBUG_CONTACT_STATE)
+
 ## Declare a C++ library
 add_library(gazebo_ros_tactile src/gazebo_ros_tactile.cpp)
 add_dependencies(gazebo_ros_tactile ${catkin_EXPORTED_TARGETS})
