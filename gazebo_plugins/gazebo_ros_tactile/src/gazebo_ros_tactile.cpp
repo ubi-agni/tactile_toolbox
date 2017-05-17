@@ -139,7 +139,6 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   else
     this->frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
 
-
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
   {
@@ -159,13 +158,16 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->frame_name_ = tf::resolve(prefix, this->frame_name_);
 
   // Begin parsing
-  try{
+  try
+  {
     if (robot_namespace_ != "")
-      this->sensors = urdf::parseSensorsFromParam(robot_namespace_ + "/robot_description", urdf::getSensorParser("tactile"));
+      this->sensors =
+        urdf::parseSensorsFromParam(robot_namespace_ + "/robot_description", urdf::getSensorParser("tactile"));
     else
       this->sensors = urdf::parseSensorsFromParam("/robot_description", urdf::getSensorParser("tactile"));
   }
-  catch (const std::runtime_error& e) {
+  catch (const std::runtime_error& e)
+  {
     std::cout << " Tactile plugin loading failed with message '" << e.what() << "'\n";
     return;
   }
@@ -185,103 +187,109 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 
     if (it->second->name_ != gzSensorName)
       continue;
-    
-    ROS_DEBUG_STREAM("Matching: " << gzSensorName);
-    
-    if(sensor->taxels_.size() == 0){ //if the taxel has no size, sensor is assumed to be an array
 
+    ROS_DEBUG_STREAM("Matching: " << gzSensorName);
+
+    if (sensor->taxels_.size() == 0)
+    {
+      // if the taxel has no size, sensor is assumed to be an array\
       // if(sensor -> array_ -> rows != 0 && sensor -> array_ -> cols != 0) //test rows and cols
 
       // Get parameter form tactile array (urdf)
-      urdf::tactile::Vector2<double> spacing = sensor -> array_ -> spacing;
-      int rows = sensor -> array_ -> rows;
-      int cols = sensor -> array_ -> cols;
-      urdf::tactile::Vector2<double> taxelSize = sensor -> array_ -> size;
-      urdf::tactile::Vector2<double> offset = sensor -> array_ -> offset;
+      urdf::tactile::Vector2<double> spacing = sensor->array_->spacing;
+      int rows = sensor->array_->rows;
+      int cols = sensor->array_->cols;
+      urdf::tactile::Vector2<double> taxelSize = sensor->array_->size;
+      urdf::tactile::Vector2<double> offset = sensor->array_->offset;
 
       // Intiaization: push back and resize
-      this->numOfTaxels.push_back((rows)*(cols));
-      this->taxelNormals.push_back(std::vector<gazebo::math::Vector3>(
-        numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));
-      this->taxelPositions.push_back(std::vector<gazebo::math::Vector3>(
-        numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));
+      this->numOfTaxels.push_back((rows) * (cols));
+      this->taxelNormals.push_back(
+        std::vector<gazebo::math::Vector3>(numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));
+      this->taxelPositions.push_back(
+        std::vector<gazebo::math::Vector3>(numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));
       sensor_msgs::ChannelFloat32 channel;
       channel.values.resize(numOfTaxels[this->numOfSensors]);
       this->tactile_state_msg_.sensors.push_back(channel);
 
       // Fill an array with the positions and normals of the grid cells of the sensor
       // if the order is col-major
-      if (sensor -> array_ -> order == 1){
-        for (int row_idx=0; row_idx < rows; row_idx++){
-          for (int col_idx=0; col_idx < cols; col_idx++){
-            this->taxelPositions[this->numOfSensors][cols*row_idx + col_idx] =
-              gazebo::math::Vector3((-offset.x + col_idx*(spacing.x )),
-                                    (-offset.y + row_idx*(spacing.y )),0);
+      if (sensor->array_->order == 1)
+      {
+        for (int row_idx = 0; row_idx < rows; row_idx++)
+        {
+          for (int col_idx = 0; col_idx < cols; col_idx++)
+          {
+            this->taxelPositions[this->numOfSensors][cols * row_idx + col_idx] =
+              gazebo::math::Vector3((-offset.x + col_idx * (spacing.x)), (-offset.y + row_idx * (spacing.y)), 0);
 
-            this->taxelNormals[this->numOfSensors][cols*row_idx + col_idx] = gazebo::math::Vector3(0, 0, 1.0);
+            this->taxelNormals[this->numOfSensors][cols * row_idx + col_idx] = gazebo::math::Vector3(0, 0, 1.0);
           }
         }
       }
       // if the order is row-major
-      else if (sensor -> array_ -> order == 0){
-        for (int row_idx=0; row_idx < rows; row_idx++){
-          for (int col_idx=0; col_idx < cols; col_idx++){
-            this->taxelPositions[this->numOfSensors][rows*col_idx + row_idx] =
-              gazebo::math::Vector3((-offset.x + col_idx*(spacing.x )),
-                                    (-offset.y + row_idx*(spacing.y )),0);
+      else if (sensor->array_->order == 0)
+      {
+        for (int row_idx = 0; row_idx < rows; row_idx++)
+        {
+          for (int col_idx = 0; col_idx < cols; col_idx++)
+          {
+            this->taxelPositions[this->numOfSensors][rows * col_idx + row_idx] =
+              gazebo::math::Vector3((-offset.x + col_idx * (spacing.x)), (-offset.y + row_idx * (spacing.y)), 0);
 
-            this->taxelNormals[this->numOfSensors][cols*row_idx + col_idx] = gazebo::math::Vector3(0, 0, 1.0);
+            this->taxelNormals[this->numOfSensors][cols * row_idx + col_idx] = gazebo::math::Vector3(0, 0, 1.0);
           }
         }
       }
       // Incorrect order
-      else {
-        ROS_WARN_STREAM("Undefined order (neither row-major nor col-major): \t" << sensor -> array_ -> order);
+      else
+      {
+        ROS_WARN_STREAM("Undefined order (neither row-major nor col-major): \t" << sensor->array_->order);
       }
     }
 
-    else{
-
-    // Intiaization: push back and resize
-    this->numOfTaxels.push_back(sensor->taxels_.size());
-    this->taxelNormals.push_back(std::vector<gazebo::math::Vector3>(
-      numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
-    this->taxelPositions.push_back(std::vector<gazebo::math::Vector3>(
-      numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
-    sensor_msgs::ChannelFloat32 channel;
-    channel.values.resize(numOfTaxels[this->numOfSensors]);
-    this->tactile_state_msg_.sensors.push_back(channel);
-
-    // Fill an array with the positions and normals of the taxels of the sensor
-    for (unsigned int j = 0; j < numOfTaxels[this->numOfSensors]; j++)
+    else
     {
-      this->taxelPositions[this->numOfSensors][j] =
-        gazebo::math::Vector3(sensor->taxels_[j]->origin.position.x, sensor->taxels_[j]->origin.position.y,
-                              sensor->taxels_[j]->origin.position.z);
+      // Intiaization: push back and resize
+      this->numOfTaxels.push_back(sensor->taxels_.size());
+      this->taxelNormals.push_back(std::vector<gazebo::math::Vector3>(
+        numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
+      this->taxelPositions.push_back(std::vector<gazebo::math::Vector3>(
+        numOfTaxels[this->numOfSensors], gazebo::math::Vector3(0, 0, 0)));  // [i].resize(numOfTaxels[i]);
+      sensor_msgs::ChannelFloat32 channel;
+      channel.values.resize(numOfTaxels[this->numOfSensors]);
+      this->tactile_state_msg_.sensors.push_back(channel);
 
-      // normal=rotation times zAxis
-      urdf::Vector3 zAxis(0, 0, 1);
-      urdf::Vector3 urdfTaxelNormal = (sensor->taxels_[j]->origin.rotation) * zAxis;
-      this->taxelNormals[this->numOfSensors][j] =
-        gazebo::math::Vector3(urdfTaxelNormal.x, urdfTaxelNormal.y, urdfTaxelNormal.z);
-    }
+      // Fill an array with the positions and normals of the taxels of the sensor
+      for (unsigned int j = 0; j < numOfTaxels[this->numOfSensors]; j++)
+      {
+        this->taxelPositions[this->numOfSensors][j] =
+          gazebo::math::Vector3(sensor->taxels_[j]->origin.position.x, sensor->taxels_[j]->origin.position.y,
+                                sensor->taxels_[j]->origin.position.z);
 
+        // normal=rotation times zAxis
+        urdf::Vector3 zAxis(0, 0, 1);
+        urdf::Vector3 urdfTaxelNormal = (sensor->taxels_[j]->origin.rotation) * zAxis;
+        this->taxelNormals[this->numOfSensors][j] =
+          gazebo::math::Vector3(urdfTaxelNormal.x, urdfTaxelNormal.y, urdfTaxelNormal.z);
+      }
     }
-    this->tactile_state_msg_.sensors[numOfSensors].name = sensor -> channel_;
+    this->tactile_state_msg_.sensors[numOfSensors].name = sensor->channel_;
 
     this->numOfSensors++;
   }
 
-  if (numOfSensors == 0){
+  if (numOfSensors == 0)
+  {
     ROS_FATAL_STREAM("No matching for " << _parent->GetName());
     return;
   }
-  else if (numOfSensors > 1){
-    ROS_WARN_STREAM("Multiple matching for " << gzSensorName 
-                    << " count: " << numOfSensors 
-                    << "\n all matchings will be published");
+  else if (numOfSensors > 1)
+  {
+    ROS_WARN_STREAM("Multiple matching for " << gzSensorName << " count: " << numOfSensors << "\n all matchings will "
+                                                                                              "be published");
   }
-  
+
   this->contact_pub_ = this->rosnode_->advertise<gazebo_msgs::ContactsState>(std::string(this->bumper_topic_name_), 1);
 
   this->tactile_pub_ = this->rosnode_->advertise<tactile_msgs::TactileState>(std::string(this->tactile_topic_name_), 1);
@@ -317,8 +325,8 @@ void GazeboRosTactile::TransformFrameInit()
 
   // if frameName specified is "world", "/map" or "map" report back
   // inertial values in the gazebo world.
-  if (this->my_link_ == NULL && this->frame_name_ != "world" && this->frame_name_ != "/map" && this->frame_name_ != "ma"
-                                                                                                                    "p")
+  if (this->my_link_ == NULL && this->frame_name_ != "world" && this->frame_name_ != "/map" &&
+      this->frame_name_ != "map")
   {
     // look through all models in the world, search for body
     // name that matches frameName
@@ -327,7 +335,7 @@ void GazeboRosTactile::TransformFrameInit()
     {
       if (*iter)
       {
-        ROS_DEBUG_STREAM("modelname: " << (*iter)->GetName() );
+        ROS_DEBUG_STREAM("modelname: " << (*iter)->GetName());
         this->my_link_ = boost::dynamic_pointer_cast<physics::Link>((*iter)->GetLink(this->frame_name_));
       }
       if (this->my_link_)
@@ -403,7 +411,7 @@ void GazeboRosTactile::OnContact()
   math::Quaternion rot, frame_rot, local_rot;
   math::Vector3 pos, frame_pos, local_pos;
 
-  //float forceSensitivity = 0.1f;
+  // float forceSensitivity = 0.1f;
   // Get local link orientation
   if (local_link_)
   {
@@ -445,18 +453,16 @@ void GazeboRosTactile::OnContact()
   const double pi = 3.14159265359;
   double minForce = 0.0;
   double p_sum = 0.0;
-  double forceDirection=0.0;
+  double forceDirection = 0.0;
 
-
-
-  //for every timestep init the sensor to zero
-   for (unsigned int m = 0; m < this->numOfSensors; m++)
-      {                                                          // Loop over Sensors
-        for (unsigned int k = 0; k < this->numOfTaxels[m]; k++)  // Loop over taxels
-        {
-          this->tactile_state_msg_.sensors[m].values[k] = 0.0f;
-        }
-      }
+  // for every timestep init the sensor to zero
+  for (unsigned int m = 0; m < this->numOfSensors; m++)
+  {                                                          // Loop over Sensors
+    for (unsigned int k = 0; k < this->numOfTaxels[m]; k++)  // Loop over taxels
+    {
+      this->tactile_state_msg_.sensors[m].values[k] = 0.0f;
+    }
+  }
 
   for (unsigned int i = 0; i < contactsPacketSize; ++i)
   {
@@ -497,7 +503,6 @@ void GazeboRosTactile::OnContact()
     contactGroupSize = contact.position_size();
     for (unsigned int j = 0; j < contactGroupSize; ++j)
     {
-
       // Get force, torque. They are in local frame already.
       // forward transform them to world and then
       // and rotate into user specified frame.
@@ -597,15 +602,13 @@ void GazeboRosTactile::OnContact()
                  force.y * this->taxelNormals[m][k].y +
                  force.z * this->taxelNormals[m][k].z);
 
-          if ((distance < critDist) && (forceDirection < 0) && (normalForceScalar > 0)) //TODO Dennis: not nessecarry
+          if ((distance < critDist) && (forceDirection < 0) && (normalForceScalar > 0))  // TODO(Dennis): not nessecarry
           {
-
-              // Normalverteilung erzeugen
-              p = exp(-(distance * distance / (2 * stdDev * stdDev))); // /
-                  //sqrt(2 * pi * stdDev * stdDev);
-              this->tactile_state_msg_.sensors[m].values[k] += p * normalForceScalar;
-              p_sum += p;
-
+            // Normalverteilung erzeugen
+            p = exp(-(distance * distance / (2 * stdDev * stdDev)));  // /
+                                                                      // sqrt(2 * pi * stdDev * stdDev);
+            this->tactile_state_msg_.sensors[m].values[k] += p * normalForceScalar;
+            p_sum += p;
           }
         }  // END FOR Taxels
       }    // END FOR Sensors
@@ -615,7 +618,7 @@ void GazeboRosTactile::OnContact()
     this->contact_state_msg_.states.push_back(state);
   }  // END FOR contactsPacketSize
 
-  //devide by sum of weights and check if sensed force is bigger minForce
+  // devide by sum of weights and check if sensed force is bigger minForce
   for (unsigned int e = 0; e < this->numOfSensors; e++)
   {
     for (unsigned int f = 0; f < this->numOfTaxels[e]; f++)
@@ -637,8 +640,6 @@ void GazeboRosTactile::OnContact()
   }
   this->contact_pub_.publish(this->contact_state_msg_);
   this->tactile_pub_.publish(this->tactile_state_msg_);
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
