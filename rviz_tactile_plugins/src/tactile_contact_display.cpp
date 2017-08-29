@@ -244,7 +244,10 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
     WrenchVisualPtr &visual = it->second.second;
     bool new_visual = !visual;
     if (msg.header.stamp != zeroStamp && msg.header.stamp + timeout < now) {
-      setStatusStd(StatusProperty::Warn, msg.header.frame_id, "no recent msg");
+      const std::string& tf_prefix = tf_prefix_property_->getStdString();
+      const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
+                                                   : tf::resolve(tf_prefix, msg.header.frame_id);
+      setStatusStd(StatusProperty::Warn, frame, "no recent msg");
       if (visual) visual->setVisible(false);
       continue;
     }
