@@ -113,10 +113,11 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   std::string parentName = _parent->GetParentName();
 #endif
   local_name_ = parentName.substr(parentName.find_last_of(':') + 1);
-  ROS_DEBUG_STREAM("contact plugin belongs to link named: " << local_name_);
+  ROS_INFO_STREAM("contact plugin belongs to link named: " << local_name_);
 
   // by default use collision_name as parentName:local_name_ _collision
   collision_name_ = parentName + "::" + local_name_ + "_collision";
+  ROS_INFO_STREAM("default collision name: " << collision_name_);
 
   // try access the real collision name used for the contact sensor (one level up from the plugin sdf)
   if (_sdf->GetParent()->HasElement("contact"))
@@ -125,6 +126,7 @@ void GazeboRosTactile::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     {
       collision_name_ = _sdf->GetParent()->GetElement("contact")->GetElement("collision")->Get<std::string>();
       collision_name_ = parentName + "::" + collision_name_;
+      ROS_INFO_STREAM("real collision name from sdf: " << collision_name_);
     }
   }
 
@@ -519,14 +521,14 @@ void GazeboRosTactile::OnContact()
       // and rotate into user specified frame.
       // frame_rot is identity if world is used (default for now)
 
-      ROS_DEBUG_STREAM("body1 name: " << contact.wrench(j).body_1_name()
+      ROS_DEBUG_STREAM_NAMED("oncontact", "collision body1 name: " << contact.wrench(j).body_1_name()
                                       << ", body2 name: " << contact.wrench(j).body_2_name());
 
       // select the correct body
       gazebo::msgs::Wrench source_wrench;
       if (switch_body)
       {
-        ROS_DEBUG("using body2");
+        ROS_DEBUG_NAMED("oncontact","using body2");
         source_wrench = contact.wrench(j).body_2_wrench();
       }
       else
@@ -602,6 +604,7 @@ void GazeboRosTactile::OnContact()
                  contact_normal.z * force.z) * (-1.0);
       for (unsigned int m = 0; m < this->numOfSensors; m++)
       {                                                          // Loop over Sensors
+        ROS_DEBUG_STREAM_NAMED("oncontact", " processing sensor " << m);
         for (unsigned int k = 0; k < this->numOfTaxels[m]; k++)  // Loop over taxels
         {
           // sensor_msgs::ChannelFloat32 &tSensor =
@@ -624,6 +627,15 @@ void GazeboRosTactile::OnContact()
                                                                       // sqrt(2 * pi * stdDev * stdDev);
             this->tactile_state_msg_.sensors[m].values[k] += p * normalForceScalar;
             p_sum += p;
+          }
+          else
+          {
+            if (distance >= critDist)
+              ROS_DEBUG_STREAM_NAMED("oncontact", " not contributing to cell " << k << " which is too far away (" << distance << ">" << critDist << ")");
+            if (forceDirection > 0)
+              ROS_DEBUG_STREAM_NAMED("oncontact", " not contributing to cell " << k << " forceDirection is not pushing");
+            if (normalForceScalar <= 0)
+              ROS_DEBUG_STREAM_NAMED("oncontact", " not contributing to cell " << k << " normalForceScalar negative");
           }
         }  // END FOR Taxels
       }    // END FOR Sensors
