@@ -44,11 +44,11 @@ tactile_sensor_cast(urdf::Sensor &sensor) {
 
 inline TactileSensorSharedPtr
 tactile_sensor_cast(const urdf::SensorBaseSharedPtr& sensor) {
-  return boost::dynamic_pointer_cast<urdf::tactile::TactileSensor>(sensor);
+  return urdf::dynamic_pointer_cast<urdf::tactile::TactileSensor>(sensor);
 }
 inline TactileSensorConstSharedPtr
 tactile_sensor_cast(const urdf::SensorBaseConstSharedPtr& sensor) {
-  return boost::dynamic_pointer_cast<const urdf::tactile::TactileSensor>(sensor);
+  return urdf::dynamic_pointer_cast<const urdf::tactile::TactileSensor>(sensor);
 }
 
 inline TactileSensorSharedPtr
