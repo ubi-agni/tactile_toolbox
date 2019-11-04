@@ -57,6 +57,7 @@ TactileVisualBase::TactileVisualBase(const std::string &name,
   , mode_(::tactile::TactileValue::rawCurrent)
   , acc_mode_(::tactile::TactileValueArray::Sum), acc_mean_(true)
   , enabled_(false)
+  , range_update_disabled_(false)
 {
   pose_.position.x = origin.position.x;
   pose_.position.y = origin.position.y;
@@ -67,6 +68,8 @@ TactileVisualBase::TactileVisualBase(const std::string &name,
   pose_.orientation.z = origin.rotation.z;
 
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
+  disable_range_update_property_ = new BoolProperty("lock range update", false, "", this, 0, 0);
+  connect(disable_range_update_property_, SIGNAL(changed()), this, SLOT(setDisableRangeUpdateFromProperty()));
   range_property_ = new RangeProperty("data range", "", this);
   connect(range_property_, SIGNAL(edited()), this, SLOT(setRawRangeFromProperty()));
   acc_value_property_ = new rviz::FloatProperty
@@ -108,6 +111,11 @@ float TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
       mode_ == ::tactile::TactileValue::rawMean) {
     v = (v - raw_range_.min()) / raw_range_.range();
   }
+  // clamp to 0..1 (permit to have fixed range and saturate outside)
+  if (v > 1.0)
+	v = 1.0;
+  if (v < 0.0)
+	v = 0.0;
   return v;
 }
 
@@ -123,8 +131,11 @@ QColor TactileVisualBase::mapColor(float v)
 void TactileVisualBase::update(const ros::Time &stamp)
 {
   last_update_time_ = stamp;
-  for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
-    raw_range_.update(it->absRange());
+  if (not range_update_disabled_)
+  {
+    for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
+      raw_range_.update(it->absRange());
+  }
 }
 
 bool TactileVisualBase::expired(const ros::Time &now, const ros::Duration& timeout) const
@@ -194,6 +205,16 @@ void TactileVisualBase::setEnabled(bool enabled)
 {
   enabled_ = enabled;
   onVisibleChanged();
+}
+
+void TactileVisualBase::setDisableRangeUpdateFromProperty()
+{
+  setDisableRangeUpdate(disable_range_update_property_->getBool());
+}
+
+void TactileVisualBase::setDisableRangeUpdate(bool val)
+{
+  range_update_disabled_ = val;
 }
 
 Qt::ItemFlags TactileVisualBase::getViewFlags(int column) const {
