@@ -43,8 +43,6 @@
 #include <OgreMaterialManager.h>
 #include <OgreTechnique.h>
 
-#define RVIZ_PACKAGE_NAME "rviz"
-
 using namespace urdf::tactile;
 
 namespace rviz {
@@ -76,7 +74,7 @@ TaxelEntity::TaxelEntity(const urdf::Geometry &geometry, const urdf::Pose& origi
   std::stringstream ss;
   static int count = 0;
   ss << "taxel color material " << count;
-  material_ = Ogre::MaterialManager::getSingleton().create(ss.str(), RVIZ_PACKAGE_NAME);
+  material_ = Ogre::MaterialPtr(new Ogre::Material(nullptr, Ogre::String(), 0, Ogre::String()));
   material_->setReceiveShadows(false);
 
   entity_ = createEntityFromGeometry(geometry, origin);
