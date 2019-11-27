@@ -4,7 +4,10 @@
   <version>0.1.0</version>
   <description>The tactile_state_publisher package</description>
 
-  <maintainer email="gwalck@techfak.uni-bielefeld.de">gwalck</maintainer>
+  <maintainer email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</maintainer>
+
+  <author email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</author>
+  <author email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</author>
 
   <license>BSD</license>
 

@@ -15,6 +15,8 @@ CATKIN_DEPENDS tactile_msgs
 #  DEPENDS
 )
 
+catkin_python_setup()
+
 include_directories(${catkin_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_publisher.cpp)
