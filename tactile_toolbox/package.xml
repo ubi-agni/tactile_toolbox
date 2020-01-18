@@ -18,6 +18,7 @@
   <run_depend>tactile_msgs</run_depend>
   <run_depend>urdf_tactile</run_depend>
   <run_depend>tactile_state_publisher</run_depend>
+  <run_depend>tactile_state_calibrator</run_depend>
   <run_depend>tactile_merger</run_depend>
   <run_depend>tactile_pcl</run_depend>
   <run_depend>rviz_tactile_plugins</run_depend>

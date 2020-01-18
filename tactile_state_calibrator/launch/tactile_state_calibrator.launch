@@ -1,7 +1,7 @@
 <launch>
   <arg name="in_topic" default="/tactile_states"/>
   <arg name="out_topic" default="/tactile_states/calibrated"/>
-  <arg name="calib" default="$(find tactile_state_calibrator)/config/raw.calib.yaml"/>
+  <arg name="calib"/>
 
   <node name="tactile_state_calibrator" pkg="tactile_state_calibrator" type="tactile_state_calibrator">
     <param name="calib" value="$(arg calib)"/>
