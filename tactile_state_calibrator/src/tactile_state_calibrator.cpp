@@ -76,11 +76,7 @@ int main(int argc, char **argv)
 
   try {
     TactileStateCalibrator tsc(calib_filename);
-
-    while (ros::ok())
-    {
-      ros::spinOnce();
-    }
+    ros::spin();
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM(e.what());
     return EFAULT;
