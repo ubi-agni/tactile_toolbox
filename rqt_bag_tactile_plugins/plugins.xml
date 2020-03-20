@@ -1,0 +1,8 @@
+<library path="src">
+  <class name="TactileArrayBagPlugin"
+         type="rqt_bag_tactile_plugins.tactile_plugin.TactileArrayBagPlugin"
+         base_class_type="rqt_bag::Plugin">
+    <description>
+    </description>
+  </class>
+</library>

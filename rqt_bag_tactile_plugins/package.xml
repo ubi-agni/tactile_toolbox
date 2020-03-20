@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rqt_bag_tactile_plugins</name>
+  <version>0.1.0</version>
+  <description>The rqt_bag_tactile_plugins package</description>
+
+  <maintainer email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</maintainer>
+  <license>BSD</license>
+  <author email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rqt_bag</build_depend>
+  <build_depend>tactile_msgs</build_depend>
+  <build_export_depend>rqt_bag</build_export_depend>
+  <build_export_depend>tactile_msgs</build_export_depend>
+  <exec_depend>rqt_bag</exec_depend>
+  <exec_depend>tactile_msgs</exec_depend>
+
+  <export>
+    <rqt_bag plugin="${prefix}/plugins.xml"/>
+  </export>
+</package>
