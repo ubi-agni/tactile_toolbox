@@ -11,10 +11,13 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rqt_bag</build_depend>
   <build_depend>tactile_msgs</build_depend>
+  <build_depend>urdf_parser_py</build_depend>
   <build_export_depend>rqt_bag</build_export_depend>
   <build_export_depend>tactile_msgs</build_export_depend>
+  <build_export_depend>urdf_parser_py</build_export_depend>
   <exec_depend>rqt_bag</exec_depend>
   <exec_depend>tactile_msgs</exec_depend>
+  <exec_depend>urdf_parser_py</exec_depend>
 
   <export>
     <rqt_bag plugin="${prefix}/plugins.xml"/>
