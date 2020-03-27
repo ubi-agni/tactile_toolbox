@@ -28,8 +28,8 @@ It is related to the [`tactile_msgs`](../tactile_msgs/README) format, when acces
    <parent link="my_tactile_mount"/>
    <!-- z-axis represents the normal of the grid array -->
    <origin xyz="0 0 0.034" rpy="0 0 0"/>
-   <tactile>
-     <!--
+   <tactile channel="data_channel">
+     <!-- 
           size: size of an individual taxel
           spacing: distance between taxels centers, equals size by default, can be negative for flipping
           offset: position offset of taxel grid (relative to origin), with no offset, grid frame is at center of cell 0,0
@@ -71,6 +71,7 @@ see image for easier understanding of the parameters describing an array
          <mesh filename="package://sensor_description/model/my_tactiles/tax_upper.stl" scale="0.00101 0.00101 0.00101"/>
        </geometry>
      </taxel>
+  </tactile>
 </sensor>
 ```
 
