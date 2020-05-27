@@ -1,17 +1,21 @@
 from rqt_bag.plugins.plugin import Plugin
 from rqt_bag import TopicMessageView, TimelineRenderer
 from python_qt_binding.QtCore import Qt, QPoint, QRectF
-from python_qt_binding.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QSizePolicy
+from python_qt_binding.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, \
+    QVBoxLayout, QHBoxLayout, QSizePolicy, QFileDialog
 from python_qt_binding.QtGui import QPainter, QBrush, QTextOption
+
 
 from tactile_msgs.msg import TactileState
 from urdf_parser_py.urdf import URDF
-import xml
 
-from tactile_helpers import parse_sensors, TactileSensor, ColorMap
+from tactile_helpers import ColorMap
+
+from urdf_parser_py import urdf
 
 import numpy as np
 import rospy
+import xacro
 
 
 abs_color_map = ColorMap(4095,0)
@@ -30,32 +34,8 @@ def get_average_taxel_color(sensor):
     if len(sensor.values) > 0:
         mean = np.array(sensor.values).mean()
         return abs_color_map.map(mean)
-        '''
-        if mean >= 4095:
-            return Qt.black
-        elif mean >= 4000 and mean < 4095:
-            return Qt.green
-        elif mean >= 3000 and mean < 4000:
-            return Qt.yellow
-        elif mean >= 1000 and mean < 3000:
-            return Qt.magenta
-        else:
-            return Qt.red
-        '''
     else:  # 0
         return Qt.black
-
-def get_taxel_color(val):
-    if val >= 4095:
-        return Qt.black
-    elif val >= 4000 and val < 4095:
-        return Qt.green
-    elif val >= 3000 and val < 4000:
-        return Qt.yellow
-    elif val >= 1000 and val < 3000:
-        return Qt.magenta
-    else:
-        return Qt.red
 
 def paint_default_sensor(qp, sensor, i, j, w, h, text_option):
     color = get_average_taxel_color(sensor)
@@ -64,7 +44,7 @@ def paint_default_sensor(qp, sensor, i, j, w, h, text_option):
     qp.drawText(QRectF(i * w, j * h,w,h),sensor.name, text_option)
 
 def paint_sensor(qp, sensor, values, i, j, w, h, text_option):
-    if sensor.type == TactileSensor.TAXEL_ARRAY:
+    if isinstance(sensor, urdf.TactileArray):
         array = sensor.array
         # hack to re-arrange the values
         #reorder = [8, 4, 7, 9, 0, 13, 10 , 12, 5, 14, 15, 11, 1, 2, 3, 6]
@@ -85,14 +65,13 @@ def paint_sensor(qp, sensor, values, i, j, w, h, text_option):
                 for tj in range(array.rows):
                     idx = tj * array.cols + ti
                     if idx < len(reordered_values):
-                        # color = get_taxel_color(reordered_values[idx])
                         color = abs_color_map.map(reordered_values[idx])
                         qp.setBrush(QBrush(color))
                         qp.drawRect(QRectF(i * w + ti*tw, j * h + tj* th ,tw,th))
-                        
+
             #p.drawText(QRectF(i * w, j * h,w,h), sensor.name, text_option)
 
-        
+
 
 class TactileArrayPanel(TopicMessageView):
     name = 'Tactile Array'
@@ -107,6 +86,8 @@ class TactileArrayPanel(TopicMessageView):
         self.paint_widget.paintEvent = self.paintEvent
         self.text_option = QTextOption()
         self.text_option.setAlignment(Qt.AlignCenter)
+        self.loaded_filename = ""
+        self.robot_description = ""
         self.sensors_initialized = False
         self.sensors = {}
 
@@ -118,8 +99,10 @@ class TactileArrayPanel(TopicMessageView):
         self.rdparam_label.setText('robot_description:')
         self.rdparam = QLineEdit(self.widget)
         self.rdparam.setText("/robot_description")
-        self.rdparam_button = QPushButton("reload", self.widget)
-        self.rdparam_button.clicked.connect(self.load_robot_description_cb)
+        self.rdparam_button = QPushButton("load from param", self.widget)
+        self.rdparam_button.clicked.connect(self.param_load_robot_description_cb)
+        self.rdfile_button = QPushButton("load from file", self.widget)
+        self.rdfile_button.clicked.connect(self.file_load_robot_description_cb)
         self.rdparam.resize(200, 32)
         hparamlayout.addWidget(self.rdparam_label)
         hparamlayout.addWidget(self.rdparam)
@@ -130,7 +113,8 @@ class TactileArrayPanel(TopicMessageView):
         self.paint_widget.setSizePolicy(policy)
         hpainterlayout.addWidget(self.paint_widget)
         vlayout.addLayout(hparamlayout)
-        vlayout.addLayout(hpainterlayout)       
+        vlayout.addWidget(self.rdfile_button)
+        vlayout.addLayout(hpainterlayout)
         self.widget.setLayout(vlayout)
 
     def message_viewed(self, bag, msg_details):
@@ -138,19 +122,44 @@ class TactileArrayPanel(TopicMessageView):
         _, self.msg, _ = msg_details
         self.widget.update()
 
-    def load_robot_description_cb(self):
-        self.load_robot_description(self.rdparam.text())
-        self.sensors_initialized = True
-
-    def load_robot_description(self, rd_param="/robot_description"):
-        if rospy.has_param(rd_param):
-            self.rd_param = rd_param
-            robot_description = rospy.get_param(rd_param)
-            # URDF does not support sensors yet
-            # robot = URDF.from_xml_string(robot_description)
-            self.sensors = parse_sensors(robot_description)
+    def param_load_robot_description_cb(self):
+        if rospy.has_param(self.rdparam.text()):
+            self.robot_description = rospy.get_param(self.rdparam.text())
+            self.load_robot_description()
         else:
-            print (rd_param , " not found on the param server")
+            print (self.rdparam.text() , " not found on the param server")
+
+    def file_load_robot_description_cb(self):
+        dlg = QFileDialog()
+        filename, filter_used = dlg.getOpenFileName(parent=self.widget,
+            caption='Open xacro file', directory=self.loaded_filename,
+            filter="xacro (*.xacro);;urdf (*.urdf)")
+        if filename:
+            xacro_file = open(filename, 'r')
+            with xacro_file:
+                robot_xacro = xacro.parse(xacro_file)
+                xacro.process_doc(robot_xacro,{})
+                self.robot_description = robot_xacro.toprettyxml(encoding="utf-8")
+                self.loaded_filename = filename
+                self.load_robot_description()
+                
+
+    def load_robot_description(self):
+        try:
+            robot = URDF.from_xml_string(self.robot_description)
+            
+            if len(robot.sensors):
+                self.sensors = {}
+                # remap with channel names // works only for arrays right now
+                for sensor in robot.sensors:
+                    self.sensors[sensor.tactile.channel] = sensor.tactile
+                self.sensors_initialized = True
+                self.widget.update()
+            else:
+                print (self.loaded_filename , " does not contain sensors")
+        except Exception as e:
+            print self.robot_description
+            print("URDF parsing error: %s" % unicode(e))
 
     def paintEvent(self, event):
 
@@ -172,7 +181,7 @@ class TactileArrayPanel(TopicMessageView):
                 i = 0
                 j = 0
                 #print sensor_width, sensor_height
-                
+
                 for idx, sensor in enumerate(self.msg.sensors):
 
                     if (idx % self.MAX_COLUMNS == 0 and idx != 0):
@@ -187,7 +196,7 @@ class TactileArrayPanel(TopicMessageView):
                             paint_default_sensor(self.qp, sensor, i, j, sensor_width, sensor_height, self.text_option)
                     else:
                         paint_default_sensor(self.qp, sensor, i, j, sensor_width, sensor_height, self.text_option)
-                    
+
                     i += 1
         self.qp.end()
 
