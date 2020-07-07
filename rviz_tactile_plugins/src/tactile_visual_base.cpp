@@ -109,13 +109,13 @@ float TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
   // normalize to range 0..1
   if (mode_ == ::tactile::TactileValue::rawCurrent ||
       mode_ == ::tactile::TactileValue::rawMean) {
-    v = (v - raw_range_.min()) / raw_range_.range();
+    if (raw_range_.range() != 0.0 ) { // if fixed range, and manually set to same value, range could be 0
+      v = (v - raw_range_.min()) / raw_range_.range();
+    }
   }
-  // clamp to 0..1 (permit to have fixed range and saturate outside)
-  if (v > 1.0)
-	v = 1.0;
-  if (v < 0.0)
-	v = 0.0;
+  // clamp to 0..1 (permits to accept fixed range and saturate outside)
+  if (v > 1.0) v = 1.0;
+  if (v < 0.0) v = 0.0;
   return v;
 }
 
