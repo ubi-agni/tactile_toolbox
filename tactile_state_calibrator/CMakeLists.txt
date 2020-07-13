@@ -5,6 +5,11 @@ find_package(catkin REQUIRED COMPONENTS roscpp tactile_msgs
 )
 find_package(tactile_filters REQUIRED)
 
+include(FindPkgConfig)
+pkg_search_module(YAML yaml-cpp)
+
+
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES
@@ -12,10 +17,16 @@ catkin_package(
 #  DEPENDS
 )
 
+if(YAML_FOUND)
+  add_definitions(-DHAVE_YAML)
+  ## Specify additional locations of header files
+  include_directories(${YAML_INCLUDE_DIRS})
+endif(YAML_FOUND)
+
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_calibrator.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} tactile_filters PRIVATE ${YAML_LIBRARIES})
 add_definitions(-std=c++11)
 # only works since cmake 3.1
 # target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)

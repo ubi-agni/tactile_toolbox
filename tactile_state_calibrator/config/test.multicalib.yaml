@@ -1,0 +1,20 @@
+calib:
+  - sensor_name: board0
+    type: PWL
+    idx_range: [[0, 90]]
+    values:
+      0:    0
+      1024: 10
+      4095: 4095
+  - sensor_name: board0
+    type: PWL
+    idx_range: [[91, 94]]
+    values:
+      0:    1.0
+      4095: 0.0
+  - sensor_name: board0
+    type: PWL
+    idx_range: [95]
+    values:
+      0:    -3.0
+      4095: -5.0

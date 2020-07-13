@@ -3,7 +3,7 @@
   <arg name="out_topic" default="/tactile_states/calibrated"/>
   <arg name="calib"/>
 
-  <node name="tactile_state_calibrator" pkg="tactile_state_calibrator" type="tactile_state_calibrator">
+  <node name="tactile_state_calibrator" pkg="tactile_state_calibrator" type="tactile_state_calibrator" output="screen">
     <param name="calib" value="$(arg calib)"/>
     <remap from="in_tactile_states" to="$(arg in_topic)"/>
     <remap from="out_tactile_states" to="$(arg out_topic)"/>
