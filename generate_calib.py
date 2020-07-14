@@ -88,6 +88,10 @@ if __name__ == "__main__":
                       help="index of the ref channel to calibrate against")
     parser.add_argument("ref_tare_val", type=float,
                       help="reference tare value (given in newton)")
+    parser.add_argument("--ref_ratio", type=float, default=REF_CALIB_RATIO,
+                      help="reference ratio (indicated on the tool)")
+    parser.add_argument("--ref_offset", type=float, default=REF_CALIB_OFFSET,
+                      help="reference offset (indicated on the tool)")
     parser.add_argument("--plot",  action="store_true", help="show the plots")
     parser.add_argument("--input_resolution", type=int, default=DEFAULT_INPUT_RESOL,
                       help="input resolution in bits")
@@ -133,7 +137,7 @@ if __name__ == "__main__":
     raw = np.array(raw_vec)
 
     # compute ref in newton 3.b    Calculate Ground Truth in Newton GTN: with Model GTN = -0,0154 * CtRAW+ 53,793    where   CrRAW = Calib-tool-RAW [12Bit] = "field.sensors0.values17" out of recorded rosbag file.
-    ref_newton = REF_CALIB_RATIO * ref_raw + REF_CALIB_OFFSET
+    ref_newton = args.ref_ratio * ref_raw + args.ref_offset
      # tare 3.c    Tare with each: GTtN = GTN - Mean(TareValues)
     ref_newton_tare = ref_newton - args.ref_tare_val
 
