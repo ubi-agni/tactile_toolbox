@@ -17,7 +17,7 @@
 
 using namespace tactile;
 
-const int verbose=2;
+int verbose=0;
 
 TactileStateCalibrator::TactileStateCalibrator(const std::string calib_filename)
 {
@@ -62,12 +62,12 @@ bool TactileStateCalibrator::fill_calibs(std::map<int, tactile::Calibration*> &m
   return false;
 }
 
-bool TactileStateCalibrator::extract_range(const YAML::Node &node, std::map<int, tactile::Calibration*> &map, tactile::Calibration* p)
+bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<int, tactile::Calibration*> &map, tactile::Calibration* p)
 {
   if (node.Type() == YAML::NodeType::Sequence)
   {
     if (verbose>1)
-      ROS_INFO_STREAM(" found a range" );
+      ROS_INFO_STREAM(" found an index range" );
     std::vector<int> idx_ranges;
     for(YAML::const_iterator idx_range_it=node.begin(); idx_range_it!=node.end(); ++idx_range_it)
     {
@@ -91,14 +91,14 @@ bool TactileStateCalibrator::extract_range(const YAML::Node &node, std::map<int,
             if  (idx_ranges[0] < idx_ranges[1] && idx_ranges[0] >= 0)
             {
               if (verbose>1)
-                ROS_INFO_STREAM("  range valid" );
+                ROS_INFO_STREAM("  index range valid" );
               // add the range to the idx_map and associate it to the calibration pointer
               for (unsigned int i = idx_ranges[0]; i <= idx_ranges[1];++i) 
               {
                 map[i] = p;
               }
               if (verbose>1)
-                ROS_INFO_STREAM("  added values in range [" <<  idx_ranges[0] << ", " << idx_ranges[1] << "]");
+                ROS_INFO_STREAM("  added index in range [" <<  idx_ranges[0] << ", " << idx_ranges[1] << "]");
             }
             else
             {
@@ -137,7 +137,7 @@ bool TactileStateCalibrator::extract_range(const YAML::Node &node, std::map<int,
   }
   else // not an accepted range
   {
-    ROS_ERROR("Range should be provided as a sequence");
+    ROS_ERROR("Index range should be provided as a sequence");
     return false;
   }
 }
@@ -218,8 +218,8 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
             if (yaml_calib["idx_range"])
             {
               if (verbose>1)
-                ROS_INFO_STREAM(" extracting range" );
-              if(extract_range(yaml_calib["idx_range"], idx_to_calib_map, calib_ptr))
+                ROS_INFO_STREAM(" extracting index range" );
+              if(extract_idx_range(yaml_calib["idx_range"], idx_to_calib_map, calib_ptr))
               {
                 // check the result
                 if (single_calib_ == nullptr) 
@@ -235,6 +235,11 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
                 {// one can break the for loop here
                   break;
                 }
+              }
+              else
+              {
+                ROS_ERROR(" extracting index range failed");
+                break;
               }
             }
             else // no range provided, apply to all
@@ -365,6 +370,8 @@ int main(int argc, char **argv)
     ROS_ERROR_STREAM("No calibration file provided");
     return EFAULT;
   }
+  
+  nh_priv.getParam("verbose", verbose); 
 
   try {
     TactileStateCalibrator tsc(calib_filename);

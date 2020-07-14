@@ -47,7 +47,7 @@ private:
   /**
    * extract index of taxels a calib applies to
    */
-  bool extract_range(const YAML::Node &node, std::map<int, tactile::Calibration*> &map, tactile::Calibration* p);
+  bool extract_idx_range(const YAML::Node &node, std::map<int, tactile::Calibration*> &map, tactile::Calibration* p);
 
   /**
    * generic tactile callback
