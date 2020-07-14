@@ -209,6 +209,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
                   ROS_ERROR("Values not found but Piece Wise Linear requires values");
                 break;
               }
+              case TactileStateCalibrator::calib_type::RAW:
               default:
                 calib_ptr = nullptr;
             }
@@ -297,8 +298,12 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 
 float TactileStateCalibrator::map(float val, tactile::Calibration *c)
 {
-  return c->map(val);
+  if (c== nullptr)
+    return val;
+  else
+    return c->map(val);
 }
+
 
 void TactileStateCalibrator::tactile_state_cb(const tactile_msgs::TactileStateConstPtr& msg)
 {
