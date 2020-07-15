@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tactile_calibration_generator</name>
+  <version>0.1.0</version>
+  <description>The tactile_calibration_generator package</description>
+
+  <maintainer email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</maintainer>
+
+  <license>LGPLv3</license>
+
+  <author email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</author> -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>pwlf</build_depend>
+  <build_depend>rosbag</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>tactile_msgs</build_depend>
+  <build_export_depend>pwlf</build_export_depend>
+  <build_export_depend>rosbag</build_export_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>tactile_msgs</build_export_depend>
+  <exec_depend>pwlf</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
+  <exec_depend>python-yaml</exec_depend>
+  <exec_depend>rosbag</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>tactile_msgs</exec_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
