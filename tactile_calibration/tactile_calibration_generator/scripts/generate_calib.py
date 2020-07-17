@@ -26,11 +26,23 @@ def smooth(y, box_pts):
     return y_smooth
 
 def find_inflection_index(x):
-    direction = 1 # check for increasing
+    direction = 0 # check for any change
     increasing_idx = []
     decreasing_idx = []
-    prev_val = 0
+    sign = 1
+    init_val = None
+    # TODO add counting of repetition of push/release
     for i, val in enumerate(vel):
+        if direction == 0: # checking for changes at all
+            if init_val is None:
+                init_val = val
+            if abs(val) > CHANGE_DETECT_THRESH:
+                if val-init_val > 0: # first change is increasing (push = increasing)
+                    sign = 1
+                    direction = 2
+                else:  # first change is decreasing (push = decreasing)
+                    sign = -1
+                    direction = -2
         if direction == 1: # checking for increasing
             if val > CHANGE_DETECT_THRESH: # if above threshold consider increasing
                 direction = 2 # switch to increasing
@@ -55,7 +67,10 @@ def find_inflection_index(x):
             else:
                 direction = 1 # switch to check for increasing
                 continue
-    return [np.array(increasing_idx), np.array(decreasing_idx)]
+    if sign > 0:
+        return [np.array(increasing_idx), np.array(decreasing_idx)]
+    else:  # inverse decreasing and increasing to have always "pushing actions" first
+        return [np.array(decreasing_idx), np.array(increasing_idx)]
 
 
 if __name__ == "__main__":
@@ -132,21 +147,25 @@ if __name__ == "__main__":
     smooth_raw = smooth(raw,19)
     ## compute derivative of the input data
     vel = np.gradient(smooth_raw)
-    ## find inflections
+    ## find inflections, inc_idx are increasing "pressure" index (which might be raw value decreasing or increasing)
     [inc_idx, dec_idx]=find_inflection_index(vel);
 
+    # check there were some push/release
+    if len(inc_idx)==0 or len(dec_idx)==0:
+        print "could not find push/release action in the data, verify the file or the channels"
+        exit(0)
     # 3.a View recorded data in graphplot in order to validate correctness (no spurious wrong data or high noise)
     if args.plot:
         plt.plot(range(len(smooth_raw)),smooth_raw, 'g-', lw=1) # smooth raw values
         plt.plot(range(len(ref_newton_tare)),ref_newton_tare*-100.0, 'm-', lw=1) # smooth ref values, on negative side to avoid cluttering
-        plt.plot(inc_idx, smooth_raw[inc_idx], 'rx', lw=2) # increasing values
-        plt.plot(dec_idx, smooth_raw[dec_idx], 'bx', lw=2) # decreasing values
+        plt.plot(inc_idx, smooth_raw[inc_idx], 'rx', lw=2) # increasing pressure values
+        plt.plot(dec_idx, smooth_raw[dec_idx], 'bx', lw=2) # decreasing pressure values
         plt.plot(range(len(vel)), vel*50, 'k-', lw=1) # velocity scaled up
         plt.show()
 
     # 3.d0    Database funktion: With each lookuptable entrance "Lookup[0-4095]"  (in excel it is  AVERAGEIF function)
-    missing_inc_input_values = [] # list of increasing input values that do not appear in the recorded data.
-    missing_dec_input_values = [] # list of decreasing input values that do not appear in the recorded data.
+    missing_inc_input_values = [] # list of increasing input pressure values that do not appear in the recorded data.
+    missing_dec_input_values = [] # list of decreasing input pressure values that do not appear in the recorded data.
     lookup_inc = OrderedDict()
     lookup_dec = OrderedDict()
     for val in range(input_range_max):
