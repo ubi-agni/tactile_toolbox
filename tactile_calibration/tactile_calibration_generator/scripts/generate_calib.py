@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
 import rosbag
-from rospy.rostime import Duration, Time
 from tactile_msgs.msg import TactileState
 import argparse
 from collections import OrderedDict
@@ -9,25 +8,10 @@ import csv
 import yaml
 import time
 
-#from sklearn import linear_model
+#pip install pwlf
 import pwlf
 
-
-#from scipy.interpolate import UnivariateSpline
-
-#from sklearn.tree import DecisionTreeRegressor
-#from sklearn.linear_model import LinearRegression
-
-
-
 import matplotlib.pyplot as plt
-
-#Calibration Procedure:
-#: rosbag record  /TactileGlove -o <outputfilename>
-
-#Glove: P2 with Teensy3.2, ADC: AD7490
-#CalibTool Channel: TactileGlove/sensors[0]/values[17]
-
 
 REF_CALIB_RATIO = -0.0154
 REF_CALIB_OFFSET = 53.793
@@ -209,11 +193,6 @@ if __name__ == "__main__":
     ys = np.array(y_inc)
     #ys = smooth(y_inc,100)
 
-    # solution 0 not tested
-    #clf = linear_model.LinearRegression()
-    #clf.fit([[getattr(t, 'x%d' % i) for i in range(1, 8)] for t in texts],
-    #    [t.y for t in texts])
-
     # solution with pwlf 1  https://pypi.org/project/pwlf/   # not available in package manager
     # Installing collected packages: numpy, scipy, pyDOE, pwlf
     # Successfully installed numpy-1.16.6 pwlf-2.0.3 pyDOE-0.3.8 scipy-1.2.3
@@ -231,51 +210,6 @@ if __name__ == "__main__":
         plt.plot(xs, ys, 'o')
         plt.plot(x_hat, y_hat, '-')
         plt.show()
-
-    # Solution with splines 2
-    #spl = UnivariateSpline(x, y, k=1, s=0.5)
-    #xs = np.linspace(x.min(), x.max(), 100)
-    #fig, ax = plt.subplots()
-    #ax.scatter(x, y, color="red", s=20, zorder=20)
-    #ax.plot(xs, spl(xs), linestyle="--", linewidth=1, color="blue", zorder=10)
-    #ax.grid(color="grey", linestyle="--", linewidth=.5, alpha=.5)
-    #ax.set_ylabel("Y")
-    #ax.set_xlabel("X")
-    #plt.show()
-
-    # solution with sklearn 3  sudo apt-get install python-sklearn
-
-    # segmented linear regression parameters
-    # n_seg = 10
-
-    ##fig, (ax0, ax1) = plt.subplots(1, 2)
-    #fig, ax0 = plt.subplots(1, 1)
-
-    # dys = np.gradient(ys, xs)
-    # rgr = DecisionTreeRegressor(max_leaf_nodes=n_seg)
-    # rgr.fit(xs.reshape(-1, 1), dys.reshape(-1, 1))
-    # dys_dt = rgr.predict(xs.reshape(-1, 1)).flatten()
-
-    # ys_sl = np.ones(len(xs)) * np.nan
-    # for y in np.unique(dys_dt):
-        # msk = dys_dt == y
-        # lin_reg = LinearRegression()
-        # lin_reg.fit(xs[msk].reshape(-1, 1), ys[msk].reshape(-1, 1))
-        # ys_sl[msk] = lin_reg.predict(xs[msk].reshape(-1, 1)).flatten()
-        # ax0.plot([xs[msk][0], xs[msk][-1]],
-                 # [ys_sl[msk][0], ys_sl[msk][-1]],
-                 # color='r', zorder=1)
-
-    # ax0.set_title('values')
-    # ax0.scatter(xs, ys, label='data', color='k')
-    # ax0.scatter(xs, ys_sl, s=3**2, label='seg lin reg', color='g', zorder=5)
-    # ax0.legend()
-
-    # #ax1.set_title('slope')
-    # #ax1.scatter(xs, dys, label='data')
-    # #ax1.scatter(xs, dys_dt, label='DecisionTree', s=2**2)
-    # #ax1.legend()
-    # plt.show()
 
     # with open('lookup_inc.csv', 'w') as csvfile:
         # csvwriter = csv.writer(csvfile, delimiter=',')
@@ -307,7 +241,6 @@ if __name__ == "__main__":
     with open('mapping.yaml', 'w') as f:
         data = yaml.dump(calib, f)  #sort_keys=False in python3 only     
 
-    #time.sleep(10)
-
+    
 
 
