@@ -144,7 +144,7 @@ if __name__ == "__main__":
     # execute only if run as a script
     parser = argparse.ArgumentParser()
 
-    # args : 1 bagfilename, 2 topic, sensor number, calib number
+    # args :
     parser.add_argument("bagfilename", type=str,
                       help="bag filename to open")
     parser.add_argument("topic", type=str,
