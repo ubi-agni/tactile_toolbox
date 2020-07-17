@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 REF_CALIB_RATIO = -0.0154
 REF_CALIB_OFFSET = 53.793
+REF_FLAT_THRESHOLD = 0.3 # in newton (30 gram) accepatable variation to find the flat part of the ref
 DEFAULT_INPUT_RESOL = 12 # in bits
 CHANGE_DETECT_THRESH = 4 # 5 unit of velocity positive or negative
 DEFAULT_SEGMENTS = 5
@@ -71,6 +72,12 @@ def find_inflection_index(x):
         return [np.array(increasing_idx), np.array(decreasing_idx)]
     else:  # inverse decreasing and increasing to have always "pushing actions" first
         return [np.array(decreasing_idx), np.array(increasing_idx)]
+
+def is_raw(data):
+    # check if there data are pure integers
+    if np.sum(data.astype(int) - data) ==0 :
+        return True
+    return False
 
 
 if __name__ == "__main__":
@@ -174,15 +181,45 @@ if __name__ == "__main__":
         exit(-1)
 
     # process the data
+    print "Processing data..."
     # 3. Offline Lookuptable generation
-    # convert the data
-    ref_raw = np.array(ref_raw_vec)
+    plot_raw = False
+    ## convert the data
     raw = np.array(raw_vec)
 
-    # compute ref in newton 3.b    Calculate Ground Truth in Newton GTN: with Model GTN = -0,0154 * CtRAW+ 53,793    where   CrRAW = Calib-tool-RAW [12Bit] = "field.sensors0.values17" out of recorded rosbag file.
-    ref_newton = args.ref_ratio * ref_raw + args.ref_offset
-     # tare 3.c    Tare with each: GTtN = GTN - Mean(TareValues)
-    ref_newton_tare = ref_newton - args.ref_tare_val
+    ## process ref if needed
+    if args.ref_is_raw:
+        ref_raw = np.array(ref_raw_vec)
+        # compute ref in newton 3.b    Calculate Ground Truth in Newton GTN: with Model GTN = -0,0154 * CtRAW+ 53,793    where   CrRAW = Calib-tool-RAW [12Bit] = "field.sensors0.values17" out of recorded rosbag file.
+        ref_newton = args.ref_ratio * ref_raw + args.ref_offset
+
+        # extract tare
+        if (args.ref_tare_val):  # tare is forced by the user, use it.
+            ref_tare = args.ref_tare_val
+        else:
+            # need to compute it
+            ## try find a "flat" zone in the beginning of the data
+            cur_ref = None
+            end_flat_range = None
+            for ref, i in enumerate(ref_newton):
+                if cur_ref is None:
+                    cur_ref = ref
+                if abs(cur_ref -  ref) > REF_FLAT_THRESHOLD:
+                    end_flat_range = i
+            if end_flat_range is not None:
+                ref_tare = np.mean(ref_newton[0:end_flat_range])
+            else:
+                print "The ref is too flat, are you sure the correct channel was selected ?"
+                ref_tare = np.mean(ref_newton)
+        
+        # tare 3.c    Tare with each: GTtN = GTN - Mean(TareValues)
+        ref_newton_tare = ref_newton - ref_tare_val
+    else:  # value is already calibrated to newton and tared
+        ref_newton_tare = np.array(ref_raw_vec)
+        # warn if data is strangly integers everywhere (which means is raw)
+        if is_raw(ref_newton_tare):
+            print " # warning # ref values seem raw but red_is_raw was not set true, proceeding without calibration of ref value"
+            plot_raw = True
 
     # find the sections in which pressure increases/decreases
     # TODO Guillaume : also look at the range of ref data to not get a decreasing force at the end of the increasing raw data
@@ -200,7 +237,10 @@ if __name__ == "__main__":
     # 3.a View recorded data in graphplot in order to validate correctness (no spurious wrong data or high noise)
     if args.plot:
         plt.plot(range(len(smooth_raw)),smooth_raw, 'g-', lw=1) # smooth raw values
-        plt.plot(range(len(ref_newton_tare)),ref_newton_tare*-100.0, 'm-', lw=1) # smooth ref values, on negative side to avoid cluttering
+        if plot_raw:
+            plt.plot(range(len(ref_newton_tare)),ref_newton_tare, 'm-', lw=1) # smooth ref values, on negative side to avoid cluttering
+        else:
+            plt.plot(range(len(ref_newton_tare)),ref_newton_tare*-100.0, 'm-', lw=1) # smooth ref values, on negative side to avoid cluttering
         plt.plot(inc_idx, smooth_raw[inc_idx], 'rx', lw=2) # increasing pressure values
         plt.plot(dec_idx, smooth_raw[dec_idx], 'bx', lw=2) # decreasing pressure values
         plt.plot(range(len(vel)), vel*50, 'k-', lw=1) # velocity scaled up
@@ -259,10 +299,11 @@ if __name__ == "__main__":
     # Installing collected packages: numpy, scipy, pyDOE, pwlf
     # Successfully installed numpy-1.16.6 pwlf-2.0.3 pyDOE-0.3.8 scipy-1.2.3
 
+    print "Fitting the data and extracting a", args.segments, " segment piece-wise-linear calib"
     pwlf_result = pwlf.PiecewiseLinFit(xs, ys)
     # request a fit with n points
     pwlf_breaks = pwlf_result.fit(args.segments)
-    
+
     #print(breaks)
     if args.plot:
         x_hat = np.linspace(xs.min(), xs.max(), 100)
