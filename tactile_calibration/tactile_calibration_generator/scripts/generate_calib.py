@@ -82,12 +82,12 @@ if __name__ == "__main__":
                       help="bag filename to open")
     parser.add_argument("topic", type=str,
                       help="topic to process")
-    parser.add_argument("data_channel", type=int,
+    parser.add_argument("--data_channel", type=int,
                       help="index of the data channel to calibrate")
-    parser.add_argument("ref_channel", type=int,
+    parser.add_argument("--ref_channel", type=int,
                       help="index of the ref channel to calibrate against")
-    parser.add_argument("ref_tare_val", type=float,
-                      help="reference tare value (given in newton)")
+    parser.add_argument("--ref_tare_val", type=float,
+                      help="use provided reference tare value (given in newton) instead of using rest pose values")
     parser.add_argument("--ref_ratio", type=float, default=REF_CALIB_RATIO,
                       help="reference ratio (indicated on the tool)")
     parser.add_argument("--ref_offset", type=float, default=REF_CALIB_OFFSET,
@@ -101,33 +101,73 @@ if __name__ == "__main__":
 
 
     input_range_max = 2**args.input_resolution
+    data_channel = None
+    calib_channel = None
+    ref_channel = None
+    
+    # validate options
+    if args.ref_is_raw and not (args.ref_ratio and args.ref_offset):
+        print "ref_is_raw was activate but ref_ratio and/or ref_offset are missing"
+        exit(0)
+    
+    
+    # select mode of operation either calib_xx with xx the calibrated cell idx, or provided calib cell idx, ref cell indx
+    if args.data_channel and args.ref_channel:
+        calib_channel = args.data_channel
+        data_channel = calib_channel
+        ref_channel = args.ref_channel
+    else:
+        # try extract data_channel from filename
+        if "calib_" in args.bagfilename:
+            split_filename = args.filename.split('_')
+            if split_filename[1].is_digit():
+                calib_channel = int(split_filename[1])
+                data_channel = 0
+                ref_channel = 1
+        else:
+            if args.data_channel:
+                calib_channel = args.data_channel
+                data_channel = 0
+                ref_channel = 1
+            else:
+                print "could not find a channel number in the filename (expected 'calib_##_*.bag') and no data_channel provided"
+                exit(0)
+ 
+
     # read the bag file
     bag = rosbag.Bag(args.bagfilename)
     ref_raw_vec = []
     raw_vec = []
     # TODO Guillaume : also handle the sensor name in case there are more than one sensor (like on iObject+)
     sensor_name = None
-    print "looking for ", args.topic
+    print "Reading", args.bagfilename," looking for ", args.topic, "channel", data_channel, " and ref ", ref_channel 
+    warned_size_tactile_vec = False
     for topic, msg, t in bag.read_messages(topics=[args.topic]):
         # if there is data
         if len(msg.sensors):
             if sensor_name is None:
                 sensor_name = msg.sensors[0].name
+            # warn if no channel provided but data is larger than 2 values
+            if not warned_size_tactile_vec:
+                if len(msg.sensors[0].values) > 2 and not (args.data_channel and args.ref_channel):
+                    print "# Warning #, data size larger than 2 elements but not both data_channel and ref_channel were given"
+                    warned_size_tactile_vec = True
+                
             # validate index are in the range
-            if (args.ref_channel < len(msg.sensors[0].values) and args.data_channel < len(msg.sensors[0].values)):
-                if msg.sensors[0].values[args.data_channel] < input_range_max:
+            if (ref_channel < len(msg.sensors[0].values) and data_channel < len(msg.sensors[0].values)):
+                if msg.sensors[0].values[data_channel] < input_range_max:
                     # extract the dedicated channels for raw and reference_raw
                     # 2.d    crop saved values to pair of channels [CalibTool;determined taxe]: /TactileGlove/sensors[0]/values[17] and /TactileGlove/sensors[0]/values[determined taxel]
-                    ref_raw_vec.append(msg.sensors[0].values[args.ref_channel])
-                    raw_vec.append(msg.sensors[0].values[args.data_channel])
+                    ref_raw_vec.append(msg.sensors[0].values[ref_channel])
+                    raw_vec.append(msg.sensors[0].values[data_channel])
                 else: # input range badly chosen
-                    print "Data ", msg.sensors[0].values[args.data_channel], " is higher than input resolution ", input_range_max
+                    print "Data ", msg.sensors[0].values[data_channel], " is higher than input resolution ", input_range_max
                     bag.close()
                     exit(-1)
             # else drop the data of this message
     bag.close()
     if (len (raw_vec)==0 or len(ref_raw_vec) ==0):
-        print "no data retrieved, check topic name"
+        print "no data retrieved, check topic name "
         exit(-1)
 
     # process the data
