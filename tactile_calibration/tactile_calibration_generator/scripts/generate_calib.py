@@ -82,6 +82,8 @@ if __name__ == "__main__":
                       help="bag filename to open")
     parser.add_argument("topic", type=str,
                       help="topic to process")
+    parser.add_argument("--no_extrapolation", action="store_true",
+                      help="deactivate extrapolation of the mapping at both ends (O and input_range-1)")
     parser.add_argument("--data_channel", type=int,
                       help="index of the data channel to calibrate")
     parser.add_argument("--ref_channel", type=int,
@@ -279,11 +281,25 @@ if __name__ == "__main__":
         # csvwriter = csv.writer(csvfile, delimiter=',')
         # for key in lookup_dec:
             # csvwriter.writerow([key, lookup_dec[key]])
-
     # extract the lookup_values
+   
+    mapping_dict_tmp = OrderedDict()
     mapping_dict = OrderedDict()
     for b in pwlf_breaks:
-        mapping_dict[round(float(b),2)] =  round(float(pwlf_result.predict(round(float(b),2))[0]),3)
+        mapping_dict_tmp[int(b)] =  round(float(pwlf_result.predict(round(float(b),2))[0]),3)
+
+    if not args.no_extrapolation:
+        # extract extremety point 0
+        mapping_dict[0] = pwlf_result.beta[0] + (pwlf_result.beta[1])*(0.0-pwlf_breaks[0])
+        # add other points
+        for k, i in mapping_dict_tmp.items():
+            mapping_dict[k] = i
+        # extract extremety point input_range_max-1
+        y0 = pwlf_result.predict(pwlf_breaks[args.segments-1])[0] # y value at last breakpoint
+        mapping_dict[input_range_max-1] = round(float(y0 + (pwlf_result.beta[args.segments])*((input_range_max-1)-pwlf_breaks[args.segments-1])),3)
+    else:
+        mapping_dict = mapping_dict_tmp
+
     #print mapping_list
     if args.output_csv:
         with open('lookup.csv', 'w') as csvfile:
