@@ -1,0 +1,33 @@
+calib:
+- idx_range: [[44,46]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 1}
+- idx_range: [[43,47]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 2}
+- idx_range: [[44,47]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 3}
+- idx_range: [[43,46]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 4}
+- idx_range: [[45,46]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 5}
+- idx_range: [[45,47]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 6}
+- idx_range: [[44,45]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 7}
+- idx_range: [[43,45]]
+  sensor_name: tactile
+  type: PWL
+  values: {0: 8}
