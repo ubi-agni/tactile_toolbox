@@ -93,6 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--ref_offset", type=float, default=REF_CALIB_OFFSET,
                       help="reference offset (indicated on the tool)")
     parser.add_argument("--plot",  action="store_true", help="show the plots")
+    parser.add_argument("--output_csv",  action="store_true", help="enable output of a lookup.csv with the resulting mapping")
     parser.add_argument("--input_resolution", type=int, default=DEFAULT_INPUT_RESOL,
                       help="input resolution in bits")
     parser.add_argument("--segments", type=int, default=DEFAULT_SEGMENTS,
@@ -284,10 +285,11 @@ if __name__ == "__main__":
     for b in pwlf_breaks:
         mapping_dict[round(float(b),2)] =  round(float(pwlf_result.predict(round(float(b),2))[0]),3)
     #print mapping_list
-    with open('lookup.csv', 'w') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=',')
-        for x in mapping_dict:
-            csvwriter.writerow([x, mapping_dict[x]])
+    if args.output_csv:
+        with open('lookup.csv', 'w') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',')
+            for x in mapping_dict:
+                csvwriter.writerow([x, mapping_dict[x]])
             
     # 6. Save
     # a    Save Lookuptable and-or Model in TaxelCalibrationMapping file.
