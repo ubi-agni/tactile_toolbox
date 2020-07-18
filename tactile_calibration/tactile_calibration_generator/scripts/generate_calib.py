@@ -394,7 +394,7 @@ if __name__ == "__main__":
 
     if not args.no_extrapolation:
         # extract extremety point 0
-        mapping_dict[0] = pwlf_result.beta[0] + (pwlf_result.beta[1])*(0.0-pwlf_breaks[0])
+        mapping_dict[0] = round(float(pwlf_result.beta[0] + (pwlf_result.beta[1])*(0.0-pwlf_breaks[0])),3)
         # add other points
         for k, i in mapping_dict_tmp.items():
             mapping_dict[k] = i
