@@ -34,9 +34,9 @@ if __name__ == "__main__":
                       help="activate if the ref channel should be calibrated, and provide ref_ratio & ref_offset")
     parser.add_argument("--ref_tare_val", type=float,
                       help="use provided reference tare value (given in newton) instead of using rest pose values")
-    parser.add_argument("--ref_ratio", type=float, default=REF_CALIB_RATIO,
+    parser.add_argument("--ref_ratio", type=float,  nargs='?', const=REF_CALIB_RATIO,
                       help="reference ratio (indicated on the tool)")
-    parser.add_argument("--ref_offset", type=float, default=REF_CALIB_OFFSET,
+    parser.add_argument("--ref_offset", type=float, nargs='?', const=REF_CALIB_OFFSET,
                       help="reference offset (indicated on the tool)")
     parser.add_argument("--plot",  action="store_true", help="show the plots")
     parser.add_argument("--output_csv",  action="store_true", help="enable output of a lookup.csv with the resulting mapping")
