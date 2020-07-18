@@ -2,8 +2,8 @@
 import numpy as np
 import argparse
 
-from tactile_calibration_tools import calibration_utils
-from tactile_calibration_tools import mapping_utils
+from tactile_calibration_tools.calibration_utils import *
+from tactile_calibration_tools.mapping_utils import *
 
 REF_CALIB_RATIO = -0.0154
 REF_CALIB_OFFSET = 53.793

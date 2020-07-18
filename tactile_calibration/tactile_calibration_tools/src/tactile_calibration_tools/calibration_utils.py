@@ -3,7 +3,7 @@ from tactile_msgs.msg import TactileState
 import numpy as np
 from collections import OrderedDict
 import matplotlib.pyplot as plt
-
+import os
 #pip install pwlf
 import pwlf
 
