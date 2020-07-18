@@ -186,21 +186,19 @@ def get_channels(user_data_channel, user_ref_channel, bagfilename):
         data_channel = calib_channel
         ref_channel = user_ref_channel
     else:
-        # try extract data_channel from filename
-        filename = os.path.basename(bagfilename)
-        if "calib_" in filename:
-            split_filename = filename.split('_')
-            if split_filename[1].isdigit():
-                calib_channel = int(split_filename[1])
-                data_channel = 0
-                ref_channel = 1
+        if user_data_channel: # user has priority
+            calib_channel = user_data_channel
+            data_channel = 0
+            ref_channel = 1
         else:
-            if args.data_channel:
-                calib_channel = user_data_channel
-                data_channel = 0
-                ref_channel = 1
-            else:
-                return [None, None, None]
+            # try extract data_channel from filename
+            filename = os.path.basename(bagfilename)
+            if "calib_" in filename:
+                split_filename = filename.split('_')
+                if split_filename[1].isdigit():
+                    calib_channel = int(split_filename[1])
+                    data_channel = 0
+                    ref_channel = 1
     return [calib_channel, data_channel, ref_channel]
 
 def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_max=1024):
