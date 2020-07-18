@@ -86,7 +86,7 @@ def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_thres
             ## try find a "flat" zone in the beginning of the data
             cur_val = None
             end_flat_range = None
-            for val, i in enumerate(ref_cal):
+            for i, val in enumerate(ref_cal):
                 if cur_val is None:
                     cur_val = val
                 if abs(cur_val -  val) > flatness_threshold:
@@ -96,6 +96,7 @@ def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_thres
             else:
                 print "The ref is too flat, are you sure the correct channel was selected ?"
                 tare = np.mean(ref_cal)
+            print "extracted tare =", round(tare,3)
         # tare
         ref_cal_tare = ref_cal - tare
 
