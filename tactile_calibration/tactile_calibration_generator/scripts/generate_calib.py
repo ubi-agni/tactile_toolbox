@@ -192,9 +192,10 @@ if __name__ == "__main__":
         ref_channel = args.ref_channel
     else:
         # try extract data_channel from filename
-        if "calib_" in args.bagfilename:
-            split_filename = args.filename.split('_')
-            if split_filename[1].is_digit():
+        filename = os.path.basename(args.bagfilename)
+        if "calib_" in filename:
+            split_filename = filename.split('_')
+            if split_filename[1].isdigit():
                 calib_channel = int(split_filename[1])
                 data_channel = 0
                 ref_channel = 1
@@ -424,6 +425,7 @@ if __name__ == "__main__":
     represent_dict_order = lambda self, data:  self.represent_mapping('tag:yaml.org,2002:map', data.items())
     yaml.add_representer(OrderedDict, represent_dict_order)  
     # check if mapping file exists
+    print "Preparing mapping for cell ", calib_channel
     rename_oldcalib = False
     calib = None
     newcalib = {"calib": []}
