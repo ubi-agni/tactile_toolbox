@@ -1,6 +1,14 @@
 # Overview
 
-This application extract a Piece Wise Linear (PWL) calibration mapping from a dataset composed of raw values of a cell and corresponding ref values of a calibration tool while pressing/releasing the calibrated cell.
+This toolbox contains 2 applications, a recorder and a generator
+
+## Recorder 
+
+The recorder is a helper to record a raw and a reference signal to be calibrated through the generator.
+
+## Generator
+
+The gerenator extracts a Piece Wise Linear (PWL) calibration mapping from a dataset composed of raw values of a cell and corresponding ref values of a calibration tool while pressing/releasing the calibrated cell.
 The PWL mapping is computed with a library pwlf  https://github.com/cjekel/piecewise_linear_fit_py that must be installed in the system (see Requirements)
 
 The default data expected is in form of a rosbag file with a name "calib_##_*.bag" containing raw values at channel 0 of a tactile_msgs and ref values at a channel 1. 
@@ -22,9 +30,13 @@ pip install pwlf
 
 pwlf is compatible with Python2.7 but requires some more recent numpy than the system in Ubuntu xenial, ensure you have more recent one.
 
-# Usage
+# Usage of the recorder 
 
-rosrun tactile_calibration_generator generate_calib.py <bagfilename> <topic> 
+rosrun tactile_calibration_tools record_calib.py <topic> <ref_channel>
+
+# Usage of the generator
+
+rosrun tactile_calibration_tools generate_calib.py <bagfilename> <topic> 
 
 usage: generate_calib.py [-h] [--mapping_file MAPPING_FILE]
                          [--no_extrapolation] [--data_channel DATA_CHANNEL]
