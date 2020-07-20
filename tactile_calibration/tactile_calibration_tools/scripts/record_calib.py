@@ -270,12 +270,14 @@ if __name__ == "__main__":
 
     # subscribe to raw topic or to raw and ref topics with a time synchronizer
     if args.ref_topic:
+        print "Initializing topic synchronizer"
         raw_sub = message_filters.Subscriber(args.raw_topic, TactileState)
         ref_sub =  message_filters.Subscriber(args.ref_topic, TactileState)
         ts = message_filters.ApproximateTimeSynchronizer([raw_sub, ref_sub], 10, 0.1, allow_headerless=False)
         #ts = message_filters.TimeSynchronizer([raw_sub, ref_sub], 10)
         ts.registerCallback(raw_ref_topic_cb)
     else:
+        print "Initializing topic subscriber"
         raw_sub = rospy.Subscriber(args.raw_topic, TactileState, raw_topic_cb)
 
     # state machine loop
@@ -384,7 +386,12 @@ if __name__ == "__main__":
                 raw_previous_vec = raw_vec
                 detected_channel = None
                 # announce detection is underway
-                print "Detection in progress, please press the channel to be calibrated or press enter to interrupt"
+                print "Selection detection in progress"
+                print " please press the channel that is to be calibrated hardware wise."
+                print " You can always interrupt by pressing enter."
+                print " ", str(DEFAULT_KEY_TIMEOUT) , "seconds after detection, calibration recording starts automaticly."
+                print "Then you have another", str(DEFAULT_RECORDING_DURATION) ,"seconds for recording."
+                print "Use the calibtool upright and press and release your selected channel evenly over", args.repetition,"iterations. \n\n" 
             # detect changes
             detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, DEFAULT_DETECT_THRESHOLD)
             if detected_channel is not None:
@@ -409,7 +416,7 @@ if __name__ == "__main__":
                 print "channel", detected_channel, "was detected"
                 # check if already recorded this channel
                 if detected_channel in processed_channels:
-                    print " it was already recorded, what do you want to do ?"
+                    print " this channel was already recorded, what do you want to do ?"
                     user_choice = user_menu({'c': "continue, move the previous recording, and re-record this channel", 'd':"detect a new channel", 'q': "quit"})
                     if user_choice == "" or user_choice == 'c':
                         # move previously recorded calib file for this channel in an old folder
@@ -424,7 +431,7 @@ if __name__ == "__main__":
                 if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue
                     if channel_list is not None:  # check if channel is part of the list
                         if detected_channel not in channel_list:
-                            print " but is not in the channel list"
+                            print " but this channel not in the channel list"
                             print channel_list
                             print "proceed with this channel anyway ?"
                             if user_yesno(default=False) == False:
