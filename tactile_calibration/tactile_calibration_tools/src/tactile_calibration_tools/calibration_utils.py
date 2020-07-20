@@ -221,6 +221,7 @@ def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
     lists_lookup_inc = lookup_inc.items() # sorted by key, return a list of tuples
     x_inc, y_inc = zip(*lists_lookup_inc) # unpack a list of pairs into two tuples
 
+
     lists_lookup_dec = lookup_dec.items() # sorted by key, return a list of tuples
     x_dec, y_dec = zip(*lists_lookup_dec) # unpack a list of pairs into two tuples
 
@@ -229,14 +230,12 @@ def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
         plt.figure(2)
         plt.clf()
         plt.plot(x_inc, y_inc, 'mx')
-        plt.plot(x_inc, smooth(y_inc,100), 'r')
         plt.plot(x_dec, y_dec, 'c+')
-        plt.plot(x_dec, smooth(y_dec,100), 'b')
         
         plt.title('Lookup data for Push and Release') 
         plt.ylabel('Ref')
         plt.xlabel('Raw')
-        plt.legend(["Pushing","Pushing smooth", "Releasing", "Releasing smooth"])
+        plt.legend(["Pushing","Releasing"])
         plt.show(block = False)
 
     return [[x_inc, y_inc], [x_dec, y_dec]]
