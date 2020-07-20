@@ -472,7 +472,8 @@ if __name__ == "__main__":
                     state=RecordingState.PROCESS
                     print "\nrecording ended"
                 else:
-                  print "\r Remaining time :", DEFAULT_RECORDING_DURATION-elapsed_time,
+                  print "\r Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                  sys.stdout.flush()
 
             # check if key pressed to interrupt recording
             if wait_key_press(0.1):
