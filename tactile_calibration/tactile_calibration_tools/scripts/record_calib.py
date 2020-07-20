@@ -17,6 +17,8 @@ from select import select
 import message_filters
 from datetime import datetime
 
+from tactile_calibration_tools.calibration_utils import *
+
 #import curses
 #import os
 
@@ -49,7 +51,7 @@ ref_topic_init = None # if None, the ref topic will not be checked because unuse
 msgs = []
 state = None
 
-recording_cell = None
+recording_channel = None
 count_repetition = 0
 
 args = None
@@ -71,20 +73,20 @@ def raw_topic_cb(msg):
         # first message arrived
         raw_topic_init = True
     else:
-        if recording_cell is not None:
+        if recording_channel is not None:
             m = deepcopy(msg)
             if ref_topic_init is None:  # the ref is part of this message too
-                # fetch recorded cell and ref
-                if (recording_cell >= 0  and recording_cell <  len(msg.sensors[0].values) and args.ref_channel >= 0 and args.ref_channel < len(msg.sensors[0].values)):
                     m.sensors[0].values = [msg.sensors[0].values[recording_cell] , msg.sensors[0].values[args.ref_channel]]
+                # fetch recorded channel and ref
+                if (recording_channel >= 0  and recording_channel <  len(msg.sensors[0].values) and args.ref_channel >= 0 and args.ref_channel < len(msg.sensors[0].values)):
             else:  # the ref is not in this message, # should not happen, shoulb be handled by another callback
-                # fetch only recorded cell
-                m.sensors[0].values = msg.sensors[0].values[recording_cell]
+                # fetch only recorded channel
+                m.sensors[0].values = msg.sensors[0].values[recording_channel]
             msgs.append(m)
             # check max size
             if len(msgs) > MAX_MESSAGE_STORED:
                 print "Reached data size limit for raw data, stopping recording"
-                recording_cell = None
+                recording_channel = None
                 state=RecordingState.PROCESS
         else:
             # only store the last values
@@ -98,21 +100,16 @@ def raw_ref_topic_cb(rawmsg, refmsg):
         raw_topic_init = True
         ref_topic_init = True
     else:
-        if recording_cell is not None:
+        if recording_channel is not None:
             m = deepcopy(rawmsg)
-            # fetch recorded cell
-            m.sensors[0].values = rawmsg.sensors[0].values[recording_cell]
             # fetch ref cell
             m.sensors[0].values.append(refmsg.sensors[0].values[args.ref_channel])
+            # fetch recorded channel
+            values.append(rawmsg.sensors[0].values[recording_channel])
             msgs.append(m)
         else:
             # only store the last values
             raw_vec = rawmsg.sensors[0].values
-
-def smooth(y, box_pts):
-    box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
-    return y_smooth
 
 def reset_recording():
     count_repetition = 0
@@ -125,28 +122,6 @@ def save_data(calibration_filename):
             outbag.write(args.raw_topic, msg, msg.header.stamp)
     print "saved data in file", calibration_filename
     return True
-
-def detect_cell_press(raw_previous_vec, raw_vec, ref_cell):
-    detected_cell = None
-    if len(raw_previous_vec) == len (raw_vec):
-        absdiff = np.fabs(np.array(raw_vec)-np.array(raw_previous_vec))
-        idx_above_thresh = np.where(absdiff > DEFAULT_DETECT_THRESHOLD)
-        if len(idx_above_thresh[0]):  # anything above threshold  
-            if len(idx_above_thresh[0])==1 and not (ref_cell in idx_above_thresh[0]):  # one cell pressed that is not the ref
-                detected_cell =  idx_above_thresh[0][0]  
-            if len(idx_above_thresh[0])==2:  # 2 cells pressed
-                if ref_cell in idx_above_thresh[0]:  # the reference was pressed too
-                    for cell in idx_above_thresh[0]:  # find the one that is not the ref
-                        if cell != ref_cell:
-                            detected_cell = cell
-                            break
-                else:  # 2 pressed and without ref
-                    print "More than one cell was pressed, retry"
-            if len(idx_above_thresh[0])>2:
-                print "More than one cell was pressed, retry"
-        #else none pressed
-    return detected_cell
-    
 
 def wait_key_press(timeout):
     tcflush(sys.stdin, TCIFLUSH)
@@ -206,7 +181,7 @@ if __name__ == "__main__":
 
     #initialize local vars
     input_range_max = 2**args.input_resolution
-    detected_cell = None
+    detected_channel = None
     start_recording_time = None
     saved = False
 
@@ -270,12 +245,12 @@ if __name__ == "__main__":
             if len(raw_previous_vec) == 0:
                 raw_previous_vec = raw_vec
                 print raw_previous_vec 
-                detected_cell = None
+                detected_channel = None
                 # announce detection is underway
-                print "Detection in progress, please press the cell to be calibrated or press enter to interrupt"
+                print "Detection in progress, please press the channel to be calibrated or press enter to interrupt"
             # detect changes
-            detected_cell = detect_cell_press(raw_previous_vec, raw_vec, args.ref_channel)
-            if detected_cell is not None:
+            detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, DEFAULT_DETECT_THRESHOLD)
+            if detected_channel is not None:
                 state = RecordingState.CONFIRM_DETECT
             
             # check if key pressed to interrupt recording
@@ -291,18 +266,18 @@ if __name__ == "__main__":
                     raw_previous_vec=[]
                 # any other will continue detection if user_choice == 'c':
 
-        # State Confirm detected cell
+        # State Confirm detected channel
         if state==RecordingState.CONFIRM_DETECT:
-            if detected_cell is not None:  # cell was chosen
-                print "cell", detected_cell,"was detected to be pressed, if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
+            if detected_channel is not None:  # channel was chosen
                 if wait_key_press(DEFAULT_KEY_TIMEOUT):
                     # key pressed, reset previous values
                     raw_previous_vec = []
                     state=RecordingState.DETECT
+                        print "channel", detected_channel,"was detected to be pressed, but was either already recorded, or not in the range, procceed with this cell anyway ?"
                 else:
+                    print "channel", detected_channel,"was detected to be pressed, if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
                     # no key pressed, start recording
                     # print "starting recording, please press the cell with the calibration tool in a push/release motion", args.repetition, "times in a row"
-                    print "starting recording, please press the cell with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
                     start_recording_time = rospy.Time.now()
                     state=RecordingState.RECORD
                 # if confirmed
@@ -312,22 +287,22 @@ if __name__ == "__main__":
 
         # State Record channel
         if state==RecordingState.RECORD:
-            if recording_cell is None:  # initialize recording
-                recording_cell = detected_cell  # actually starts the recording of frames in the callback
+            if recording_channel is None:  # initialize recording
+                recording_channel = detected_channel  # actually starts the recording of frames in the callback
                 print " press enter to interrupt recording..."
             else: # we are recording
                 # TODO analyse the last recorded values and detect push/release
                 # if count_repetition >= args.repetition:
                 # for now we just use a time and stop after a certain time
                 if (rospy.Time.now()-start_recording_time).to_sec() > DEFAULT_RECORDING_DURATION :
-                    recording_cell = None
+                    recording_channel = None
                     state=RecordingState.PROCESS
 
             # check if key pressed to interrupt recording
             if wait_key_press(0.1):
                 # key pressed
                 # stop recording
-                recording_cell =  None
+                recording_channel =  None
                 print "recording stopped"
                 already_recorded_duration = rospy.Time.now() - start_recording_time
                 user_choice = user_menu()
@@ -364,8 +339,8 @@ if __name__ == "__main__":
         if state==RecordingState.SAVE:
             date_time_obj = datetime.now()
             date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
-            saved=save_data("calib_" + str(detected_cell) + "_" + date_time + ".bag")
-            # exit the loop
+            saved=save_data("calib_" + str(detected_channel) + "_" + date_time + ".bag")
+            
             break;
 
         rate.sleep()

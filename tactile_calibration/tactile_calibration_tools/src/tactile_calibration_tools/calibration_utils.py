@@ -65,10 +65,52 @@ def is_raw(data):
         return True
     return False
 
+def detect_cell_press(raw_previous_vec, raw_vec, ref_cell, detect_threshold):
+    detected_cell = None
+    if len(raw_previous_vec) == len (raw_vec):
+        absdiff = np.fabs(np.array(raw_vec)-np.array(raw_previous_vec))
+        idx_above_thresh = np.where(absdiff > detect_threshold)
+        if len(idx_above_thresh[0]):  # anything above threshold  
+            if len(idx_above_thresh[0])==1 and not (ref_cell in idx_above_thresh[0]):  # one cell pressed that is not the ref
+                detected_cell =  idx_above_thresh[0][0]  
+            if len(idx_above_thresh[0])==2:  # 2 cells pressed
+                if ref_cell in idx_above_thresh[0]:  # the reference was pressed too
+                    for cell in idx_above_thresh[0]:  # find the one that is not the ref
+                        if cell != ref_cell:
+                            detected_cell = cell
+                            break
+                else:  # 2 pressed and without ref
+                    print "More than one cell was pressed, retry"
+            if len(idx_above_thresh[0])>2:
+                print "More than one cell was pressed, retry"
+        #else none pressed
+    return detected_cell
+
+
+def compute_tare(data, flatness_threshold=None):
+    if flatness_threshold is not None: # search for the flat part in the vec
+        cur_val = None
+        end_flat_range = None
+        for i, val in enumerate(data):
+            if cur_val is None:
+                cur_val = val
+            if abs(cur_val -  val) > flatness_threshold:
+                end_flat_range = i
+                break
+        if end_flat_range is not None:
+            # we found a certain zone of flatness at the beginning of the data
+            tare = np.mean(ref_cal[0:end_flat_range])
+        else: 
+            print "The ref is too flat, are you sure the correct channel was selected ?"
+            tare = None
+    else: # not extracting a flat, part, just using the whole vector
+        tare = np.mean(data)
+    return tare
+
+
 def calibrate_affine(raw, a, b):
-    # affine calibration
-    cal = a * raw + b
-    return cal
+    # affine calibration 
+    return a * raw + b
 
 def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_threshold=0.3, user_is_raw=False):
     ref_raw = np.array(ref_vec)
@@ -84,19 +126,11 @@ def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_thres
         else:
             # need to compute it
             ## try find a "flat" zone in the beginning of the data
-            cur_val = None
-            end_flat_range = None
-            for i, val in enumerate(ref_cal):
-                if cur_val is None:
-                    cur_val = val
-                if abs(cur_val -  val) > flatness_threshold:
-                    end_flat_range = i
-            if end_flat_range is not None:
-                tare = np.mean(ref_cal[0:end_flat_range])
+            tare = compute_tare(ref_cal, flatness_threshold)
+            if tare is None:
+                tare = 0
             else:
-                print "The ref is too flat, are you sure the correct channel was selected ?"
-                tare = np.mean(ref_cal)
-            print "extracted tare =", round(tare,3)
+                print "extracted tare =", round(tare,3)
         # tare
         ref_cal_tare = ref_cal - tare
 
