@@ -198,7 +198,7 @@ def user_yesno(default=True):
         else:
             if ret == 'y' or ret == 'Y':
                 return True
-            if ref == 'n' or rett == 'N':
+            if ret == 'n' or ret == 'N':
                 return False
         print "wrong choice, try again"
         tcflush(sys.stdin, TCIFLUSH)
@@ -265,6 +265,7 @@ if __name__ == "__main__":
         raw_sub = rospy.Subscriber(args.raw_topic, TactileState, raw_topic_cb)
 
     # state machine loop
+    print "Started, waiting for data on topic", args.raw_topic
     while not rospy.is_shutdown():
         now = rospy.get_time()
 
@@ -366,7 +367,6 @@ if __name__ == "__main__":
             # initialize detection
             if len(raw_previous_vec) == 0:
                 raw_previous_vec = raw_vec
-                print raw_previous_vec 
                 detected_channel = None
                 # announce detection is underway
                 print "Detection in progress, please press the channel to be calibrated or press enter to interrupt"
@@ -429,7 +429,9 @@ if __name__ == "__main__":
                 if elapsed_time > DEFAULT_RECORDING_DURATION :
                     recording_channel = None
                     state=RecordingState.PROCESS
-                print "\r Remaining time :", DEFAULT_RECORDING_DURATION-elapsed_time,
+                    print "\nrecording ended"
+                else:
+                  print "\r Remaining time :", DEFAULT_RECORDING_DURATION-elapsed_time,
 
             # check if key pressed to interrupt recording
             if wait_key_press(0.1):
