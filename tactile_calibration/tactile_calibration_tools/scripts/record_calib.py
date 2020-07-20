@@ -212,7 +212,8 @@ def move_previous_recording(processed_channels, detected_channel, folder):
         dirname +="/"+folder
     else:
         dirname =folder
-    os.mkdir(dirname)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
     os.rename(fullfilename, dirname +"/" + filename)
     print "moving", filename, " into folder called ", folder
 
