@@ -56,7 +56,7 @@ def find_inflection_index(x, change_detection_threshold=4):
 
 def smooth(y, box_pts):
     box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
+    y_smooth = np.convolve(y, box, mode='valid')
     return y_smooth
 
 def is_raw(data):
