@@ -297,7 +297,8 @@ if __name__ == "__main__":
                         channel_list = range(0, args.num_channels)
                         # handle ref in case it is in the same vector
                         if not args.ref_topic:  # remove the ref_channel from the list
-                            channel_list.remove(args.ref_channel)
+                            if args.ref_channel in channel_list:
+                                channel_list.remove(args.ref_channel)
                         # else the ref is on a separate topic, use all data channels
                     else: # detect channels on the go, and continue until user stops
                         channel_list = None
