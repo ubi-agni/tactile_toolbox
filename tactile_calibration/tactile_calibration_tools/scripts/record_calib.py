@@ -57,7 +57,7 @@ state = None
 calibrate_ref = False
 
 recording_channel = None
-processed_channels = []
+processed_channels = OrderedDict()
 count_repetition = 0
 
 args = None
@@ -106,7 +106,7 @@ def raw_topic_cb(msg):
                 if args.ref_channel >= 0 and args.ref_channel < len(msg.sensors[0].values):
                     ref = calibrate_affine(msg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset)
                     tare_vec.append(ref)
-              
+
             # only store the last values
             raw_vec = msg.sensors[0].values
 
@@ -204,6 +204,18 @@ def user_yesno(default=True):
         print "wrong choice, try again"
         tcflush(sys.stdin, TCIFLUSH)
 
+def move_previous_recording(processed_channels, detected_channel, folder):
+    fullfilename = processed_channels[detected_channel]
+    filename = os.path.basename(fullfilename)
+    dirname = os.path.dirname(os.path.realpath(fullfilename))
+    if dirname != "":
+        dirname +="/"+folder
+    else:
+        dirname =folder
+    os.mkdir(dirname)
+    os.rename(fullfilename, dirname +"/" + filename)
+    print "moving", filename, " into folder called ", folder
+
 #def main(win): 
     #win.nodelay(True)
     #key=""
@@ -253,7 +265,7 @@ if __name__ == "__main__":
 
     # prepare state machine
     state = RecordingState.INIT
-    rate = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(20) # 10hz
     # prepare publisher of tactile "instruction" state
 
     # subscribe to raw topic or to raw and ref topics with a time synchronizer
@@ -393,23 +405,42 @@ if __name__ == "__main__":
         # State Confirm detected channel
         if state==RecordingState.CONFIRM_DETECT:
             if detected_channel is not None:  # channel was chosen
-                if channel_list is not None:  # check if channel is part of the list
-                    if detected_channel not in channel_list:
-                        print "channel", detected_channel,"was detected to be pressed, but was either already recorded, or not in the range, procceed with this cell anyway ?"
-                        if user_yesno(default=True) == False:
-                            raw_previous_vec = []
-                            state = RecordingState.DETECT
-                else:
-                    print "channel", detected_channel,"was detected to be pressed, if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
-                    if wait_key_press(DEFAULT_KEY_TIMEOUT):
-                        # key pressed, reset previous values
-                        raw_previous_vec = []
+                print "channel", detected_channel, "was detected"
+                # check if already recorded this channel
+                if detected_channel in processed_channels:
+                    print " it was already recorded, what do you want to do ?"
+                    user_choice = user_menu({'c': "continue, move the previous recording, and re-record this channel", 'd':"detect a new channel", 'q': "quit"})
+                    if user_choice == "" or user_choice == 'c':
+                        # move previously recorded calib file for this channel in an old folder
+                        # recorded in this session
+                        move_previous_recording(processed_channels, detected_channel, "old")
+                        # TODO Handle files matching a pattern "calib_ detected_channel_*.bag
+                    if user_choice == 'q':
+                        state=RecordingState.END
+                    if user_choice == 'd':
                         state=RecordingState.DETECT
-                if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue with recording
-                    # start recording
-                    print "starting recording"
-                    state=RecordingState.RECORD
-                # if confirmed
+
+                if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue
+                    if channel_list is not None:  # check if channel is part of the list
+                        if detected_channel not in channel_list:
+                            print " but is not in the channel list"
+                            print channel_list
+                            print "proceed with this channel anyway ?"
+                            if user_yesno(default=False) == False:
+                                raw_previous_vec = []
+                                state = RecordingState.DETECT
+                    else:
+                        print " if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
+                        if wait_key_press(DEFAULT_KEY_TIMEOUT):
+                            # key pressed, reset previous values
+                            raw_previous_vec = []
+                            state=RecordingState.DETECT
+                    if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue with recording
+                        # start recording
+                        print "starting recording"
+                        state=RecordingState.RECORD
+                    # if confirmed
+
             else: # this should not happen, reset
                 state=RecordingState.DETECT
 
