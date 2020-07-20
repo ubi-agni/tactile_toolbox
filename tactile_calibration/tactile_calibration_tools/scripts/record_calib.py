@@ -246,6 +246,7 @@ if __name__ == "__main__":
     detected_channel = None
     start_recording_time = None
     saved = False
+    quit_request = False
     
     if args.ref_ratio and args.ref_offset:
         calibrate_ref = True
@@ -381,7 +382,7 @@ if __name__ == "__main__":
                     user_choice = user_menu({'c': "continue", 'r':"retry detect", 's': "save", 'q': "quit without saving"})
                     if user_choice == 'q':
                         # TODO warn a second time, that all recording will be lost ?
-                        exit(0)
+                        state=RecordingState.END
                     if user_choice == 's':
                         state=RecordingState.SAVE
                     if user_choice == 'r':
@@ -500,33 +501,47 @@ if __name__ == "__main__":
 
         # State Save recording
         if state==RecordingState.SAVE:
-            date_time_obj = datetime.now()
-            date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
-            saved=save_data("calib_" + str(detected_channel) + "_" + date_time + ".bag")
-            
-            if saved:
-                if channel_list is not None:
-                    # remove
-                    channel_list.remove(current_channel)
-                    processed_channels.append(current_channel)
-                    saved = False
-                    reset_recording()
+            save_filename = None
+            if len(msgs) and detected_channel is not None: 
+                date_time_obj = datetime.now()
+                date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
+                save_filename = "calib_" + str(detected_channel) + "_" + date_time + ".bag"
+                saved=save_data(save_filename)
+
+                if saved:
+                    if channel_list is not None:
+                        # remove is was in list
+                        if detected_channel in channel_list:
+                            channel_list.remove(detected_channel)
+                        
+            else:
+                print "No data to save or No channel selected"
+            if detected_channel is not None:
+                processed_channels[detected_channel]= save_filename
             # loop
-            state=RecordingState.NEXTCHANNEL
+            if not quit_request:
+                saved = False
+                reset_recording()
+                state=RecordingState.NEXTCHANNEL
+            else:
+                saved = True # even if not saved, we need to quit now
+                state=RecordingState.END
+                
 
         # State End
         if state==RecordingState.END:
-            # check if we saved the data or not
             if not saved:
-                # save here
-                date_time_obj = datetime.now()
-                date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
-                saved=save_data("calib_" + str(detected_channel) + "_" + date_time + ".bag")
-
-            print "Channels recorded ", processed_channels
-            if channel_list is not None and len(channel_list) > 0:
-                print "some channels were not recorded :", channel_list
-            break;
+                quit_request = True
+                state=RecordingState.SAVE
+            else:
+                print "Channels recorded ", processed_channels.keys()
+                if channel_list is not None and len(channel_list) > 0:
+                    print "some channels were not recorded :", channel_list
+                
+                if args.plot:
+                    print "close plot windows to quit"
+                    plt.show(block = True)
+                break;
 
         rate.sleep()
 
