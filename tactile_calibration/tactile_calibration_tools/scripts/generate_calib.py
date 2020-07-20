@@ -54,13 +54,13 @@ if __name__ == "__main__":
     # validate options
     if args.ref_is_raw and not (args.ref_ratio and args.ref_offset):
         print "ref_is_raw was activate but ref_ratio and/or ref_offset are missing"
-        exit(0)
+        exit(-1)
 
     # select mode of operation either calib_xx with xx the calibrated cell idx, or provided calib cell idx, ref cell indx
     [calib_channel, data_channel, ref_channel] = get_channels(args.data_channel, args.ref_channel, args.bagfilename)
     if calib_channel is None:
         print "could not find a channel number in the filename (expected 'calib_##_*.bag') and no data_channel provided"
-        exit(0)
+        exit(-1)
 
     # read the bag file
     [sensor_name, ref_raw_vec, raw_vec] = read_calib(args.bagfilename, args.topic, data_channel, ref_channel, input_range_max)
@@ -78,10 +78,15 @@ if __name__ == "__main__":
 
     # find the sections in which pressure increases/decreases
     print " Finding push/release"
-    [inc, dec] = get_push_release(raw, ref_newton_tare, input_range_max, CHANGE_DETECT_THRESH, args.plot)
-    if len(inc)==0:
+    [inc_idx, dec_idx] = get_push_release(raw, ref_newton_tare, CHANGE_DETECT_THRESH, args.plot)
+    if inc_idx is not None:
+        [inc, dec] = generate_lookup(raw, ref_newton_tare, inc_idx, dec_idx, input_range_max, args.plot)
+        if len(inc)==0:
+            print " failed to generate lookup"
+            exit(-1)
+    else:
         print " failed to extract push/release"
-        exit(0)
+        exit(-1)
     print " Fitting the data and extracting a", args.segments, " segment piece-wise-linear calib"
     # process only increasing
     mapping_dict = generate_mapping_pwl(inc[0], inc[1], input_range_max, args.segments, args.no_extrapolation, args.plot)

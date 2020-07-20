@@ -108,7 +108,7 @@ def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_thres
 
     return ref_cal_tare
 
-def get_push_release(raw, ref, input_range_max, change_detect_threshold, doplot=False):
+def get_push_release(raw, ref, change_detect_threshold, doplot=False):
     # TODO Guillaume : also look at the range of ref data to not get a decreasing force at the end of the increasing raw data
     ## smooth the data to avoid derivate sign change on noise
     smooth_raw = smooth(raw,19)
@@ -120,7 +120,7 @@ def get_push_release(raw, ref, input_range_max, change_detect_threshold, doplot=
     # check there were some push/release
     if len(inc_idx)==0 or len(dec_idx)==0:
         print "could not find push/release action in the data, verify the file or the channels"
-        return [[],[]]
+        return [None,None]
 
     # 3.a View recorded data in graphplot in order to validate correctness (no spurious wrong data or high noise)
     if doplot:
@@ -133,6 +133,10 @@ def get_push_release(raw, ref, input_range_max, change_detect_threshold, doplot=
         plt.plot(dec_idx, smooth_raw[dec_idx], 'bx', lw=2) # decreasing pressure values
         plt.plot(range(len(vel)), vel*50, 'k-', lw=1) # velocity scaled up
         plt.show()
+    return [inc_idx, dec_idx]
+
+
+def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
 
     # 3.d0    Database funktion: With each lookuptable entrance "Lookup[0-4095]"  (in excel it is  AVERAGEIF function)
     missing_inc_input_values = [] # list of increasing input pressure values that do not appear in the recorded data.
