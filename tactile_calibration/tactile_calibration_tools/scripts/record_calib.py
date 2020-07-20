@@ -445,7 +445,7 @@ if __name__ == "__main__":
             ## basic data size check
             # TODO
             ## push/release check and plot the last recording
-            [inc, dec] = get_push_release(raw, ref_newton_tare, input_range_max, CHANGE_DETECT_THRESH, True)
+            [inc, dec] = get_push_release_from_msgs(msgs, CHANGE_DETECT_THRESH, True)
             
             if inc is None:
                 print " failed to extract push/release, verify the data visually, do you want to save anyway ?"

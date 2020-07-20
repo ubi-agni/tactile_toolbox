@@ -65,26 +65,26 @@ def is_raw(data):
         return True
     return False
 
-def detect_cell_press(raw_previous_vec, raw_vec, ref_cell, detect_threshold):
-    detected_cell = None
+def detect_channel_press(raw_previous_vec, raw_vec, ref_channel, detect_threshold):
+    detected_channel = None
     if len(raw_previous_vec) == len (raw_vec):
         absdiff = np.fabs(np.array(raw_vec)-np.array(raw_previous_vec))
         idx_above_thresh = np.where(absdiff > detect_threshold)
         if len(idx_above_thresh[0]):  # anything above threshold  
-            if len(idx_above_thresh[0])==1 and not (ref_cell in idx_above_thresh[0]):  # one cell pressed that is not the ref
-                detected_cell =  idx_above_thresh[0][0]  
-            if len(idx_above_thresh[0])==2:  # 2 cells pressed
-                if ref_cell in idx_above_thresh[0]:  # the reference was pressed too
-                    for cell in idx_above_thresh[0]:  # find the one that is not the ref
-                        if cell != ref_cell:
-                            detected_cell = cell
+            if len(idx_above_thresh[0])==1 and not (ref_channel in idx_above_thresh[0]):  # one channel pressed that is not the ref
+                detected_channel =  idx_above_thresh[0][0]  
+            if len(idx_above_thresh[0])==2:  # 2 channels pressed
+                if ref_channel in idx_above_thresh[0]:  # the reference was pressed too
+                    for channel in idx_above_thresh[0]:  # find the one that is not the ref
+                        if channel != ref_channel:
+                            detected_channel = channel
                             break
                 else:  # 2 pressed and without ref
-                    print "More than one cell was pressed, retry"
+                    print "More than one channel was pressed, retry"
             if len(idx_above_thresh[0])>2:
-                print "More than one cell was pressed, retry"
+                print "More than one channel was pressed, retry"
         #else none pressed
-    return detected_cell
+    return detected_channel
 
 
 def compute_tare(data, flatness_threshold=None):
@@ -179,6 +179,13 @@ def get_push_release(raw, ref, change_detect_threshold, doplot=False):
     
     return [inc_idx, dec_idx]
 
+def get_push_release_from_msgs(msgs, change_detect_threshold, doplot=False):
+    raw_vec = []
+    ref_vec = []
+    for msg in msgs:
+        raw_vec.append(msg.sensors[0].values[0])
+        ref_vec.append(msg.sensors[0].values[1])
+    return get_push_release(np.array(raw_vec), np.array(ref_vec), change_detect_threshold, doplot)
 
 def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
 
