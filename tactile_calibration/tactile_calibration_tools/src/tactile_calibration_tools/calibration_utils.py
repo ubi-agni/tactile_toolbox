@@ -3,9 +3,11 @@ from tactile_msgs.msg import TactileState
 import numpy as np
 from collections import OrderedDict
 import matplotlib.pyplot as plt
+from datetime import datetime
 import os
 #pip install pwlf
 import pwlf
+
 
 def find_inflection_index(x, change_detection_threshold=4):
     direction = 0 # check for any change
@@ -240,26 +242,80 @@ def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
 
     return [[x_inc, y_inc], [x_dec, y_dec]]
 
+def get_date_from_file(fn):
+    basename = os.path.basename(fn)
+    name = os.path.splitext(basename)[0]
+    name_split = name.split('_')
+    if len(name_split)==3:
+        return name_split[2]
+    else:
+        return ""
+
+def get_later_date(old, new):
+    datetime_str_old = get_date_from_file(old)
+    datetime_str_new = get_date_from_file(new)
+    if len(datetime_str_old)>0 and len(datetime_str_new)>0:
+        try:
+            datetime_obj_old = datetime.strptime(datetime_str_old, "%Y-%m-%d-%H-%M-%S")
+            datetime_obj_new = datetime.strptime(datetime_str_new, "%Y-%m-%d-%H-%M-%S")
+            
+            if datetime_obj_new > datetime_obj_old:
+                return new
+            else:
+                return old
+        except ValueError:
+            # one of the format is invalid, take the new by default
+            print "error extracting date", datetime_str_old, datetime_str_new
+            pass
+    else:
+        print "error finding dates", datetime_str_old, datetime_str_new
+    return new
+
+def get_channel_from_filename(filename):
+    calib_channel = None
+    split_filename = filename.split('_')
+    if split_filename[1].isdigit():
+        calib_channel = int(split_filename[1])
+    return calib_channel
+
 def get_channels(user_data_channel, user_ref_channel, bagfilename):
     calib_channel = data_channel = ref_channel = None
-    if user_data_channel and user_ref_channel:
-        calib_channel = user_data_channel
-        data_channel = calib_channel
-        ref_channel = user_ref_channel
-    else:
-        if user_data_channel: # user has priority
-            calib_channel = user_data_channel
+    filename = os.path.basename(bagfilename)
+    # look for a wildcard
+    if "calib_#" in filename:
+        # find all files of the correct format
+        dirname = os.path.dirname(os.path.realpath(bagfilename))
+        file_names = [fn for fn in os.listdir(dirname) if (fn.startswith("calib_") and fn.endswith(".bag"))]
+        calib_channels = {}
+        for fn in file_names:
+            chan = get_channel_from_filename(fn)
+            if chan is not None:
+                if chan in calib_channels:
+                    calib_channels[chan] = get_later_date(calib_channels[chan], os.path.join(dirname, fn))
+                else:
+                    calib_channels[chan] = os.path.join(dirname, fn)
+        if len(calib_channels):
+            calib_channel = calib_channels
             data_channel = 0
             ref_channel = 1
+    else:
+        if user_data_channel and user_ref_channel:
+            calib_channel = user_data_channel
+            data_channel = calib_channel
+            ref_channel = user_ref_channel
         else:
-            # try extract data_channel from filename
-            filename = os.path.basename(bagfilename)
-            if "calib_" in filename:
-                split_filename = filename.split('_')
-                if split_filename[1].isdigit():
-                    calib_channel = int(split_filename[1])
-                    data_channel = 0
-                    ref_channel = 1
+            if user_data_channel: # user has priority
+                calib_channel = user_data_channel
+                data_channel = 0
+                ref_channel = 1
+            else:
+                # try extract data_channel from filename
+                filename =  os.path.basename(bagfilename)
+                if "calib_" in filename:
+                    calib_channel = get_channel_from_filename(filename)
+                    if calib_channel is not None:
+                        data_channel = 0
+                        ref_channel = 1
     return [calib_channel, data_channel, ref_channel]
 
 def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_max=1024):
