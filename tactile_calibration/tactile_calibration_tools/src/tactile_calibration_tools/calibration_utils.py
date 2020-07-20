@@ -99,7 +99,7 @@ def compute_tare(data, flatness_threshold=None):
                 break
         if end_flat_range is not None:
             # we found a certain zone of flatness at the beginning of the data
-            tare = np.mean(ref_cal[0:end_flat_range])
+            tare = np.mean(data[0:end_flat_range])
         else: 
             print "The ref is too flat, are you sure the correct channel was selected ?"
             tare = None
