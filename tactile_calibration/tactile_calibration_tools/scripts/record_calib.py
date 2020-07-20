@@ -40,14 +40,16 @@ DEFAULT_DETECT_THRESHOLD = 100 # in raw unit
 DEFAULT_KEY_TIMEOUT = 2 # 2 seconds
 DEFAULT_RECORDING_DURATION = 10 # 30 seconds
 MAX_MESSAGE_STORED = 100000 # 100 seconds at 1 kHz of data rate
+DEFAULT_TARE_RECORDINGS = 1000
 
 # prepare storage
-global raw_topic_init, recording_channel, state, args, msgs, ref_topic_init, raw_vec, raw_previous_vec, saved
+global raw_topic_init, recording_channel, state, args, msgs, ref_topic_init, raw_vec, raw_previous_vec, tare_vec, saved
 raw_vec = []
 raw_previous_vec = []
 raw_topic_init = False
 ref_raw_vec = []
 tare_vec = []
+tare_recording = None
 tare = 0
 ref_topic_init = None # if None, the ref topic will not be checked because unused
 msgs = []
@@ -110,6 +112,7 @@ def raw_topic_cb(msg):
 
 # callback for time synchronized topics
 def raw_ref_topic_cb(rawmsg, refmsg):
+    global raw_topic_init, ref_topic_init, state, recording_channel, raw_vec, tare_vec, msgs
     if not raw_topic_init:
         # first message arrived
         raw_topic_init = True
@@ -127,7 +130,18 @@ def raw_ref_topic_cb(rawmsg, refmsg):
                 values.append(refmsg.sensors[0].values[args.ref_channel])
             m.sensors[0].values = values
             msgs.append(m)
+            
+            # check max size
+            if len(msgs) > MAX_MESSAGE_STORED:
+                print "Reached data size limit for raw data, stopping recording"
+                recording_channel = None
+                state=RecordingState.PROCESS
         else:
+            if tare_recording is not None and calibrate_ref:
+                if args.ref_channel >= 0 and args.ref_channel < len(refmsg.sensors[0].values):
+                    ref = calibrate_affine(refmsg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset)
+                    tare_vec.append(ref)
+
             # only store the last values
             raw_vec = rawmsg.sensors[0].values
 
@@ -210,11 +224,11 @@ if __name__ == "__main__":
                       help="force to record the specified data channel")
     parser.add_argument("--num_channels", type=int,
                       help="number of channels to record (will record 0 to num_channels-1)")
-    parser.add_argument("--ref_tare", type=float, 
+    parser.add_argument("--ref_tare", type=float,
                       help="reference tare (substracted from calibrated value only)")
-    parser.add_argument("--ref_ratio", type=float, default=REF_CALIB_RATIO,
+    parser.add_argument("--ref_ratio", type=float,  nargs='?', const=REF_CALIB_RATIO,
                       help="reference ratio (indicated on the tool)")
-    parser.add_argument("--ref_offset", type=float, default=REF_CALIB_OFFSET,
+    parser.add_argument("--ref_offset", type=float, nargs='?', const=REF_CALIB_OFFSET,
                       help="reference offset (indicated on the tool)")
     parser.add_argument("--no_tare",  action="store_true", help="deactivate initial tare process")
     parser.add_argument("--plot",  action="store_true", help="show the plots")
@@ -274,37 +288,43 @@ if __name__ == "__main__":
                         channel_list = None
                 
                 # handle if tare is required
-                if args.ref_tare:
+                if args.ref_tare:  # use user tare
                     tare = args.ref_tare
                 if args.no_tare or args.ref_tare:
                     state=RecordingState.NEXTCHANNEL
                 else:
-                    print "starting tare recording, keep the calibration tool still in the rest position, press enter when ready"
-                    if wait_key_press(10):
-                        state=RecordingState.TARE
-                    else:
-                        print "No key was pressed in 10 seconds, what do you want to do ?"
-                        user_choice = user_menu({'t': "tare", 'k': "skip tare", 'q': "quit without saving"})
-                        if user_choice == 'q':
-                            state=RecordingState.END
-                        if user_choice == 'k':
-                            state=RecordingState.NEXTCHANNEL
-                        if user_choice == 'k':
+                    if calibrate_ref:
+                        print "starting tare recording, keep the calibration tool still in the rest position, press enter when ready"
+                        if wait_key_press(10):
                             state=RecordingState.TARE
+                        else:
+                            print "No key was pressed in 10 seconds, what do you want to do ?"
+                            user_choice = user_menu({'t': "tare", 'k': "skip tare", 'q': "quit without saving"})
+                            if user_choice == 'q':
+                                state=RecordingState.END
+                            if user_choice == 'k':
+                                state=RecordingState.NEXTCHANNEL
+                            if user_choice == 'k':
+                                state=RecordingState.TARE
+                    else:
+                        print "reference cannot be calibrated, so will not be tared"
+                        tare = None
+                        state=RecordingState.NEXTCHANNEL
 
         # State Tare
         if state==RecordingState.TARE:
             # activate tare recording
             if not tare_recording:
-                
-                tare_vec=[]
+                tare_vec = []
                 tare_recording = True
+                print "Tare in progress..."
             
             if len(tare_vec) > DEFAULT_TARE_RECORDINGS:
                 # enough samples
                 tare_recording = False
                 # compute tare from tare_vec
-                tare=compute_tare(tare_vec)
+                tare = compute_tare(tare_vec)
+                print "tare =", tare
                 state=RecordingState.NEXTCHANNEL
             #TODO: handle timeout if no data for a while
 
