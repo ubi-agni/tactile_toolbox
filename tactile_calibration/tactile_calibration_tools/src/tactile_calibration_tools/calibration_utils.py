@@ -158,6 +158,7 @@ def get_push_release(raw, ref, change_detect_threshold, doplot=False):
 
     # 3.a View recorded data in graphplot in order to validate correctness (no spurious wrong data or high noise)
     if doplot:
+        plt.figure(1)
         plt.plot(range(len(smooth_raw)),smooth_raw, 'g-', lw=1) # smooth raw values
         if is_raw(ref):
             plt.plot(range(len(ref)),ref, 'm-', lw=1) # smooth ref values, on negative side to avoid cluttering
@@ -166,7 +167,8 @@ def get_push_release(raw, ref, change_detect_threshold, doplot=False):
         plt.plot(inc_idx, smooth_raw[inc_idx], 'rx', lw=2) # increasing pressure values
         plt.plot(dec_idx, smooth_raw[dec_idx], 'bx', lw=2) # decreasing pressure values
         plt.plot(range(len(vel)), vel*50, 'k-', lw=1) # velocity scaled up
-        plt.show()
+        plt.show(block = False)
+    
     return [inc_idx, dec_idx]
 
 
@@ -209,11 +211,12 @@ def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
 
     # e    Visualize point diagram with [0-4095;LGTtN] including all taxel data points in X axis =[0-4095] over Y-axis =[fmin-fmax Newton]
     if doplot:
+        plt.figure(2)
         plt.plot(x_inc, y_inc, 'mx')
         plt.plot(x_inc, smooth(y_inc,100), 'r')
         plt.plot(x_dec, y_dec, 'c+')
         plt.plot(x_dec, smooth(y_dec,100), 'b')
-        plt.show()
+        plt.show(block = False)
 
     return [[x_inc, y_inc], [x_dec, y_dec]]
 
@@ -297,7 +300,7 @@ def generate_mapping_pwl(x, y, input_range_max, seg=4, no_extrapolation=False, d
         plt.figure()
         plt.plot(xs, ys, 'o')
         plt.plot(x_hat, y_hat, '-')
-        plt.show()
+        plt.show(block = False)
 
     # with open('lookup_inc.csv', 'w') as csvfile:
         # csvwriter = csv.writer(csvfile, delimiter=',')

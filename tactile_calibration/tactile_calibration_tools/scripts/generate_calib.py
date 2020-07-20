@@ -95,3 +95,7 @@ if __name__ == "__main__":
     # a    Save Lookuptable and-or Model in TaxelCalibrationMapping file.
     print "Preparing mapping for cell ", calib_channel
     save_mapping(mapping_dict, calib_channel, sensor_name, args.mapping_file, args.output_csv)
+    
+    if args.plot:
+        print "close plot windows to quit"
+        plt.show(block = True)

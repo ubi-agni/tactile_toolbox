@@ -42,7 +42,7 @@ DEFAULT_RECORDING_DURATION = 10 # 30 seconds
 MAX_MESSAGE_STORED = 100000 # 100 seconds at 1 kHz of data rate
 
 # prepare storage
-global raw_topic_init, recording_cell, state, args, msgs, ref_topic_init, raw_vec, raw_previous_vec, saved
+global raw_topic_init, recording_channel, state, args, msgs, ref_topic_init, raw_vec, raw_previous_vec, saved
 raw_vec = []
 raw_previous_vec = []
 raw_topic_init = False
@@ -55,6 +55,7 @@ state = None
 calibrate_ref = False
 
 recording_channel = None
+processed_channels = []
 count_repetition = 0
 
 args = None
@@ -63,11 +64,14 @@ saved = False
 
 class RecordingState(Enum):
     INIT = 1
-    DETECT = 2
-    CONFIRM_DETECT = 3
-    RECORD = 4
-    PROCESS = 5
-    SAVE = 6
+    TARE = 2
+    NEXTCHANNEL = 3
+    DETECT = 4
+    CONFIRM_DETECT = 5
+    RECORD = 6
+    PROCESS = 7
+    SAVE = 8
+    END = 9
 
 # callback for single topic
 def raw_topic_cb(msg):
@@ -103,7 +107,6 @@ def raw_topic_cb(msg):
               
             # only store the last values
             raw_vec = msg.sensors[0].values
-
 
 # callback for time synchronized topics
 def raw_ref_topic_cb(rawmsg, refmsg):
@@ -157,12 +160,34 @@ def wait_key_press(timeout):
            # pass   
     # return False
 
-def user_menu():
-    print "press c to continue, r to retry, d to detect a new cell, s to save and quit, or q to quit without saving"
+def user_menu(choices={'c': "continue", 'r':"retry", 's': "save", 'q': "quit without saving"}):
+    letter_string = "("
+    for letter in choices:
+        letter_string += letter + "/"
+        print  letter, "to", choices[letter]
+    letter_string += ") ?\n"
+    #print "press c to continue, r to retry, d to detect a new channel, s to save and quit, or q to quit without saving"
     tcflush(sys.stdin, TCIFLUSH)
     #user_choice = stdscr.getch()
-    return raw_input("(c/r/d/s/q) ?\n")
-   
+    return raw_input(letter_string)
+
+def user_yesno(default=True):
+    if default:
+        text = "[y]/n ?"
+    else:
+        text = "y/[n] ?"
+    tcflush(sys.stdin, TCIFLUSH)
+    while(1):
+        ret = raw_input(text)
+        if ret == "":
+            return default
+        else:
+            if ret == 'y' or ret == 'Y':
+                return True
+            if ref == 'n' or rett == 'N':
+                return False
+        print "wrong choice, try again"
+        tcflush(sys.stdin, TCIFLUSH)
 
 #def main(win): 
     #win.nodelay(True)
@@ -181,8 +206,10 @@ if __name__ == "__main__":
                       help="index of the ref channel to calibrate against")
     parser.add_argument("--ref_topic", type=str,
                       help="reference topic if different from raw topic")
-    parser.add_argument("--data_channel", type=int,
+    parser.add_argument("--data_channel", type=int, nargs='+',
                       help="force to record the specified data channel")
+    parser.add_argument("--num_channels", type=int,
+                      help="number of channels to record (will record 0 to num_channels-1)")
     parser.add_argument("--ref_tare", type=float, 
                       help="reference tare (substracted from calibrated value only)")
     parser.add_argument("--ref_ratio", type=float, default=REF_CALIB_RATIO,
@@ -231,10 +258,40 @@ if __name__ == "__main__":
         if state==RecordingState.INIT:
             # wait for initial data in one or 2 topics
             if (raw_topic_init and (args.ref_topic is None or (args.ref_topic is not None and ref_topic_init))):
-                if (args.data_channel):  # cell was already chosen in command line arguments
-                    print "cell", args.data_channel," will be recorded, if incorrect press enter to go to detection mode, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
-                    #win.addstr("cell " + str(args.data_channel) +
-                    #    " will be recorded, if incorrect press a key to enter detection mode, otherwise wait " + str(DEFAULT_KEY_TIMEOUT) + " sec\n")
+                print "Found data on topics"
+                # handle the channel list
+                if (args.data_channel):  # user provided channel(s) in command line arguments
+                    channel_list = args.data_channel
+                else:  # no provided list
+                    # check if a range is given
+                    if args.num_channels:
+                        channel_list = range(0, args.num_channels)
+                        # handle ref in case it is in the same vector
+                        if not args.ref_topic:  # remove the ref_channel from the list
+                            channel_list.remove(args.ref_channel)
+                        # else the ref is on a separate topic, use all data channels
+                    else: # detect channels on the go, and continue until user stops
+                        channel_list = None
+                
+                # handle if tare is required
+                if args.ref_tare:
+                    tare = args.ref_tare
+                if args.no_tare or args.ref_tare:
+                    state=RecordingState.NEXTCHANNEL
+                else:
+                    print "starting tare recording, keep the calibration tool still in the rest position, press enter when ready"
+                    if wait_key_press(10):
+                        state=RecordingState.TARE
+                    else:
+                        print "No key was pressed in 10 seconds, what do you want to do ?"
+                        user_choice = user_menu({'t': "tare", 'k': "skip tare", 'q': "quit without saving"})
+                        if user_choice == 'q':
+                            state=RecordingState.END
+                        if user_choice == 'k':
+                            state=RecordingState.NEXTCHANNEL
+                        if user_choice == 'k':
+                            state=RecordingState.TARE
+
         # State Tare
         if state==RecordingState.TARE:
             # activate tare recording
@@ -250,34 +307,41 @@ if __name__ == "__main__":
                 tare=compute_tare(tare_vec)
                 state=RecordingState.NEXTCHANNEL
             #TODO: handle timeout if no data for a while
+
+        # State Next Channel
+        if state==RecordingState.NEXTCHANNEL:
+            if channel_list is None: # no list, means ask if continue for a next one 
+                print "Do you want to detect a new channel ?"
+                user_choice = user_yesno(default=True)
+                if user_choice == False:  # end there
+                    state=RecordingState.END
+                else:
+                    raw_previous_vec=[]
+                    state=RecordingState.DETECT
+                
+            else: # there is a list
+                if len(channel_list): # if not at the end of the channel list
+                    print len(channel_list), "channels remaining to be recorded"
+                    print "Proceeding to next channel, press enter to interrupt or wait for", DEFAULT_KEY_TIMEOUT, "seconds"
                     key_pressed = False
                     if wait_key_press(DEFAULT_KEY_TIMEOUT):
-                        user_choice = user_menu()
+                        user_choice = user_menu({'c': "continue to detection", 'q': "quit without saving"})
                         if user_choice == 'q':
-                            exit(0)
-                        if user_choice == 's':
-                            state=RecordingState.SAVE
+                            state=RecordingState.END
                             key_pressed = True
-                        if user_choice == 'r':
-                            state=RecordingState.INIT
-                            key_pressed = True
-                        if user_choice == 'd':
+                        if user_choice == 'c':
                             raw_previous_vec = []
                             state=RecordingState.DETECT
                             key_pressed = True
                         # any other will not do anything and continue
                     if not key_pressed:
-                        print "starting recording, please press the cell with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
-                        print " press enter to interrupt recording..."
-                        start_recording_time = rospy.Time.now()
-                        recording_cell = detected_cell = args.data_channel
-                        state=RecordingState.RECORD
-                else:
-                    # reset previous values
-                    raw_previous_vec = []
-                    state=RecordingState.DETECT
-
-        # State Detect next channel
+                        raw_previous_vec = []
+                        state=RecordingState.DETECT
+                else: # at the end of the list, proceed to quit
+                    print "All channels have been recorded, quitting"
+                    state=RecordingState.END
+  
+        # State Detect
         if state==RecordingState.DETECT:
             # initialize detection
             if len(raw_previous_vec) == 0:
@@ -290,51 +354,62 @@ if __name__ == "__main__":
             detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, DEFAULT_DETECT_THRESHOLD)
             if detected_channel is not None:
                 state = RecordingState.CONFIRM_DETECT
-            
-            # check if key pressed to interrupt recording
-            if wait_key_press(0.1):
-                user_choice = user_menu()
-                if user_choice == 'q':
-                    # TODO warn a second time, that all recording will be lost ?
-                    exit(0)
-                if user_choice == 's':
-                    state=RecordingState.SAVE
-                if user_choice == 'd' or user_choice == 'r':
-                    state=RecordingState.DETECT
-                    raw_previous_vec=[]
-                # any other will continue detection if user_choice == 'c':
+            else:
+                # check if key pressed to interrupt recording
+                if wait_key_press(0.1):
+                    user_choice = user_menu({'c': "continue", 'r':"retry detect", 's': "save", 'q': "quit without saving"})
+                    if user_choice == 'q':
+                        # TODO warn a second time, that all recording will be lost ?
+                        exit(0)
+                    if user_choice == 's':
+                        state=RecordingState.SAVE
+                    if user_choice == 'r':
+                        state=RecordingState.DETECT
+                        raw_previous_vec=[]
+                    # any other will continue detection if user_choice == 'c':
 
         # State Confirm detected channel
         if state==RecordingState.CONFIRM_DETECT:
             if detected_channel is not None:  # channel was chosen
-                if wait_key_press(DEFAULT_KEY_TIMEOUT):
-                    # key pressed, reset previous values
-                    raw_previous_vec = []
-                    state=RecordingState.DETECT
+                if channel_list is not None:  # check if channel is part of the list
+                    if detected_channel not in channel_list:
                         print "channel", detected_channel,"was detected to be pressed, but was either already recorded, or not in the range, procceed with this cell anyway ?"
+                        if user_yesno(default=True) == False:
+                            raw_previous_vec = []
+                            state = RecordingState.DETECT
                 else:
                     print "channel", detected_channel,"was detected to be pressed, if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
-                    # no key pressed, start recording
-                    # print "starting recording, please press the cell with the calibration tool in a push/release motion", args.repetition, "times in a row"
-                    start_recording_time = rospy.Time.now()
+                    if wait_key_press(DEFAULT_KEY_TIMEOUT):
+                        # key pressed, reset previous values
+                        raw_previous_vec = []
+                        state=RecordingState.DETECT
+                if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue with recording
+                    # start recording
+                    print "starting recording"
                     state=RecordingState.RECORD
                 # if confirmed
             else: # this should not happen, reset
                 state=RecordingState.DETECT
-            # else
 
         # State Record channel
         if state==RecordingState.RECORD:
             if recording_channel is None:  # initialize recording
+                reset_recording()
+                start_recording_time = rospy.Time.now()
                 recording_channel = detected_channel  # actually starts the recording of frames in the callback
+                # print "starting recording, please press the channel with the calibration tool in a push/release motion", args.repetition, "times in a row"
+                print " please press the channel with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
+                        
                 print " press enter to interrupt recording..."
             else: # we are recording
                 # TODO analyse the last recorded values and detect push/release
                 # if count_repetition >= args.repetition:
                 # for now we just use a time and stop after a certain time
-                if (rospy.Time.now()-start_recording_time).to_sec() > DEFAULT_RECORDING_DURATION :
+                elapsed_time = (rospy.Time.now()-start_recording_time).to_sec() 
+                if elapsed_time > DEFAULT_RECORDING_DURATION :
                     recording_channel = None
                     state=RecordingState.PROCESS
+                print "\r Remaining time :", DEFAULT_RECORDING_DURATION-elapsed_time,
 
             # check if key pressed to interrupt recording
             if wait_key_press(0.1):
@@ -343,24 +418,24 @@ if __name__ == "__main__":
                 recording_channel =  None
                 print "recording stopped"
                 already_recorded_duration = rospy.Time.now() - start_recording_time
-                user_choice = user_menu()
-                if user_choice == 'q':
-                    # TODO warn a second time, that all recording will be lost ?
-                    exit(0)
-                if user_choice == 's':
-                    state=RecordingState.SAVE
-                if user_choice == 'd':
-                    state=RecordingState.DETECT
-                    raw_previous_vec=[]
-                if user_choice == 'r':
-                    reset_recording()
-                    print "restarting recording, please press the cell with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
-                    start_recording_time = rospy.Time.now()
-                    state=RecordingState.RECORD
-                if user_choice == 'c':
+                user_choice = user_menu({'c': "continue recording", 'r':"restart recording", 'd': "detect a new cell", 's': "save now", 'q': "quit without saving"})
+                if user_choice == "" or user_choice == 'c':
                     start_recording_time = rospy.Time.now() - already_recorded_duration
+                    recording_channel = detected_channel
                     print "continuing recording, for ", str(round(DEFAULT_RECORDING_DURATION-already_recorded_duration.to_sec(),1)) , " sec"
-                    
+                else:
+                    if user_choice == 'q':
+                        # TODO warn a second time, that all recording will be lost ?
+                        state=RecordingState.END
+                    if user_choice == 's':
+                        state=RecordingState.SAVE
+                    if user_choice == 'd':
+                        state=RecordingState.DETECT
+                        raw_previous_vec=[]
+                    if user_choice == 'r':
+                        print "restarting recording"
+                        state=RecordingState.RECORD
+
             # else:
             # TODO display pressure
 
@@ -368,10 +443,37 @@ if __name__ == "__main__":
         if state==RecordingState.PROCESS:
             # check if data is valid, otherwise ask for recording again with some instruction how to improve
             ## basic data size check
-            ## push/release check
+            # TODO
+            ## push/release check and plot the last recording
+            [inc, dec] = get_push_release(raw, ref_newton_tare, input_range_max, CHANGE_DETECT_THRESH, True)
+            
+            if inc is None:
+                print " failed to extract push/release, verify the data visually, do you want to save anyway ?"
+                if user_yesno(default=False):
+                    state = RecordingState.SAVE
+                else:
+                    user_choice = user_menu({'d': "detect a new cell", 'r': "restart recording", 's': "save now"})
+                    if user_choice == 's' or user_choice == 'c':
+                        state=RecordingState.SAVE
+                    if user_choice == 'd':
+                        state=RecordingState.DETECT
+                        raw_previous_vec=[]
+                    if user_choice == 'r':
+                        print "restarting recording"
+                        state=RecordingState.RECORD
 
-            # data is valid
-            state=RecordingState.SAVE
+            else:
+                if len(inc) < args.repetition:
+                    print len(inc)," push/release actions found when", args.repetition, "were expected"
+                    print "restart recording ?"
+                    if user_yesno(default=False):
+                        print "restarting recording, please press the channel with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
+                        state = RecordingState.RECORD
+                    else:
+                        state=RecordingState.SAVE
+                else:
+                    # data is valid
+                    state=RecordingState.SAVE
 
         # State Save recording
         if state==RecordingState.SAVE:
@@ -379,15 +481,32 @@ if __name__ == "__main__":
             date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
             saved=save_data("calib_" + str(detected_channel) + "_" + date_time + ".bag")
             
+            if saved:
+                if channel_list is not None:
+                    # remove
+                    channel_list.remove(current_channel)
+                    processed_channels.append(current_channel)
+                    saved = False
+                    reset_recording()
+            # loop
+            state=RecordingState.NEXTCHANNEL
+
+        # State End
+        if state==RecordingState.END:
+            # check if we saved the data or not
+            if not saved:
+                # save here
+                date_time_obj = datetime.now()
+                date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
+                saved=save_data("calib_" + str(detected_channel) + "_" + date_time + ".bag")
+
+            print "Channels recorded ", processed_channels
+            if channel_list is not None and len(channel_list) > 0:
+                print "some channels were not recorded :", channel_list
             break;
 
         rate.sleep()
-    # check if we saved the data or not
-    if not saved:
-        # save here
-        date_time_obj = datetime.now()
-        date_time = date_time_obj.strftime("%Y-%m-%d-%H-%M-%S")
-        saved=save_data("calib_" + str(detected_cell) + "_" + date_time + ".bag")
+
 
 
 
