@@ -47,9 +47,12 @@ raw_vec = []
 raw_previous_vec = []
 raw_topic_init = False
 ref_raw_vec = []
+tare_vec = []
+tare = 0
 ref_topic_init = None # if None, the ref topic will not be checked because unused
 msgs = []
 state = None
+calibrate_ref = False
 
 recording_channel = None
 count_repetition = 0
@@ -68,7 +71,7 @@ class RecordingState(Enum):
 
 # callback for single topic
 def raw_topic_cb(msg):
-    global raw_topic_init, state, recording_cell, raw_vec, msgs
+    global raw_topic_init, state, recording_channel, raw_vec, tare_vec, msgs
     if not raw_topic_init:
         # first message arrived
         raw_topic_init = True
@@ -76,9 +79,13 @@ def raw_topic_cb(msg):
         if recording_channel is not None:
             m = deepcopy(msg)
             if ref_topic_init is None:  # the ref is part of this message too
-                    m.sensors[0].values = [msg.sensors[0].values[recording_cell] , msg.sensors[0].values[args.ref_channel]]
                 # fetch recorded channel and ref
                 if (recording_channel >= 0  and recording_channel <  len(msg.sensors[0].values) and args.ref_channel >= 0 and args.ref_channel < len(msg.sensors[0].values)):
+                    if calibrate_ref:
+                        ref = calibrate_affine(msg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset) - (tare if tare is not None else 0)
+                    else:
+                        ref = msg.sensors[0].values[args.ref_channel]
+                    m.sensors[0].values = [msg.sensors[0].values[recording_channel] , ref]
             else:  # the ref is not in this message, # should not happen, shoulb be handled by another callback
                 # fetch only recorded channel
                 m.sensors[0].values = msg.sensors[0].values[recording_channel]
@@ -89,6 +96,11 @@ def raw_topic_cb(msg):
                 recording_channel = None
                 state=RecordingState.PROCESS
         else:
+            if tare_recording is not None and calibrate_ref:
+                if args.ref_channel >= 0 and args.ref_channel < len(msg.sensors[0].values):
+                    ref = calibrate_affine(msg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset)
+                    tare_vec.append(ref)
+              
             # only store the last values
             raw_vec = msg.sensors[0].values
 
@@ -102,10 +114,15 @@ def raw_ref_topic_cb(rawmsg, refmsg):
     else:
         if recording_channel is not None:
             m = deepcopy(rawmsg)
-            # fetch ref cell
-            m.sensors[0].values.append(refmsg.sensors[0].values[args.ref_channel])
+            values = []
             # fetch recorded channel
             values.append(rawmsg.sensors[0].values[recording_channel])
+            # fetch ref channel
+            if calibrate_ref:
+                values.append(calibrate_affine(refmsg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset) - tare)
+            else:
+                values.append(refmsg.sensors[0].values[args.ref_channel])
+            m.sensors[0].values = values
             msgs.append(m)
         else:
             # only store the last values
@@ -166,10 +183,13 @@ if __name__ == "__main__":
                       help="reference topic if different from raw topic")
     parser.add_argument("--data_channel", type=int,
                       help="force to record the specified data channel")
+    parser.add_argument("--ref_tare", type=float, 
+                      help="reference tare (substracted from calibrated value only)")
     parser.add_argument("--ref_ratio", type=float, default=REF_CALIB_RATIO,
                       help="reference ratio (indicated on the tool)")
     parser.add_argument("--ref_offset", type=float, default=REF_CALIB_OFFSET,
                       help="reference offset (indicated on the tool)")
+    parser.add_argument("--no_tare",  action="store_true", help="deactivate initial tare process")
     parser.add_argument("--plot",  action="store_true", help="show the plots")
     parser.add_argument("--input_resolution", type=int, default=DEFAULT_INPUT_RESOL,
                       help="input resolution in bits")
@@ -184,6 +204,9 @@ if __name__ == "__main__":
     detected_channel = None
     start_recording_time = None
     saved = False
+    
+    if args.ref_ratio and args.ref_offset:
+        calibrate_ref = True
 
     # prepare state machine
     state = RecordingState.INIT
@@ -212,6 +235,21 @@ if __name__ == "__main__":
                     print "cell", args.data_channel," will be recorded, if incorrect press enter to go to detection mode, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
                     #win.addstr("cell " + str(args.data_channel) +
                     #    " will be recorded, if incorrect press a key to enter detection mode, otherwise wait " + str(DEFAULT_KEY_TIMEOUT) + " sec\n")
+        # State Tare
+        if state==RecordingState.TARE:
+            # activate tare recording
+            if not tare_recording:
+                
+                tare_vec=[]
+                tare_recording = True
+            
+            if len(tare_vec) > DEFAULT_TARE_RECORDINGS:
+                # enough samples
+                tare_recording = False
+                # compute tare from tare_vec
+                tare=compute_tare(tare_vec)
+                state=RecordingState.NEXTCHANNEL
+            #TODO: handle timeout if no data for a while
                     key_pressed = False
                     if wait_key_press(DEFAULT_KEY_TIMEOUT):
                         user_choice = user_menu()
