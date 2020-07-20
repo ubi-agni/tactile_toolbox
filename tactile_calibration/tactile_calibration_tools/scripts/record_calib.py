@@ -146,6 +146,7 @@ def raw_ref_topic_cb(rawmsg, refmsg):
             raw_vec = rawmsg.sensors[0].values
 
 def reset_recording():
+    global count_repetition, msgs
     count_repetition = 0
     msgs = []
 
