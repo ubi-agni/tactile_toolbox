@@ -236,6 +236,8 @@ if __name__ == "__main__":
                       help="reference topic if different from raw topic")
     parser.add_argument("--data_channel", type=int, nargs='+',
                       help="force to record the specified data channel")
+    parser.add_argument("--detect_threshold", type=float, default=DEFAULT_DETECT_THRESHOLD,
+                      help="number of channels to record (will record 0 to num_channels-1)")
     parser.add_argument("--num_channels", type=int,
                       help="number of channels to record (will record 0 to num_channels-1)")
     parser.add_argument("--ref_tare", type=float,
@@ -394,7 +396,7 @@ if __name__ == "__main__":
                 print "Then you have another", str(DEFAULT_RECORDING_DURATION) ,"seconds for recording."
                 print "Use the calibtool upright and press and release your selected channel evenly over", args.repetition,"iterations. \n\n" 
             # detect changes
-            detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, DEFAULT_DETECT_THRESHOLD)
+            detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, args.detect_threshold)
             if detected_channel is not None:
                 state = RecordingState.CONFIRM_DETECT
             else:

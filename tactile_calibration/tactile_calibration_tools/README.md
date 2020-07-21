@@ -50,6 +50,7 @@ rosrun tactile_calibration_tools record_calib.py <topic> <ref_channel>
 
 usage: record_calib.py [-h] [--ref_topic REF_TOPIC]
                        [--data_channel DATA_CHANNEL [DATA_CHANNEL ...]]
+                       [--detect_threshold DETECT_THRESHOLD]
                        [--num_channels NUM_CHANNELS] [--ref_tare REF_TARE]
                        [--ref_ratio [REF_RATIO]] [--ref_offset [REF_OFFSET]]
                        [--no_tare] [--plot]
@@ -66,6 +67,7 @@ usage: record_calib.py [-h] [--ref_topic REF_TOPIC]
 
 * --data_channel <DATA_CHANNEL> [<DATA_CHANNEL2> [...]] : index (or space-separated indices) of the data channel to calibrate 
     (if not provided in the bagfile name, or if one wants to change the default channel 0)
+* --detect_threshold <DETECT_THRESHOLD> : change the default detection threshold for selecting a cell
 * --ref_topic <REF_TOPIC> : topic where the reference channel is if different from raw_topic (data of raw and ref topic will be synchronized)
 * --num_channels <NUM_CHANNELS> : number of channels to calibrate. Will prepare a list of 0 to num_channel-1 to be calibrated.
 * --ref_tare_val <REF_TARE_VAL> : use provided reference tare value (given in newton) instead of running a tare procedure
