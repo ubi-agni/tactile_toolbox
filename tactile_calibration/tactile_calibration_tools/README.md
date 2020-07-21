@@ -70,7 +70,7 @@ usage: record_calib.py [-h] [--ref_topic REF_TOPIC]
 * --detect_threshold <DETECT_THRESHOLD> : change the default detection threshold for selecting a cell
 * --ref_topic <REF_TOPIC> : topic where the reference channel is if different from raw_topic (data of raw and ref topic will be synchronized)
 * --num_channels <NUM_CHANNELS> : number of channels to calibrate. Will prepare a list of 0 to num_channel-1 to be calibrated.
-* --ref_tare_val <REF_TARE_VAL> : use provided reference tare value (given in newton) instead of running a tare procedure
+* --ref_tare <REF_TARE> : use provided reference tare value (given in newton) instead of running a tare procedure
 * --no_tare : deactivates using tare and deactivates tare procedure
 * --ref_ratio [<REF_RATIO>] (used in combination with --ref_offset) : reference ratio for ref_raw calibration (indicated on the tool), if no value given, default will be used
 * --ref_offset [<REF_OFFSET>] (used in combination with --ref_ratio) : reference offset for ref_raw calibration (indicated on the tool), if no value given, default will be used
