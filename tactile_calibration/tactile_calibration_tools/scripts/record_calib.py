@@ -107,8 +107,8 @@ def raw_topic_cb(msg):
                     ref = calibrate_affine(msg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset)
                     tare_vec.append(ref)
 
-            # only store the last values
-            raw_vec = msg.sensors[0].values
+    # only store the last values
+    raw_vec = msg.sensors[0].values
 
 # callback for time synchronized topics
 def raw_ref_topic_cb(rawmsg, refmsg):
@@ -216,6 +216,64 @@ def move_previous_recording(processed_channels, detected_channel, folder):
         os.makedirs(dirname)
     os.rename(fullfilename, dirname +"/" + filename)
     print "moving", filename, " into folder called ", folder
+
+def display_channel(prev_raw, raw, detect_threshold):
+    channel_disp = None
+    if len(raw) and len(prev_raw) == len (raw):
+        channel_disp = ['.']*len(raw)
+        absdiff = np.fabs(np.array(raw)-np.array(prev_raw))
+        idx_above66 = np.where(absdiff > detect_threshold*0.66)
+        idx_above50 = np.where(absdiff > detect_threshold*0.5)
+        idx_above33 = np.where(absdiff > detect_threshold*0.33)
+        idx_above25 = np.where(absdiff > detect_threshold*0.25)
+ 
+        if len(idx_above25[0]):
+            for i in idx_above25[0]:
+                channel_disp[i] = "_"
+        if len(idx_above33[0]):
+            for i in idx_above33[0]:
+                channel_disp[i] = "-"
+        if len(idx_above50[0]):
+            for i in idx_above50[0]:
+                channel_disp[i] = "="
+        if len(idx_above66[0]):
+            for i in idx_above66[0]:
+                channel_disp[i] = "^"
+    return channel_disp
+
+def display_channel_color(prev_raw, raw, detect_threshold):
+    channel_disp = None
+    
+    if len(raw) and len(prev_raw) == len (raw):
+        channel_disp = ['.']*len(raw)
+        absdiff = np.fabs(np.array(raw)-np.array(prev_raw))
+        for i, val in enumerate(absdiff):
+            if val < detect_threshold*0.25:
+                channel_disp[i] = '\033[90m' + str(i) # dark grey
+            elif val < detect_threshold*0.33:
+                channel_disp[i] = '\033[32m' + str(i) # green
+            elif val < detect_threshold*0.5:
+                channel_disp[i] = '\033[93m' + str(i) # yellow
+            elif val < detect_threshold*0.66:
+                channel_disp[i] = '\033[33m' + str(i) # orange
+            else:
+                channel_disp[i] = '\033[31m' + str(i) # red
+    return channel_disp
+
+def select_color(prev_raw, raw, threshold):
+    color = '\033[0m'
+    val = abs(raw-prev_raw)
+    if val < threshold*0.25:
+        color = '\033[90m' # dark grey
+    elif val < threshold*0.33:
+        color = '\033[32m' # green
+    elif val < threshold*0.5:
+        color = '\033[93m' # yellow
+    elif val < threshold*0.66:
+        color = '\033[33m' # orange
+    else:
+        color = '\033[31m' # red
+    return color
 
 #def main(win): 
     #win.nodelay(True)
@@ -395,7 +453,13 @@ if __name__ == "__main__":
                 print " ", str(DEFAULT_KEY_TIMEOUT) , "seconds after detection, calibration recording starts automaticly."
                 print "Then you have another", str(DEFAULT_RECORDING_DURATION) ,"seconds for recording."
                 print "Use the calibtool upright and press and release your selected channel evenly over", args.repetition,"iterations. \n\n" 
-            # detect changes
+            # display vector and detection level
+            #channel_display_str = display_channel(raw_previous_vec, raw_vec, args.detect_threshold)
+            channel_display_str = display_channel_color(raw_previous_vec, raw_vec, args.detect_threshold)
+            if channel_display_str is not None:
+                print "\033[0m\r chan:", '\033[0m|'.join(channel_display_str),'\033[0m',
+                sys.stdout.flush()
+            # detect changeschannel_disp
             detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, args.detect_threshold)
             if detected_channel is not None:
                 state = RecordingState.CONFIRM_DETECT
@@ -475,7 +539,12 @@ if __name__ == "__main__":
                     state=RecordingState.PROCESS
                     print "\nrecording ended"
                 else:
-                  print "\r Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                  #display_raw_ref = display_channel_color([raw_previous_vec[i] for i in [detected_channel, args.ref_channel]] , [raw_vec[i] for i in [detected_channel, args.ref_channel] ], input_range_max)
+                  #if display_raw_ref is not None:
+                      #print "\033[0m\r chan:",display_raw_ref[0],"\033[0mref:",display_raw_ref[1],"\033[0m Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                  print "\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(raw_previous_vec[args.ref_channel], raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                  #else:
+                  #    print "\033[0m\r Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
                   sys.stdout.flush()
 
             # check if key pressed to interrupt recording
