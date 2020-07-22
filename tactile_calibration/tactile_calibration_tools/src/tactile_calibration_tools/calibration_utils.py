@@ -354,7 +354,7 @@ def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_m
 
     return [sensor_name, ref_raw_vec, raw_vec]
 
-def generate_mapping_pwl(x, y, input_range_max, seg=4, no_extrapolation=False, doplot=False):
+def generate_mapping_pwl(x, y, input_range_max, calib_channel, seg=4, no_extrapolation=False, doplot=False):
 
     xs = np.array(x)
     ys = np.array(y)
@@ -377,7 +377,7 @@ def generate_mapping_pwl(x, y, input_range_max, seg=4, no_extrapolation=False, d
         plt.clf() 
         plt.plot(xs, ys, 'o')
         plt.plot(x_hat, y_hat, '-')
-        plt.title('Piece-wise linear mapping') 
+        plt.title('Piece-wise linear mapping channel '+ str(calib_channel)) 
         plt.ylabel('Ref')
         plt.xlabel('Raw')
         plt.legend(["Pushing data", "PWL Mapping"])

@@ -42,7 +42,7 @@ def process(bagfilename, topic, calib_channel, data_channel, ref_channel, ref_ra
         return -1
     print " Fitting the data and extracting a", segments, " segment piece-wise-linear calib"
     # process only increasing
-    mapping_dict = generate_mapping_pwl(inc[0], inc[1], input_range_max, segments, no_extrapolation, plot)
+    mapping_dict = generate_mapping_pwl(inc[0], inc[1], input_range_max, calib_channel, segments, no_extrapolation, plot)
 
     # 6. Save
     # a    Save Lookuptable and-or Model in TaxelCalibrationMapping file.
