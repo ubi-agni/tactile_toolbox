@@ -48,6 +48,8 @@ bool TactileStateCalibrator::fill_calibs(std::map<int, tactile::Calibration*> &m
   if (map.size() < (max_key - min_key + 1))
   {
     ROS_ERROR("not all indices in the range are defined");
+    ROS_ERROR_STREAM("  length of the calib map: " <<  map.size());
+    ROS_ERROR_STREAM("  length of the range:  ("<< max_key <<"- " << min_key << " + 1) =" <<  (max_key - min_key + 1));
     return false;
   }
   else
