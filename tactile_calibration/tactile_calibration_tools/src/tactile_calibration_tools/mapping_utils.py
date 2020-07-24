@@ -43,6 +43,8 @@ def check_idx_range_duplicate(idx_ranges, data_channel):
                 if idx_range == data_channel:
                     found_duplicate = True
                     # don't append, since this data_channel will have its own calib
+                else:
+                    new_idx_ranges.append(idx_range)
         else: # concatenate the remaining ranges
             new_idx_ranges.append(idx_range)
     if found_duplicate:
