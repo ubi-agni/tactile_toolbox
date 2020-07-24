@@ -112,6 +112,8 @@ def save_mapping(mapping_dict, calib_channel, sensor_name, mapping_file=None, ou
             # TODO maybe allow to insert this calib for more than calib_channel
             # check if duplicate data_channel
             for cal in calib["calib"]:
+                if 'values' not in cal:
+                    cal['values'] = []
                 new_idx_range = check_idx_range_duplicate(cal["idx_range"], calib_channel)
                 if new_idx_range is not None: # data must be split
                     print " found a calibration for channel", calib_channel, " replacing with new calib"
@@ -119,16 +121,16 @@ def save_mapping(mapping_dict, calib_channel, sensor_name, mapping_file=None, ou
                         # keep the others
                         if type(new_idx_range)==list:
                             print new_idx_range
-                            newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range':  flowmap(new_idx_range) , "values": cal["values"]})
+                            newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range':  flowmap(new_idx_range) , 'values': cal["values"]})
                         else:
-                            newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range': flowmap([new_idx_range]), "values": cal["values"]})
+                            newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range': flowmap([new_idx_range]), 'values': cal["values"]})
                 else: # just append
-                    newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range':  flowmap(cal["idx_range"]) , "values": cal["values"]})
+                    newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range':  flowmap(cal["idx_range"]) , 'values': cal["values"]})
             # append new calib
-            newcalib["calib"].append({'sensor_name': sensor_name, 'type': 'PWL', 'idx_range': flowmap([calib_channel]), "values": mapping_dict})
+            newcalib["calib"].append({'sensor_name': sensor_name, 'type': 'PWL', 'idx_range': flowmap([calib_channel]), 'values': mapping_dict})
 
     except IOError:  # file does not exist, create it
-        newcalib["calib"] = [{'sensor_name': sensor_name, 'type': 'PWL', 'idx_range': flowmap([calib_channel]), "values": mapping_dict}]
+        newcalib["calib"] = [{'sensor_name': sensor_name, 'type': 'PWL', 'idx_range': flowmap([calib_channel]), 'values': mapping_dict}]
         pass
     print "Saving mapping to ", mapping_filename
     with open(mapping_filename, 'w') as f:
