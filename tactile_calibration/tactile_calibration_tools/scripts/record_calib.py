@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import rospy
 
 import numpy as np
@@ -43,11 +43,12 @@ MAX_MESSAGE_STORED = 100000 # 100 seconds at 1 kHz of data rate
 DEFAULT_TARE_RECORDINGS = 1000
 
 # prepare storage
-global raw_topic_init, recording_channel, state, args, msgs, ref_topic_init, raw_vec, raw_previous_vec, tare_vec, saved
+global raw_topic_init, recording_channel, state, args, msgs, ref_topic_init, raw_vec, raw_previous_vec, ref_raw_previous_vec, tare_vec, saved
 raw_vec = []
 raw_previous_vec = []
 raw_topic_init = False
 ref_raw_vec = []
+ref_raw_previous_vec = []
 tare_vec = []
 tare_recording = None
 tare = 0
@@ -112,7 +113,7 @@ def raw_topic_cb(msg):
 
 # callback for time synchronized topics
 def raw_ref_topic_cb(rawmsg, refmsg):
-    global raw_topic_init, ref_topic_init, state, recording_channel, raw_vec, tare_vec, msgs
+    global raw_topic_init, ref_topic_init, state, recording_channel, raw_vec, ref_raw_vec, tare_vec, msgs
     if not raw_topic_init:
         # first message arrived
         raw_topic_init = True
@@ -142,8 +143,9 @@ def raw_ref_topic_cb(rawmsg, refmsg):
                     ref = calibrate_affine(refmsg.sensors[0].values[args.ref_channel], args.ref_ratio, args.ref_offset)
                     tare_vec.append(ref)
 
-            # only store the last values
-            raw_vec = rawmsg.sensors[0].values
+    # only store the last values
+    raw_vec = rawmsg.sensors[0].values
+    ref_raw_vec = refmsg.sensors[0].values
 
 def reset_recording():
     global count_repetition, msgs
@@ -416,6 +418,7 @@ if __name__ == "__main__":
                     state=RecordingState.END
                 else:
                     raw_previous_vec=[]
+                    ref_raw_previous_vec = []
                     state=RecordingState.DETECT
                 
             else: # there is a list
@@ -430,11 +433,13 @@ if __name__ == "__main__":
                             key_pressed = True
                         if user_choice == 'c':
                             raw_previous_vec = []
+                            ref_raw_previous_vec = []
                             state=RecordingState.DETECT
                             key_pressed = True
                         # any other will not do anything and continue
                     if not key_pressed:
                         raw_previous_vec = []
+                        ref_raw_previous_vec = []
                         state=RecordingState.DETECT
                 else: # at the end of the list, proceed to quit
                     print "All channels have been recorded, quitting"
@@ -445,6 +450,7 @@ if __name__ == "__main__":
             # initialize detection
             if len(raw_previous_vec) == 0:
                 raw_previous_vec = raw_vec
+                ref_raw_previous_vec = ref_raw_vec
                 detected_channel = None
                 # announce detection is underway
                 print "Selection detection in progress"
@@ -460,6 +466,7 @@ if __name__ == "__main__":
                 print "\033[0m\r chan:", '\033[0m|'.join(channel_display_str),'\033[0m',
                 sys.stdout.flush()
             # detect changeschannel_disp
+            # TODO handle the case of 2 channels
             detected_channel = detect_channel_press(raw_previous_vec, raw_vec, args.ref_channel, args.detect_threshold)
             if detected_channel is not None:
                 state = RecordingState.CONFIRM_DETECT
@@ -475,6 +482,7 @@ if __name__ == "__main__":
                     if user_choice == 'r':
                         state=RecordingState.DETECT
                         raw_previous_vec=[]
+                        ref_raw_previous_vec=[]
                     # any other will continue detection if user_choice == 'c':
 
         # State Confirm detected channel
@@ -503,12 +511,14 @@ if __name__ == "__main__":
                             print "proceed with this channel anyway ?"
                             if user_yesno(default=False) == False:
                                 raw_previous_vec = []
+                                ref_raw_previous_vec = []
                                 state = RecordingState.DETECT
                     else:
                         print " if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
                         if wait_key_press(DEFAULT_KEY_TIMEOUT):
                             # key pressed, reset previous values
                             raw_previous_vec = []
+                            ref_raw_previous_vec = []
                             state=RecordingState.DETECT
                     if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue with recording
                         # start recording
@@ -542,10 +552,13 @@ if __name__ == "__main__":
                   #display_raw_ref = display_channel_color([raw_previous_vec[i] for i in [detected_channel, args.ref_channel]] , [raw_vec[i] for i in [detected_channel, args.ref_channel] ], input_range_max)
                   #if display_raw_ref is not None:
                       #print "\033[0m\r chan:",display_raw_ref[0],"\033[0mref:",display_raw_ref[1],"\033[0m Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
-                  print "\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(raw_previous_vec[args.ref_channel], raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
-                  #else:
-                  #    print "\033[0m\r Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
-                  sys.stdout.flush()
+                    if ref_topic_init is not None and ref_topic_init is True:
+                        print "\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(ref_raw_previous_vec[args.ref_channel], ref_raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                    else:
+                        print "\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(raw_previous_vec[args.ref_channel], raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                    #else:
+                    #    print "\033[0m\r Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                    sys.stdout.flush()
 
             # check if key pressed to interrupt recording
             if wait_key_press(0.1):
@@ -568,6 +581,7 @@ if __name__ == "__main__":
                     if user_choice == 'd':
                         state=RecordingState.DETECT
                         raw_previous_vec=[]
+                        ref_raw_previous_vec=[]
                     if user_choice == 'r':
                         print "restarting recording"
                         state=RecordingState.RECORD
@@ -594,6 +608,7 @@ if __name__ == "__main__":
                     if user_choice == 'd':
                         state=RecordingState.DETECT
                         raw_previous_vec=[]
+                        ref_raw_previous_vec=[]
                     if user_choice == 'r':
                         print "restarting recording"
                         state=RecordingState.RECORD
