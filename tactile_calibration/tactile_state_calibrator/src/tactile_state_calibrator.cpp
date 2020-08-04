@@ -10,10 +10,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#ifdef HAVE_YAML
 #include <yaml-cpp/yaml.h>
-#endif
-
 
 using namespace tactile;
 
@@ -150,7 +147,6 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
   if (!calib_filename.empty())
   {
     calibs_.clear();
-#ifdef HAVE_YAML
     const YAML::Node yaml_node = YAML::LoadFile(calib_filename);
     if (yaml_node["calib"])
     {
@@ -277,9 +273,6 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
         ROS_INFO("found a single map");
       single_calib_ = new PieceWiseLinearCalib(PieceWiseLinearCalib::load(yaml_node));
     }
-#else
-    single_calib_ = new PieceWiseLinearCalib(PieceWiseLinearCalib::load(calib_filename));
-#endif
     if (single_calib_ == nullptr && calibs_.size()==0)
     {
       if (verbose>1)
