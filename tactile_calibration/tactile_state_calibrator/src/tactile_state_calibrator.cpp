@@ -124,7 +124,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
           else // negative value == apply to all == single calib
           {
             single_calib_ = calib;
-            break;
+            break; // BUG?: The break applies to the switch, but should apply to the for loop here?
           }
         }
         default:
@@ -166,7 +166,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
           {
             YAML::Node yaml_calib = *calib_it;
             // extract sensor name
-            std::string sensor_name = "None";
+            std::string sensor_name = "None";  // TODO: sensor_name is not yet used.
             if (yaml_calib["sensor_name"])
               sensor_name = yaml_calib["sensor_name"].as<std::string>();
 
