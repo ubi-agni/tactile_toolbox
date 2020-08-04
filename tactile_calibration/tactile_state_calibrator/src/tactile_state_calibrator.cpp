@@ -276,7 +276,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
     if (single_calib_ == nullptr && calibs_.size()==0)
     {
       if (verbose>1)
-        ROS_INFO_STREAM(" calibs or single_calib empty" );
+        ROS_INFO_STREAM(" calibs and single_calib empty" );
       throw ("unable to create PieceWiseLinearCalib");
       return;
     }

@@ -54,7 +54,7 @@ private:
    */
   void tactile_state_cb(const tactile_msgs::TactileStateConstPtr& msg);
   /**
-   * wrappwr to call calibration map operator with different calib
+   * wrapper to call calibration map operator with different calib
    */ 
   float map(float val, tactile::Calibration *c);
   
