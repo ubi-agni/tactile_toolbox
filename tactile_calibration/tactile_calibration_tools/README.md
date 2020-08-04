@@ -8,29 +8,29 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 This toolbox contains 2 command line applications, a recorder and a generator
 
-## Recorder 
+## Recorder
 
 The recorder is a helper to record a raw and a reference signal in a specific calib bagfile to be later calibrated through the generator.
 It is recommended to provide reference calibration information (see options in usage) to directly save a calibrated reference (for instance in Newton)
 
 It can record one or more channel in a row.
-A tare is of the reference is done at start of the application unless disabled.
+A tare of the reference is done at start of the application unless disabled.
 The same tare is re-used for all the acquired channels.
-If a same channel is recorded twice during a recording session, the previous data is moved to an "old" folder.
+If the same channel is recorded twice during a recording session, the previous data is moved to an "old" folder.
 
 ## Generator
 
-The gerenator basically extracts a Piece Wise Linear (PWL) calibration mapping from a dataset composed of raw values of a data channel 
+The generator basically extracts a Piece Wise Linear (PWL) calibration mapping from a dataset composed of raw values of a data channel
 and corresponding ref values (of a calibration tool) while pressing/releasing the data channel to be calibrated.
 The PWL mapping is computed by the library pwlf  https://github.com/cjekel/piecewise_linear_fit_py that must be installed in the system (see Requirements)
 
-The default data expected is in form of a rosbag file with a name "calib_##_<datetime>.bag" containing raw values at channel 0 of a tactile_msgs and ref values at channel 1. 
+The default data expected is in form of a rosbag file with a name "calib_##_<datetime>.bag" containing raw values at channel 0 of a tactile_msgs and ref values at channel 1.
 The number in the filename will be extracted to serve as calibrated channel index in the mapping unless a different number is provided at command line.
 However, the application can handle any bagfile containing a tactile_msgs, at any topic name and at any raw/ref channel indices provided correct options are given.
 A special input permit to process all calib_## files in a folder.
 
 The output is a mapping.yaml file that will be merged with any existing/provided filename, and will replace calibration for duplicate channel index with existing entries.
-single calib mapping.yaml (previous format) will be converted to the multi calib calibration format before merging
+Single-calib mapping.yaml (previous format) will be converted to the multi-calib calibration format before merging.
 
 # Requirements
 
@@ -38,13 +38,13 @@ single calib mapping.yaml (previous format) will be converted to the multi calib
 
 works only in python2.7 due to ros in melodic not supporting python3 (rospkg)
 
-* pwlf library 
- 
+* pwlf library
+
 pip install pwlf
 
 pwlf is compatible with Python2.7 but requires some more recent numpy than the system in Ubuntu xenial, ensure you have more recent one.
 
-# Usage of the recorder 
+# Usage of the recorder
 
 rosrun tactile_calibration_tools record_calib.py <topic> <ref_channel>
 
@@ -59,13 +59,13 @@ usage: record_calib.py [-h] [--ref_topic REF_TOPIC]
                        raw_topic ref_channel
 
 ## required arguments:
- 
+
 * raw_topic           topic where the data channel and optionally reference channel is
 * ref_channel         index where the reference channel is in the raw_topic, or in the ref_topic if provided.
 
 ## optional arguments:
 
-* --data_channel <DATA_CHANNEL> [<DATA_CHANNEL2> [...]] : index (or space-separated indices) of the data channel to calibrate 
+* --data_channel <DATA_CHANNEL> [<DATA_CHANNEL2> [...]] : index (or space-separated indices) of the data channel to calibrate
     (if not provided in the bagfile name, or if one wants to change the default channel 0)
 * --detect_threshold <DETECT_THRESHOLD> : change the default detection threshold for selecting a cell
 * --ref_topic <REF_TOPIC> : topic where the reference channel is if different from raw_topic (data of raw and ref topic will be synchronized)
@@ -81,7 +81,7 @@ usage: record_calib.py [-h] [--ref_topic REF_TOPIC]
 
 # Usage of the generator
 
-rosrun tactile_calibration_tools generate_calib.py <bagfilename> <topic> 
+rosrun tactile_calibration_tools generate_calib.py <bagfilename> <topic>
 
 usage: generate_calib.py [-h] [--mapping_file MAPPING_FILE]
                          [--no_extrapolation] [--data_channel DATA_CHANNEL]
@@ -94,8 +94,8 @@ usage: generate_calib.py [-h] [--mapping_file MAPPING_FILE]
                          bagfilename topic
 
 ## required arguments:
- 
-* bagfilename           bag filename to open. 
+
+* bagfilename           bag filename to open.
                         If filename is ofr the form "calib_##_*.bag", ## being a number, the number will be extracted to become the calibrated cell index in the output mapping
                         If filename ends with calib_# (with the sharp), all calib_##_*.bag files in the given folder will be processed
                            if several files are available for a same channel, the latest in recording date will be used.
@@ -115,4 +115,3 @@ usage: generate_calib.py [-h] [--mapping_file MAPPING_FILE]
 * --output_csv : enable output of a lookup.csv with the resulting mapping (for debugging)
 * --input_resolution <INPUT_RESOLUTION> : input resolution in bits (default is 12)
 * --segments <SEGMENTS> : number of segments for piece-wise-linear mapping (default is 2)
-
