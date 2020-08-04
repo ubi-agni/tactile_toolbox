@@ -18,9 +18,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_calibrator.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters ${YAML_LIBRARIES})
-add_definitions(-std=c++11)
-# only works since cmake 3.1
-# target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
+target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11)
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
