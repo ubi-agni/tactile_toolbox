@@ -4,17 +4,17 @@ project(tactile_state_calibrator)
 find_package(catkin REQUIRED COMPONENTS roscpp tactile_msgs)
 find_package(tactile_filters REQUIRED)
 
-include(FindPkgConfig)
+find_package(PkgConfig REQUIRED)
 pkg_search_module(YAML REQUIRED yaml-cpp)
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES
-#  CATKIN_DEPENDS tactile_msgs sensor_msgs
+CATKIN_DEPENDS tactile_msgs roscpp
 #  DEPENDS
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_calibrator.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters ${YAML_LIBRARIES})

@@ -31,7 +31,7 @@ find_package(tactile_filters REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES agni_tf_tools
-#  CATKIN_DEPENDS other_catkin_pkg
+CATKIN_DEPENDS rviz tactile_msgs
 #  DEPENDS system_lib
 )
 

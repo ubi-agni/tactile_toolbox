@@ -32,7 +32,6 @@ catkin_package(
 ## sub dir ##
 #############
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIRS})
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 file(GLOB_RECURSE PROJECT_INCLUDES *.h)

@@ -104,7 +104,7 @@ catkin_python_setup()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES tactile_calibration_tools
-#  CATKIN_DEPENDS rosbag rospy tactile_msgs
+CATKIN_DEPENDS tactile_msgs
 #  DEPENDS python-yaml python-numpy pwlf
 )
 

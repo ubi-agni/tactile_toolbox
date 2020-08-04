@@ -10,30 +10,30 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS tactile_msgs
 #  DEPENDS system_lib
 )
 
 include_directories(
-  include/tactile_merger
+  include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
 )
 
-add_library(lib${PROJECT_NAME}
+add_library(${PROJECT_NAME}
   src/taxel.cpp
   src/taxel_group.cpp
   src/merger.cpp
 )
-target_link_libraries(lib${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters)
-set_target_properties(lib${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME} src/merger_node.cpp)
-target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME})
+add_executable(merger_node src/merger_node.cpp)
+target_link_libraries(merger_node ${PROJECT_NAME})
 
 # Install rules
 install(TARGETS
-  ${PROJECT_NAME} lib${PROJECT_NAME}
+  merger_node ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

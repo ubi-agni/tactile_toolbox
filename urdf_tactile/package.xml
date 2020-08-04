@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>urdf_tactile</name>
   <version>0.1.0</version>
   <description>handle tactile sensor descriptions in URDF</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
+  <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</maintainer>
@@ -33,12 +33,8 @@
   <!-- Dependencies can be catkin packages or system dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- Use build_depend for packages required at compile time: -->
-  <build_depend>cmake_modules</build_depend>
-  <build_depend>urdf</build_depend>
-
-  <!-- Use run_depend for packages you need at runtime: -->
-  <run_depend>urdf</run_depend>
+  <depend>urdf</depend>
+  <depend>pluginlib</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

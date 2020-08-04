@@ -1,6 +1,5 @@
 find_package(Boost REQUIRED unit_test_framework)
 include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIRS})
 
 # unit tests
 add_executable(test_parser parser.cpp)
