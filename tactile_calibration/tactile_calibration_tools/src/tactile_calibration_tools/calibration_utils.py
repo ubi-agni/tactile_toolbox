@@ -5,7 +5,6 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
-#pip install pwlf
 import pwlf
 
 
@@ -72,9 +71,9 @@ def detect_channel_press(raw_previous_vec, raw_vec, ref_channel, detect_threshol
     if len(raw_previous_vec) == len (raw_vec):
         absdiff = np.fabs(np.array(raw_vec)-np.array(raw_previous_vec))
         idx_above_thresh = np.where(absdiff > detect_threshold)
-        if len(idx_above_thresh[0]):  # anything above threshold  
+        if len(idx_above_thresh[0]):  # anything above threshold
             if len(idx_above_thresh[0])==1 and not (ref_channel in idx_above_thresh[0]):  # one channel pressed that is not the ref
-                detected_channel =  idx_above_thresh[0][0]  
+                detected_channel =  idx_above_thresh[0][0]
             if len(idx_above_thresh[0])==2:  # 2 channels pressed
                 if ref_channel in idx_above_thresh[0]:  # the reference was pressed too
                     for channel in idx_above_thresh[0]:  # find the one that is not the ref
@@ -102,7 +101,7 @@ def compute_tare(data, flatness_threshold=None):
         if end_flat_range is not None:
             # we found a certain zone of flatness at the beginning of the data
             tare = np.mean(data[0:end_flat_range])
-        else: 
+        else:
             print "The ref is too flat, are you sure the correct channel was selected ?"
             tare = None
     else: # not extracting a flat, part, just using the whole vector
@@ -111,7 +110,7 @@ def compute_tare(data, flatness_threshold=None):
 
 
 def calibrate_affine(raw, a, b):
-    # affine calibration 
+    # affine calibration
     return a * raw + b
 
 def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_threshold=0.3, user_is_raw=False):
@@ -162,7 +161,7 @@ def get_push_release(raw, ref, change_detect_threshold, doplot=False):
     if doplot:
         plt.figure(1)
         plt.clf()
-       
+
         plt.subplot(211)             # the first subplot in the first figure
         plt.title('Detection of Push / Release')
         plt.plot(range(len(smooth_raw)),smooth_raw, 'g-', lw=1) # smooth raw values
@@ -171,14 +170,14 @@ def get_push_release(raw, ref, change_detect_threshold, doplot=False):
         plt.plot(range(len(vel)), vel*50, 'k-', lw=1) # velocity scaled up
         plt.ylabel('Raw / derivative of Raw (x50)')
         plt.legend(["Channel","Pushing", "Releasing", "Vel"])
-        
+
         plt.subplot(212)             # the second subplot in the first figure
         plt.plot(range(len(ref)), ref, 'm-', lw=1)
         plt.xlabel('Samples')
         plt.ylabel('Ref')
         plt.legend(["Reference"])
         plt.show(block = False)
-    
+
     return [inc_idx, dec_idx]
 
 def get_push_release_from_msgs(msgs, change_detect_threshold, doplot=False):
@@ -233,8 +232,8 @@ def generate_lookup(raw, ref, inc_idx, dec_idx, input_range_max, doplot=False):
         plt.clf()
         plt.plot(x_inc, y_inc, 'mx')
         plt.plot(x_dec, y_dec, 'c+')
-        
-        plt.title('Lookup data for Push and Release') 
+
+        plt.title('Lookup data for Push and Release')
         plt.ylabel('Ref')
         plt.xlabel('Raw')
         plt.legend(["Pushing","Releasing"])
@@ -258,7 +257,7 @@ def get_later_date(old, new):
         try:
             datetime_obj_old = datetime.strptime(datetime_str_old, "%Y-%m-%d-%H-%M-%S")
             datetime_obj_new = datetime.strptime(datetime_str_new, "%Y-%m-%d-%H-%M-%S")
-            
+
             if datetime_obj_new > datetime_obj_old:
                 return new
             else:
@@ -374,10 +373,10 @@ def generate_mapping_pwl(x, y, input_range_max, calib_channel, seg=4, no_extrapo
         y_hat = pwlf_result.predict(x_hat)
 
         plt.figure()
-        plt.clf() 
+        plt.clf()
         plt.plot(xs, ys, 'o')
         plt.plot(x_hat, y_hat, '-')
-        plt.title('Piece-wise linear mapping channel '+ str(calib_channel)) 
+        plt.title('Piece-wise linear mapping channel '+ str(calib_channel))
         plt.ylabel('Ref')
         plt.xlabel('Raw')
         plt.legend(["Pushing data", "PWL Mapping"])
@@ -410,4 +409,3 @@ def generate_mapping_pwl(x, y, input_range_max, calib_channel, seg=4, no_extrapo
     else:
         mapping_dict = mapping_dict_tmp
     return mapping_dict
-
