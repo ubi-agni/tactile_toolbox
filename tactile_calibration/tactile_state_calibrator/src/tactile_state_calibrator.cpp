@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <exception>
 #include <yaml-cpp/yaml.h>
 
 using namespace tactile;
@@ -225,7 +226,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
                   if (idx_to_calib_map.size()==0)
                   {
                     ROS_ERROR(" No calibration assigned, something went wrong");
-                    throw ("No calibration assigned, something went wrong");
+                    throw std::runtime_error("No calibration assigned, something went wrong");
                     return;
                   }
                 }
@@ -277,13 +278,13 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
     {
       if (verbose>1)
         ROS_INFO_STREAM(" calibs and single_calib empty" );
-      throw ("unable to create PieceWiseLinearCalib");
+      throw std::runtime_error("unable to create PieceWiseLinearCalib");
       return;
     }
   }
   else
   {
-    throw ("calibration file cannot be empty");
+    throw std::runtime_error("calibration file cannot be empty");
     return;
   }
   if (verbose>0)
