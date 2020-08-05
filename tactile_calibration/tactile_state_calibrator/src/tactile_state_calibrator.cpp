@@ -69,11 +69,11 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
   {
     if (verbose>1)
       ROS_INFO_STREAM(" found an index range" );
-    std::vector<unsigned int> idx_ranges;
+    std::vector<unsigned int> idx_range;
     // Break from loop as soon as single_calib_ was configured to handle all taxels
     for(YAML::const_iterator idx_range_it=node.begin(); idx_range_it!=node.end() && !single_calib_; ++idx_range_it)
     {
-      idx_ranges.clear();
+      idx_range.clear();
       switch ((*idx_range_it).Type())
       {
         case YAML::NodeType::Sequence:
@@ -83,24 +83,24 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
           const YAML::Node yaml_vec = (*idx_range_it);
           if (verbose>1)
             ROS_INFO_STREAM("  extract sequence" );
-          idx_ranges = yaml_vec.as<std::vector<unsigned int>>();
+          idx_range = yaml_vec.as<std::vector<unsigned int>>();
           // must be pairs
-          if(idx_ranges.size() == 2)
+          if(idx_range.size() == 2)
           {
             if (verbose>1)
               ROS_INFO_STREAM("  found size 2" );
             // check the start and end are valid
-            if  (idx_ranges[0] < idx_ranges[1] && idx_ranges[0] >= 0)
+            if  (idx_range[0] < idx_range[1] && idx_range[0] >= 0)
             {
               if (verbose>1)
                 ROS_INFO_STREAM("  index range valid" );
               // add the range to the idx_map and associate it to the calibration pointer
-              for (unsigned int i = idx_ranges[0]; i <= idx_ranges[1]; ++i)
+              for (unsigned int i = idx_range[0]; i <= idx_range[1]; ++i)
               {
                 map[i] = calib;
               }
               if (verbose>1)
-                ROS_INFO_STREAM("  added index in range [" <<  idx_ranges[0] << ", " << idx_ranges[1] << "]");
+                ROS_INFO_STREAM("  added index in range [" <<  idx_range[0] << ", " << idx_range[1] << "]");
             }
             else
             {
