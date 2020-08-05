@@ -69,7 +69,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
   {
     if (verbose>1)
       ROS_INFO_STREAM(" found an index range" );
-    std::vector<int> idx_ranges;
+    std::vector<unsigned int> idx_ranges;
     // Break from loop as soon as single_calib_ was configured to handle all taxels
     for(YAML::const_iterator idx_range_it=node.begin(); idx_range_it!=node.end() && !single_calib_; ++idx_range_it)
     {
@@ -83,7 +83,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
           const YAML::Node yaml_vec = (*idx_range_it);
           if (verbose>1)
             ROS_INFO_STREAM("  extract sequence" );
-          idx_ranges = yaml_vec.as<std::vector<int>>();
+          idx_ranges = yaml_vec.as<std::vector<unsigned int>>();
           // must be pairs
           if(idx_ranges.size() == 2)
           {
@@ -95,7 +95,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
               if (verbose>1)
                 ROS_INFO_STREAM("  index range valid" );
               // add the range to the idx_map and associate it to the calibration pointer
-              for (int i = idx_ranges[0]; i <= idx_ranges[1]; ++i)
+              for (unsigned int i = idx_ranges[0]; i <= idx_ranges[1]; ++i)
               {
                 map[i] = calib;
               }
