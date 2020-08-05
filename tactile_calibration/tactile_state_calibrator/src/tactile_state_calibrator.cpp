@@ -70,7 +70,8 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
     if (verbose>1)
       ROS_INFO_STREAM(" found an index range" );
     std::vector<int> idx_ranges;
-    for(YAML::const_iterator idx_range_it=node.begin(); idx_range_it!=node.end(); ++idx_range_it)
+    // Break from loop as soon as single_calib_ was configured to handle all taxels
+    for(YAML::const_iterator idx_range_it=node.begin(); idx_range_it!=node.end() && !single_calib_; ++idx_range_it)
     {
       idx_ranges.clear();
       switch ((*idx_range_it).Type())
@@ -122,10 +123,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node, std::map<
           if (yaml_scal.as<int>() >= 0)
             map[yaml_scal.as<unsigned int>()] = calib;
           else // negative value == apply to all == single calib
-          {
             single_calib_ = calib;
-            break; // BUG?: The break applies to the switch, but should apply to the for loop here?
-          }
         }
         default:
         break;
