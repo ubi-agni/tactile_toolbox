@@ -5,7 +5,6 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
-import pwlf
 
 
 def find_inflection_index(x, change_detection_threshold=4):
@@ -354,14 +353,16 @@ def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_m
     return [sensor_name, ref_raw_vec, raw_vec]
 
 def generate_mapping_pwl(x, y, input_range_max, calib_channel, seg=4, no_extrapolation=False, doplot=False):
+    try:
+        import pwlf
+    except ImportError as e:
+        e.args = (e.args[0] + '. Ensure that it is installed according to the instructions here: \n' \
+                  '  https://github.com/cjekel/piecewise_linear_fit_py#installation',)
+        raise
 
     xs = np.array(x)
     ys = np.array(y)
     #ys = smooth(y_inc,100)
-
-    # solution with pwlf 1  https://pypi.org/project/pwlf/   # not available in package manager
-    # Installing collected packages: numpy, scipy, pyDOE, pwlf
-    # Successfully installed numpy-1.16.6 pwlf-2.0.3 pyDOE-0.3.8 scipy-1.2.3
 
     pwlf_result = pwlf.PiecewiseLinFit(xs, ys)
     # request a fit with n points
