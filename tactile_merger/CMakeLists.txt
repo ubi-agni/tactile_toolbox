@@ -28,12 +28,13 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
-add_executable(merger_node src/merger_node.cpp)
-target_link_libraries(merger_node ${PROJECT_NAME})
+add_executable(${PROJECT_NAME}_node src/merger_node.cpp)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 # Install rules
 install(TARGETS
-  merger_node ${PROJECT_NAME}
+  ${PROJECT_NAME}_node ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
