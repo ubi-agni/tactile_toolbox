@@ -148,7 +148,6 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
       switch( yaml_calibs.Type() )
       {
         case YAML::NodeType::Sequence: // a sequence of calibration configuration
-        {
           ROS_DEBUG_NAMED(detail, "found calibs");
           // for each calib
           for(YAML::const_iterator calib_it=yaml_calibs.begin(); calib_it!=yaml_calibs.end(); ++calib_it)
@@ -172,7 +171,6 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
             switch (calib_type)
             {
               case TactileStateCalibrator::calib_type::PWL:
-              {
                 // search for mapping values 
                 // check if the sequence is defining calibration mappings
                 if (yaml_calib["values"])
@@ -190,7 +188,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
                 else
                   ROS_ERROR("Values not found but Piece Wise Linear requires values");
                 break;
-              }
+
               case TactileStateCalibrator::calib_type::RAW:
               default:
                 calib_ptr.reset();
@@ -239,12 +237,11 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
             fill_calibs(idx_to_calib_map);  
           }
           break;
-        }
+
         case YAML::NodeType::Map: // wrong type
-        {
           ROS_FATAL("Wrong format, sequence calibration configuration expected");
           break;
-        }
+
         default:
           break;
       }
