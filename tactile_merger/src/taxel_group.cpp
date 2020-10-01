@@ -96,6 +96,48 @@ template void TaxelGroup::update<std::vector<float>::const_iterator>
 (const TaxelMapping &mapping,
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
+void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
+                                                   const Eigen::Vector3d &normal, const float &force_amplitude,
+                                                   const int id)
+{
+	// append the id if needed
+	if (id >= 0)
+	{
+		std::stringstream sstr;
+		sstr << contact.name << "_" << id;
+		contact.name =  sstr.str();
+	}
+
+	Eigen::Vector3d force, torque;
+	contact.position.x = pos.x();
+	contact.position.y = pos.y();
+	contact.position.z = pos.z();
+
+	contact.normal.x = normal.x();
+	contact.normal.y = normal.y();
+	contact.normal.z = normal.z();
+
+	force = (-force_amplitude) * normal; // force acts opposite to normal
+	contact.wrench.force.x = force.x();
+	contact.wrench.force.y = force.y();
+	contact.wrench.force.z = force.z();
+
+	torque = pos.cross(force);
+	contact.wrench.torque.x = torque.x();
+	contact.wrench.torque.y = torque.y();
+	contact.wrench.torque.z = torque.z();
+}
+
+bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts, const tactile_msgs::TactileContact &contact_template)
+{
+	unsigned int i=0;
+	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
+		tactile_msgs::TactileContact contact = contact_template;  // copy header and name
+		toContact(contact, it->position, it->normal, it->weight, i++);  // add index
+		contacts.push_back(contact);
+	}
+	return true;
+}
 
 bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 {
@@ -113,24 +155,7 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 		normal.normalize();
 	} else
 		return false;
-
-	contact.position.x = pos.x();
-	contact.position.y = pos.y();
-	contact.position.z = pos.z();
-
-	contact.normal.x = normal.x();
-	contact.normal.y = normal.y();
-	contact.normal.z = normal.z();
-
-	force = (-sum) * normal; // force acts opposite to normal
-	contact.wrench.force.x = force.x();
-	contact.wrench.force.y = force.y();
-	contact.wrench.force.z = force.z();
-
-	torque = pos.cross(force);
-	contact.wrench.torque.x = torque.x();
-	contact.wrench.torque.y = torque.y();
-	contact.wrench.torque.z = torque.z();
+	toContact(contact, pos, normal, sum);
 	return true;
 }
 
