@@ -18,9 +18,12 @@ void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 			msg.header.frame_id = collector.targetFrame();
 			collector.clear();
 		}
-		msg.header.stamp = ros::Time::now();
-		msg.header.seq++;
-		pub.publish(msg);
+		if (msg.data.size())
+		{
+			msg.header.stamp = ros::Time::now();
+			msg.header.seq++;
+			pub.publish(msg);
+		}
 		rate.sleep();
 	}
 }
