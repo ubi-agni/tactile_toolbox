@@ -9,6 +9,7 @@ using namespace tactile;
 
 void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 	sensor_msgs::PointCloud2 msg;
+	bool send_empty = false;  // should we send an empty message?
 	while (ros::ok())
 	{
 		ros::spinOnce();
@@ -18,9 +19,13 @@ void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 			msg.header.frame_id = collector.targetFrame();
 			collector.clear();
 		}
-		msg.header.stamp = ros::Time::now();
-		msg.header.seq++;
-		pub.publish(msg);
+		if (!msg.data.empty() || send_empty)
+		{
+			send_empty = !msg.data.empty();  // only send a single empty message in a row
+			msg.header.stamp = ros::Time::now();
+			msg.header.seq++;
+			pub.publish(msg);
+		}
 		rate.sleep();
 	}
 }
@@ -31,7 +36,7 @@ int main(int argc, char **argv) {
 	ros::NodeHandle nh_priv("~");
 
 	ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("tactile_pcl", 10);
-	PCLCollector collector(nh_priv.param<std::string>("frame", ""));
+	PCLCollector collector(nh_priv.param<std::string>("frame", ""), nh_priv.param<double>("threshold", 0.0));
 	ros::Rate rate(nh_priv.param("rate", 100.));
 
 	switch (1) {

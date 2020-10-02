@@ -24,7 +24,7 @@ class PCLCollector : public boost::mutex
 public:
 	typedef pcl::PointXYZINormal ContactPoint;
 
-	PCLCollector(const std::string &target_frame="");
+	PCLCollector(const std::string &target_frame="", const double threshold=0.0);
 	void initFromRobotDescription(const std::string &param="robot_description");
 
 	template <typename M, typename F>
@@ -60,6 +60,7 @@ protected:
 	boost::shared_ptr<tf2_ros::MessageFilterBase> tf_filter_;
 
 	static ros::Duration timeout_;
+	double threshold_;
 };
 
 } // namespace tactile
