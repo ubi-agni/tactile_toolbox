@@ -31,7 +31,8 @@ int main(int argc, char **argv) {
 	ros::NodeHandle nh_priv("~");
 
 	ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("tactile_pcl", 10);
-	PCLCollector collector(nh_priv.param<std::string>("frame", ""));
+	float threshold = nh_priv.param<float>("threshold", 0.0);
+	PCLCollector collector(nh_priv.param<std::string>("frame", ""), threshold);
 	ros::Rate rate(nh_priv.param("rate", 100.));
 
 	switch (1) {

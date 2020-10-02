@@ -11,9 +11,10 @@ namespace tactile {
 
 ros::Duration PCLCollector::timeout_;
 
-PCLCollector::PCLCollector(const std::string &target_frame)
+PCLCollector::PCLCollector(const std::string &target_frame, const float &threshold)
    : tf_buffer_()
    , tf_listener_(tf_buffer_)
+   , threshold_(threshold)
 {
 	initFromRobotDescription();
 	setTargetFrame(target_frame);
@@ -61,6 +62,13 @@ template <>
 void PCLCollector::process<TactileContact>(const TactileContactConstPtr &msg)
 {
 	ContactPoint contact;
+
+	const geometry_msgs::Vector3 &f = msg->wrench.force;
+	contact.intensity = Eigen::Vector3d(f.x, f.y, f.z).norm();
+
+	if (contact.intensity < threshold_)
+		return;
+
 	contact.x = msg->position.x;
 	contact.y = msg->position.y;
 	contact.z = msg->position.z;
@@ -68,9 +76,6 @@ void PCLCollector::process<TactileContact>(const TactileContactConstPtr &msg)
 	contact.normal_x = msg->normal.x;
 	contact.normal_y = msg->normal.y;
 	contact.normal_z = msg->normal.z;
-
-	const geometry_msgs::Vector3 &f = msg->wrench.force;
-	contact.intensity = Eigen::Vector3d(f.x, f.y, f.z).norm();
 
 	try {
 		boost::unique_lock<boost::mutex> lock(*this);
