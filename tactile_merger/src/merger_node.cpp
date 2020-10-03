@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
 	{
 		ros::spinOnce();
 		if (no_clustering)
-			pub.publish(merger.getAllContacts());
+			pub.publish(merger.getAllTaxelContacts());
 		else
-			pub.publish(merger.getAverageContacts());
+			pub.publish(merger.getGroupContacts());
 		rate.sleep();
 	}
 

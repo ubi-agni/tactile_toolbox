@@ -96,7 +96,7 @@ template void Merger::update<std::vector<float>::const_iterator>
 (const ros::Time &stamp, const std::string &sensor_name,
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
-tactile_msgs::TactileContacts Merger::getAllContacts() {
+tactile_msgs::TactileContacts Merger::getAllTaxelContacts() {
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
 
@@ -117,7 +117,7 @@ tactile_msgs::TactileContacts Merger::getAllContacts() {
 	return contacts;
 }
 
-tactile_msgs::TactileContacts Merger::getAverageContacts() {
+tactile_msgs::TactileContacts Merger::getGroupContacts() {
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
 
@@ -127,7 +127,7 @@ tactile_msgs::TactileContacts Merger::getAverageContacts() {
 		boost::unique_lock<boost::mutex> lock(data->mutex);
 		if (data->timestamp + timeout < now)
 		{
-			ROS_DEBUG_STREAM_NAMED("timeouts", "getAverageContacts timed out " << data->timestamp + timeout << " < " << now);
+			ROS_DEBUG_STREAM_NAMED("timeouts", "getGroupContacts timed out " << data->timestamp + timeout << " < " << now);
 			continue; // ignore stalled groups
 		}
 		tactile_msgs::TactileContact contact;
@@ -136,7 +136,7 @@ tactile_msgs::TactileContacts Merger::getAverageContacts() {
 		contact.header.stamp = data->timestamp;
 		if (!data->group->average(contact))
 		{
-			ROS_DEBUG_STREAM_NAMED("contacts", "getAverageContacts no contact for group of frame_id " << contact.header.frame_id);
+			ROS_DEBUG_STREAM_NAMED("contacts", "getGroupContacts no contact for group of frame_id " << contact.header.frame_id);
 			continue; // ignore not contacted groups
 		}
 
