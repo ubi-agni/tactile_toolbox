@@ -126,19 +126,19 @@ tactile_msgs::TactileContacts Merger::getAverageContacts() {
 		const GroupDataPtr &data = it->second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
 		if (data->timestamp + timeout < now)
-    {
-      ROS_DEBUG_STREAM_NAMED("timeouts", "getAverageContacts timed out " << data->timestamp + timeout << " < " << now);
+		{
+			ROS_DEBUG_STREAM_NAMED("timeouts", "getAverageContacts timed out " << data->timestamp + timeout << " < " << now);
 			continue; // ignore stalled groups
-    }
+		}
 		tactile_msgs::TactileContact contact;
 		contact.name = it->first; // group name
 		contact.header.frame_id = data->group->frame();
 		contact.header.stamp = data->timestamp;
 		if (!data->group->average(contact))
-    {
-       ROS_DEBUG_STREAM_NAMED("contacts", "getAverageContacts no contact for group of frame_id " << contact.header.frame_id);
+		{
+			ROS_DEBUG_STREAM_NAMED("contacts", "getAverageContacts no contact for group of frame_id " << contact.header.frame_id);
 			continue; // ignore not contacted groups
-    }
+		}
 
 		// insert all contacts of the group into result array
 		contacts.contacts.push_back(contact);

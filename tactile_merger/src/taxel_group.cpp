@@ -97,8 +97,8 @@ template void TaxelGroup::update<std::vector<float>::const_iterator>
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
 void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-                                                   const Eigen::Vector3d &normal, const float &force_amplitude,
-                                                   const int id)
+                           const Eigen::Vector3d &normal, const float &force_amplitude,
+                           const int id)
 {
 	// append the id if needed
 	if (id >= 0)
