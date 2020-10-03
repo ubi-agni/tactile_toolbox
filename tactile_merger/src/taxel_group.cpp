@@ -97,17 +97,8 @@ template void TaxelGroup::update<std::vector<float>::const_iterator>
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
 void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-                           const Eigen::Vector3d &normal, const float &force_amplitude,
-                           const int id)
+                           const Eigen::Vector3d &normal, const double force_amplitude)
 {
-	// append the id if needed
-	if (id >= 0)
-	{
-		std::stringstream sstr;
-		sstr << contact.name << "_" << id;
-		contact.name =  sstr.str();
-	}
-
 	Eigen::Vector3d force, torque;
 	contact.position.x = pos.x();
 	contact.position.y = pos.y();
@@ -131,9 +122,12 @@ void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::V
 bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts, const tactile_msgs::TactileContact &contact_template)
 {
 	unsigned int i=0;
-	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
+	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++i) {
 		tactile_msgs::TactileContact contact = contact_template;  // copy header and name
-		toContact(contact, it->position, it->normal, it->weight, i++);  // add index
+		contact.name.append('_');
+		contact.name.append(std::to_string(i));
+
+		toContact(contact, it->position, it->normal, it->weight);  // add index
 		contacts.push_back(contact);
 	}
 	return true;

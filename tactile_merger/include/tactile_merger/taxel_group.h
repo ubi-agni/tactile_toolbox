@@ -81,7 +81,7 @@ private:
 	SensorToTaxelMapping mappings_;
 	/// conversion from eigen pos, normal, amplitude to contact
 	void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-	               const Eigen::Vector3d &normal, const float &force_amplitude, const int i=-1);
+	               const Eigen::Vector3d &normal, const double force_amplitude);
 };
 
 } // namespace tactile
