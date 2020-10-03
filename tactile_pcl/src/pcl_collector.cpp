@@ -11,7 +11,7 @@ namespace tactile {
 
 ros::Duration PCLCollector::timeout_;
 
-PCLCollector::PCLCollector(const std::string &target_frame, const float &threshold)
+PCLCollector::PCLCollector(const std::string &target_frame, const double threshold)
    : tf_buffer_()
    , tf_listener_(tf_buffer_)
    , threshold_(threshold)
