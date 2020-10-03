@@ -124,7 +124,7 @@ bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts, const 
 	unsigned int i=0;
 	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++i) {
 		tactile_msgs::TactileContact contact = contact_template;  // copy header and name
-		contact.name.append('_');
+		contact.name.append("_");
 		contact.name.append(std::to_string(i));
 
 		toContact(contact, it->position, it->normal, it->weight);  // add index
