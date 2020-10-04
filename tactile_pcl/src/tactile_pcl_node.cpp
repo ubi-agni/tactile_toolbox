@@ -9,6 +9,7 @@ using namespace tactile;
 
 void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 	sensor_msgs::PointCloud2 msg;
+	bool send_empty = false;  // should we send an empty message?
 	while (ros::ok())
 	{
 		ros::spinOnce();
@@ -18,8 +19,9 @@ void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 			msg.header.frame_id = collector.targetFrame();
 			collector.clear();
 		}
-		if (msg.data.size())
+		if (!msg.data.empty() || send_empty)
 		{
+			send_empty = !msg.data.empty();  // only send a single empty message in a row
 			msg.header.stamp = ros::Time::now();
 			msg.header.seq++;
 			pub.publish(msg);
