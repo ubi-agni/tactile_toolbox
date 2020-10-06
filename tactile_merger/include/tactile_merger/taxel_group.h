@@ -79,9 +79,6 @@ private:
 	std::vector<Taxel> taxels_;
 	/// mapping from channel name onto its TaxelMapping
 	SensorToTaxelMapping mappings_;
-	/// conversion from eigen pos, normal, and force to contact message
-	void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-	               const Eigen::Vector3d &normal, const Eigen::Vector3d &force);
 };
 
 } // namespace tactile

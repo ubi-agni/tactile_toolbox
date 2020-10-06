@@ -96,8 +96,8 @@ template void TaxelGroup::update<std::vector<float>::const_iterator>
 (const TaxelMapping &mapping,
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
-void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-                           const Eigen::Vector3d &normal, const Eigen::Vector3d &force)
+inline void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
+                      const Eigen::Vector3d &normal, const Eigen::Vector3d &force, const Eigen::Vector3d& torque)
 {
 	contact.position.x = pos.x();
 	contact.position.y = pos.y();
@@ -111,7 +111,6 @@ void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::V
 	contact.wrench.force.y = force.y();
 	contact.wrench.force.z = force.z();
 
-	Eigen::Vector3d torque = pos.cross(force);
 	contact.wrench.torque.x = torque.x();
 	contact.wrench.torque.y = torque.y();
 	contact.wrench.torque.z = torque.z();
@@ -120,12 +119,14 @@ void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::V
 bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts, const tactile_msgs::TactileContact &contact_template)
 {
 	unsigned int i=0;
+	Eigen::Vector3d force;
 	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++i) {
 		tactile_msgs::TactileContact contact = contact_template;  // copy header and name
 		contact.name.append("_");
 		contact.name.append(std::to_string(i));
 
-		toContact(contact, it->position, it->normal, (-it->weight)*it->normal);
+		force = (-it->weight)*it->normal;
+		toContact(contact, it->position, it->normal, force, it->position.cross(force));
 		contacts.push_back(contact);
 	}
 	return true;
@@ -141,7 +142,9 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 		sum += w;
 		pos += w * it->position;
 		normal += w * it->normal;
-		force += (-it->weight) * it->normal;  // force is pointing opposite to normal
+		Eigen::Vector3d f = (-it->weight) * it->normal;  // force is pointing opposite to normal
+		force += f;
+		torque += it->position.cross(f);
 	}
 	// Is overall force magnitude large enough to compute location?
 	if (sum > Eigen::NumTraits<float>::dummy_precision())
@@ -151,7 +154,7 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 
 	normal.normalize();
 
-	toContact(contact, pos, normal, force);
+	toContact(contact, pos, normal, force, torque);
 	return true;
 }
 
