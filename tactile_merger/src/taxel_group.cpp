@@ -97,9 +97,8 @@ template void TaxelGroup::update<std::vector<float>::const_iterator>
 std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
 
 void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-                           const Eigen::Vector3d &normal, const double force_amplitude)
+                           const Eigen::Vector3d &normal, const Eigen::Vector3d &force)
 {
-	Eigen::Vector3d force, torque;
 	contact.position.x = pos.x();
 	contact.position.y = pos.y();
 	contact.position.z = pos.z();
@@ -108,12 +107,11 @@ void TaxelGroup::toContact(tactile_msgs::TactileContact &contact, const Eigen::V
 	contact.normal.y = normal.y();
 	contact.normal.z = normal.z();
 
-	force = (-force_amplitude) * normal; // force acts opposite to normal
 	contact.wrench.force.x = force.x();
 	contact.wrench.force.y = force.y();
 	contact.wrench.force.z = force.z();
 
-	torque = pos.cross(force);
+	Eigen::Vector3d torque = pos.cross(force);
 	contact.wrench.torque.x = torque.x();
 	contact.wrench.torque.y = torque.y();
 	contact.wrench.torque.z = torque.z();
@@ -127,7 +125,7 @@ bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts, const 
 		contact.name.append("_");
 		contact.name.append(std::to_string(i));
 
-		toContact(contact, it->position, it->normal, it->weight);  // add index
+		toContact(contact, it->position, it->normal, (-it->weight)*it->normal);
 		contacts.push_back(contact);
 	}
 	return true;
@@ -139,17 +137,21 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	Eigen::Vector3d pos, normal, force, torque;
 	pos = normal = force = torque = Eigen::Vector3d::Zero();
 	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
-		double w = it->weight;
+		double w = std::abs(it->weight);
 		sum += w;
 		pos += w * it->position;
 		normal += w * it->normal;
+		force += (-it->weight) * it->normal;  // force is pointing opposite to normal
 	}
-	if (sum > Eigen::NumTraits<float>::dummy_precision()) {
+	// Is overall force magnitude large enough to compute location?
+	if (sum > Eigen::NumTraits<float>::dummy_precision())
 		pos /= sum;
-		normal.normalize();
-	} else
+	else
 		return false;
-	toContact(contact, pos, normal, sum);
+
+	normal.normalize();
+
+	toContact(contact, pos, normal, force);
 	return true;
 }
 
