@@ -77,6 +77,7 @@ protected:
   void reset();
   void onEnable();
   void onDisable();
+  void checkForTimeReset(const ros::Time &now);
   void update(float wall_dt, float ros_dt);
 
   void processMessage(const tactile_msgs::TactileContact &msg);
@@ -102,6 +103,7 @@ private:
   ros::Subscriber  sub_;
   std::map<std::string, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
   boost::mutex mutex_;
+  ros::Time last_update_time_;
 };
 
 } // namespace tactile

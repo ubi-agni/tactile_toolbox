@@ -167,6 +167,7 @@ void TactileContactDisplay::setTopic(const QString &topic, const QString &dataty
 
 void TactileContactDisplay::onInitialize()
 {
+  last_update_time_ = ros::Time::now();
 }
 
 void TactileContactDisplay::reset()
@@ -228,6 +229,16 @@ void TactileContactDisplay::processMessages(const tactile_msgs::TactileContacts:
   }
 }
 
+void TactileContactDisplay::checkForTimeReset(const ros::Time &now)
+{
+  if (now < last_update_time_)
+  {
+    ROS_WARN("Detected jump back in time of %fs. Clearing Contacts buffer." ,(last_update_time_ - now).toSec());
+    contacts_.clear();
+  }
+  last_update_time_ = now;
+}
+
 void TactileContactDisplay::update(float wall_dt, float ros_dt)
 {
   static const ros::Time zeroStamp;
@@ -236,6 +247,8 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
   Display::update(wall_dt, ros_dt);
 
   ros::Time now = ros::Time::now();
+  checkForTimeReset(now);
+
   ros::Duration timeout(timeout_property_->getFloat());
 
   boost::unique_lock<boost::mutex> lock(mutex_);
