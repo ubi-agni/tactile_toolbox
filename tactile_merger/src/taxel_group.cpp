@@ -100,8 +100,8 @@ std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end
 bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 {
 	double sum = 0;
-	Eigen::Vector3d pos, normal, force, torque;
-	pos = normal = force = torque = Eigen::Vector3d::Zero();
+	Eigen::Vector3d pos, normal, force;
+	pos = normal = force = Eigen::Vector3d::Zero();
 	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
 		double w = it->weight;
 		sum += w;
@@ -127,10 +127,10 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	contact.wrench.force.y = force.y();
 	contact.wrench.force.z = force.z();
 
-	torque = pos.cross(force);
-	contact.wrench.torque.x = torque.x();
-	contact.wrench.torque.y = torque.y();
-	contact.wrench.torque.z = torque.z();
+	// We cannot apply torques in the contact point
+	contact.wrench.torque.x = 0;
+	contact.wrench.torque.y = 0;
+	contact.wrench.torque.z = 0;
 	return true;
 }
 
