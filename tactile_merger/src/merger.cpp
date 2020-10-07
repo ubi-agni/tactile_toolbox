@@ -72,6 +72,12 @@ void Merger::init(const std::string &param)
 	}
 }
 
+void Merger::reset()
+{
+	for (auto& group : groups_)
+		group.second->timestamp = ros::Time();
+}
+
 template <typename Iterator>
 void Merger::update(const ros::Time &stamp, const std::string &channel,
                     Iterator begin, Iterator end) {

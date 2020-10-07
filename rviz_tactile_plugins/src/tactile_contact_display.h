@@ -96,12 +96,14 @@ private:
   rviz::ColorProperty *force_color_property_, *torque_color_property_;
   rviz::FloatProperty *alpha_property_;
   rviz::FloatProperty *scale_property_, *force_scale_property_, *torque_scale_property_, *width_property_;
+  rviz::BoolProperty* hide_small_values_property_;
   bool full_update_; // update all visual properties?
 
   ros::NodeHandle  nh_;
   ros::Subscriber  sub_;
   std::map<std::string, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
   boost::mutex mutex_;
+  ros::Time last_update_;
 };
 
 } // namespace tactile

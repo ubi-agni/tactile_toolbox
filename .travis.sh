@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e  # fail on any error
+
 export TRAVIS_FOLD_COUNTER=1
 
 # Display command in Travis console and fold output in dropdown section
@@ -34,10 +37,6 @@ cd /tmp/catkin/src
 travis_run wstool init
 travis_run wstool merge file://$REPO/.travis.rosinstall
 travis_run wstool update
-
-# only need to build package urdf
-mv robot_model/urdf .
-rm -rf robot_model
 
 # link in source
 ln -s $REPO .

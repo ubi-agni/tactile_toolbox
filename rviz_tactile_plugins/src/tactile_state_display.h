@@ -102,6 +102,7 @@ private:
   ros::Subscriber  sub_;
   /// list of all sensors, accessible by sensor name
   std::multimap<std::string, TactileVisualBase*> sensors_;
+  ros::Time last_update_;
 
   ::tactile::TactileValue::Mode mode_;
   ColorMap abs_color_map_;

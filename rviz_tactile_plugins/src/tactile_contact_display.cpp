@@ -37,6 +37,7 @@
 #include <rviz/properties/color_property.h>
 #include <rviz/default_plugin/wrench_visual.h>
 #include <QApplication>
+#include <QTimer>
 #include <boost/thread/locks.hpp>
 
 namespace rviz {
@@ -111,7 +112,9 @@ TactileContactDisplay::TactileContactDisplay()
   torque_scale_property_ = new rviz::FloatProperty
       ("Torque Arrow Scale", 1.0, "", scale_property_, SLOT(triggerFullUpdate()), this);
   width_property_ = new rviz::FloatProperty
-      ( "Arrow Width", 1.0, "", scale_property_, SLOT(triggerFullUpdate()), this);
+      ( "Arrow Width", 0.5, "", scale_property_, SLOT(triggerFullUpdate()), this);
+  hide_small_values_property_ = new rviz::BoolProperty("Hide Small Values", true, "Hide small values",
+                                                       this, SLOT(triggerFullUpdate()));
 }
 
 TactileContactDisplay::~TactileContactDisplay()
@@ -134,7 +137,9 @@ void TactileContactDisplay::subscribe()
     auto it = topics.begin(), end = topics.end();
     for (; it != end && it->name != topic; ++it);
     if (it == end) {
-      setStatus(StatusProperty::Error, "Topic", "not published, cannot infer msg type");
+      setStatus(StatusProperty::Error, "Topic", "Not yet published, cannot infer msg type");
+      // try again in a second
+      QTimer::singleShot(1000, this, &TactileContactDisplay::subscribe);
       return;
     }
 
@@ -148,7 +153,7 @@ void TactileContactDisplay::subscribe()
       // should not happen due to type filtering in TactileContactTopicProperty
       throw ros::Exception(std::string("unhandled msg type: " + it->datatype));
 
-    setStatus(StatusProperty::Ok, "Topic", "OK");
+    setStatusStd(StatusProperty::Ok, "Topic", it->datatype.substr(it->datatype.find('/')));
   } catch(const ros::Exception& e) {
     setStatus(StatusProperty::Error, "Topic", QString("error subscribing: ") + e.what());
   }
@@ -220,6 +225,7 @@ void TactileContactDisplay::processMessage(const tactile_msgs::TactileContact::C
   boost::unique_lock<boost::mutex> lock(mutex_);
   processMessage(*msg);
 }
+
 void TactileContactDisplay::processMessages(const tactile_msgs::TactileContacts::ConstPtr& msg)
 {
   boost::unique_lock<boost::mutex> lock(mutex_);
@@ -237,19 +243,23 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 
   ros::Time now = ros::Time::now();
   ros::Duration timeout(timeout_property_->getFloat());
-
   boost::unique_lock<boost::mutex> lock(mutex_);
+
+  if(now < last_update_) {
+    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing contacts.");
+    contacts_.clear();
+  }
+  last_update_ = now;
+
   for (auto it = contacts_.begin(), end = contacts_.end(); it != end; ++it) {
     const tactile_msgs::TactileContact &msg = it->second.first;
     WrenchVisualPtr &visual = it->second.second;
     bool new_visual = !visual;
+
+    // hide visuals if they are outdated
     if (msg.header.stamp != zeroStamp && msg.header.stamp + timeout < now) {
-      const std::string& tf_prefix = tf_prefix_property_->getStdString();
-      const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
-                                                   : tf::resolve(tf_prefix, msg.header.frame_id);
-      setStatusStd(StatusProperty::Warn, frame, "no recent msg");
       if (visual) visual->setVisible(false);
-      continue;
+      continue;  // skip further processing for this message
     }
 
     // Update pose of visual
@@ -260,15 +270,14 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
     const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
                                                  : tf::resolve(tf_prefix, msg.header.frame_id);
     // use zeroStamp to fetch most recent frame (tf is lacking behind our timestamps which caused issues)
-    if (!context_->getFrameManager()->getTransform(frame, zeroStamp,
-                                                   position, orientation)) {
+    if (!context_->getFrameManager()->getTransform(frame, zeroStamp, position, orientation)) {
       std::string error;
       context_->getFrameManager()->transformHasProblems(frame, msg.header.stamp, error);
       setStatusStd(StatusProperty::Error, frame, error);
       if (visual) visual->setVisible(false);
       continue;
     } else {
-      setStatusStd(StatusProperty::Ok, frame, "");
+      deleteStatusStd(frame);
     }
 
     // create visual if not yet done
@@ -289,6 +298,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
       visual->setTorqueColor(torque_color.r, torque_color.g, torque_color.b, alpha);
       visual->setForceScale(force_scale);
       visual->setTorqueScale(torque_scale);
+      visual->setHideSmallValues(hide_small_values_property_->getBool());
       visual->setWidth(width);
     }
 

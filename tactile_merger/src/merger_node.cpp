@@ -32,8 +32,11 @@
 #include <tactile_msgs/TactileState.h>
 #include <boost/bind.hpp>
 
+static bool have_new_data = false;
+
 void message_handler(tactile::Merger &merger,
                      const tactile_msgs::TactileStateConstPtr &msg) {
+	have_new_data = true;
 	for (auto it = msg->sensors.begin(), end = msg->sensors.end(); it != end; ++it) {
 		merger.update(msg->header.stamp, it->name, it->values.begin(), it->values.end());
 	}
@@ -54,15 +57,28 @@ int main(int argc, char *argv[])
 	      callback = boost::bind(message_handler, boost::ref(merger), _1);
 	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
+	ros::Time last_update_;
 	ros::Rate rate(nh_priv.param("rate", 100.));
 	bool no_clustering = nh_priv.param("no_clustering", false);
 	while (ros::ok())
 	{
 		ros::spinOnce();
-		if (no_clustering)
-			pub.publish(merger.getAllTaxelContacts());
-		else
-			pub.publish(merger.getGroupAveragedContacts());
+		ros::Time now = ros::Time::now();
+		if(now < last_update_) {
+			ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Resetting data.");
+			merger.reset();
+			have_new_data = false;
+		}
+		last_update_ = now;
+
+		if (have_new_data) {
+			have_new_data = false;
+			if (no_clustering)
+				pub.publish(merger.getAllTaxelContacts());
+			else
+				pub.publish(merger.getGroupAveragedContacts());
+			ros::spinOnce();
+		}
 		rate.sleep();
 	}
 
