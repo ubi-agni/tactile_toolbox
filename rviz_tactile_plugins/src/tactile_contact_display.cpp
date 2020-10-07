@@ -243,13 +243,15 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
     const tactile_msgs::TactileContact &msg = it->second.first;
     WrenchVisualPtr &visual = it->second.second;
     bool new_visual = !visual;
+
+    // hide visuals if they are outdated
     if (msg.header.stamp != zeroStamp && msg.header.stamp + timeout < now) {
       const std::string& tf_prefix = tf_prefix_property_->getStdString();
       const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
                                                    : tf::resolve(tf_prefix, msg.header.frame_id);
       setStatusStd(StatusProperty::Warn, frame, "no recent msg");
       if (visual) visual->setVisible(false);
-      continue;
+      continue;  // skip further processing for this message
     }
 
     // Update pose of visual
@@ -260,8 +262,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
     const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
                                                  : tf::resolve(tf_prefix, msg.header.frame_id);
     // use zeroStamp to fetch most recent frame (tf is lacking behind our timestamps which caused issues)
-    if (!context_->getFrameManager()->getTransform(frame, zeroStamp,
-                                                   position, orientation)) {
+    if (!context_->getFrameManager()->getTransform(frame, zeroStamp, position, orientation)) {
       std::string error;
       context_->getFrameManager()->transformHasProblems(frame, msg.header.stamp, error);
       setStatusStd(StatusProperty::Error, frame, error);
