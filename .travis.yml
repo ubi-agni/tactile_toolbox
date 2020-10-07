@@ -9,9 +9,9 @@ notifications:
       - rhaschke@techfak.uni-bielefeld.de
 env:
   matrix:
-    - ROS_DISTRO="kinetic"
+    - ROS_DISTRO="melodic"
 
 before_script:
   - docker pull ros:$ROS_DISTRO-ros-base
 script:
-  - docker run -v $(pwd):$(pwd) ros:$ROS_DISTRO-ros-base /bin/bash -c "source $(pwd)/.travis.sh"
+  - docker run -v $(pwd):$(pwd) ros:$ROS_DISTRO-ros-base $(pwd)/.travis.sh
