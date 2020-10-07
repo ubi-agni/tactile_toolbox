@@ -117,7 +117,7 @@ tactile_msgs::TactileContacts Merger::getAllTaxelContacts() {
 	return contacts;
 }
 
-tactile_msgs::TactileContacts Merger::getGroupContacts() {
+tactile_msgs::TactileContacts Merger::getGroupAveragedContacts() {
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
 
@@ -127,7 +127,7 @@ tactile_msgs::TactileContacts Merger::getGroupContacts() {
 		boost::unique_lock<boost::mutex> lock(data->mutex);
 		if (data->timestamp + timeout < now)
 		{
-			ROS_DEBUG_STREAM_NAMED("timeouts", "getGroupContacts timed out " << data->timestamp + timeout << " < " << now);
+			ROS_DEBUG_STREAM_NAMED("timeouts", "getGroupAveragedContacts timed out " << data->timestamp + timeout << " < " << now);
 			continue; // ignore stalled groups
 		}
 		tactile_msgs::TactileContact contact;
@@ -136,7 +136,7 @@ tactile_msgs::TactileContacts Merger::getGroupContacts() {
 		contact.header.stamp = data->timestamp;
 		if (!data->group->average(contact))
 		{
-			ROS_DEBUG_STREAM_NAMED("contacts", "getGroupContacts no contact for group of frame_id " << contact.header.frame_id);
+			ROS_DEBUG_STREAM_NAMED("contacts", "getGroupAveragedContacts no contact for group of frame_id " << contact.header.frame_id);
 			continue; // ignore not contacted groups
 		}
 

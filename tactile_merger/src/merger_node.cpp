@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 		if (no_clustering)
 			pub.publish(merger.getAllTaxelContacts());
 		else
-			pub.publish(merger.getGroupContacts());
+			pub.publish(merger.getGroupAveragedContacts());
 		rate.sleep();
 	}
 
