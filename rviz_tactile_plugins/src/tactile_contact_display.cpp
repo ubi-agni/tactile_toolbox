@@ -225,6 +225,7 @@ void TactileContactDisplay::processMessage(const tactile_msgs::TactileContact::C
   boost::unique_lock<boost::mutex> lock(mutex_);
   processMessage(*msg);
 }
+
 void TactileContactDisplay::processMessages(const tactile_msgs::TactileContacts::ConstPtr& msg)
 {
   boost::unique_lock<boost::mutex> lock(mutex_);
@@ -242,8 +243,14 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 
   ros::Time now = ros::Time::now();
   ros::Duration timeout(timeout_property_->getFloat());
-
   boost::unique_lock<boost::mutex> lock(mutex_);
+
+  if(now < last_update_) {
+    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing contacts.");
+    contacts_.clear();
+  }
+  last_update_ = now;
+
   for (auto it = contacts_.begin(), end = contacts_.end(); it != end; ++it) {
     const tactile_msgs::TactileContact &msg = it->second.first;
     WrenchVisualPtr &visual = it->second.second;

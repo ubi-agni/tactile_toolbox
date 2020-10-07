@@ -175,6 +175,11 @@ void TactileVisualBase::reset()
   setRawRangeFromProperty();
 }
 
+void TactileVisualBase::resetTime()
+{
+  last_update_time_ = ros::Time();
+}
+
 void TactileVisualBase::onVisibleChanged()
 {
   scene_node_->setVisible(isVisible() && isEnabled());

@@ -81,6 +81,7 @@ public:
 
   /// reset ranges
   virtual void reset();
+  void resetTime();
 
   /// most recent update time + timeout older than now?
   bool expired(const ros::Time &now, const ros::Duration &timeout) const;

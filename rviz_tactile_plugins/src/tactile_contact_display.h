@@ -103,6 +103,7 @@ private:
   ros::Subscriber  sub_;
   std::map<std::string, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
   boost::mutex mutex_;
+  ros::Time last_update_;
 };
 
 } // namespace tactile
