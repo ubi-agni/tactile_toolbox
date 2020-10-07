@@ -30,6 +30,7 @@
 #include "taxel.h"
 #include <urdf_tactile/tactile.h>
 #include <tactile_msgs/TactileContact.h>
+#include <Eigen/Dense>
 #include <map>
 #include <vector>
 
@@ -64,6 +65,8 @@ public:
 
 	template <typename Iterator>
 	void update(const TaxelMapping &mapping, Iterator begin, Iterator end);
+	bool all(std::vector<tactile_msgs::TactileContact> &contacts,
+	         const tactile_msgs::TactileContact &contact_template);
 	bool average(tactile_msgs::TactileContact &contact);
 
 private:
@@ -76,6 +79,9 @@ private:
 	std::vector<Taxel> taxels_;
 	/// mapping from channel name onto its TaxelMapping
 	SensorToTaxelMapping mappings_;
+	/// conversion from eigen pos, normal, amplitude to contact
+	void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
+	               const Eigen::Vector3d &normal, const double force_amplitude);
 };
 
 } // namespace tactile

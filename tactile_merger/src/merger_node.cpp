@@ -55,10 +55,14 @@ int main(int argc, char *argv[])
 	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
 	ros::Rate rate(nh_priv.param("rate", 100.));
+	bool no_clustering = nh_priv.param("no_clustering", false);
 	while (ros::ok())
 	{
 		ros::spinOnce();
-		pub.publish(merger.getContacts());
+		if (no_clustering)
+			pub.publish(merger.getAllTaxelContacts());
+		else
+			pub.publish(merger.getGroupAveragedContacts());
 		rate.sleep();
 	}
 

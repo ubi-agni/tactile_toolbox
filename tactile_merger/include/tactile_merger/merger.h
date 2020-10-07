@@ -42,7 +42,8 @@ public:
 	template <typename Iterator>
 	void update(const ros::Time &stamp, const std::string &channel,
 	            Iterator begin, Iterator end);
-	tactile_msgs::TactileContacts getContacts();
+	tactile_msgs::TactileContacts getGroupAveragedContacts();
+	tactile_msgs::TactileContacts getAllTaxelContacts();
 
 private:
 	struct GroupData;
