@@ -127,9 +127,9 @@ void TactileVisualBase::update(const ros::Time &stamp)
     raw_range_.update(it->absRange());
 }
 
-bool TactileVisualBase::expired(const ros::Time &timeout) const
+bool TactileVisualBase::expired(const ros::Time &now, const ros::Duration& timeout) const
 {
-  return last_update_time_ <= timeout;
+  return last_update_time_ + timeout < now;
 }
 
 bool TactileVisualBase::updatePose()

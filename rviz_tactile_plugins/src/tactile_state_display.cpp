@@ -320,12 +320,13 @@ void TactileStateDisplay::onAllVisibleChanged()
 // This is our callback to handle an incoming message.
 void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::ConstPtr& msg)
 {
+  const ros::Time now = ros::Time::now();
   for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
   {
     const std::string &channel = sensor->name;
     auto range = sensors_.equal_range(channel);
     for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
-      s->second->update(ros::Time::now(), sensor->values);
+      s->second->update(now, sensor->values);
     }
   }
 }
@@ -336,19 +337,15 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 
   Display::update(wall_dt, ros_dt);
 
-  ros::Time timeout = ros::Time::now();
-  try {
-    timeout -= ros::Duration(timeout_property_->getFloat());
-  } catch (const std::runtime_error &e) {
-    // ros::Time::now was smaller than ros::Duration
-  }
+  ros::Time now = ros::Time::now();
+  ros::Duration timeout(timeout_property_->getFloat());
 
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
     TactileVisualBase &sensor = *it->second;
     sensor.updateRangeProperty();
     if (!sensor.isVisible()) continue;
 
-    bool enabled = !sensor.expired(timeout) && sensor.updatePose();
+    bool enabled = !sensor.expired(now, timeout) && sensor.updatePose();
     sensor.setEnabled(enabled);
     if (!enabled) continue;
 
