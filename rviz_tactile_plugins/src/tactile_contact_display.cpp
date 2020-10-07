@@ -37,6 +37,7 @@
 #include <rviz/properties/color_property.h>
 #include <rviz/default_plugin/wrench_visual.h>
 #include <QApplication>
+#include <QTimer>
 #include <boost/thread/locks.hpp>
 
 namespace rviz {
@@ -135,6 +136,8 @@ void TactileContactDisplay::subscribe()
     for (; it != end && it->name != topic; ++it);
     if (it == end) {
       setStatus(StatusProperty::Error, "Topic", "Not yet published, cannot infer msg type");
+      // try again in a second
+      QTimer::singleShot(1000, this, &TactileContactDisplay::subscribe);
       return;
     }
 
