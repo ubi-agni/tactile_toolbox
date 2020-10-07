@@ -148,7 +148,7 @@ void TactileContactDisplay::subscribe()
       // should not happen due to type filtering in TactileContactTopicProperty
       throw ros::Exception(std::string("unhandled msg type: " + it->datatype));
 
-    setStatus(StatusProperty::Ok, "Topic", it->datatype.substr(it->datatype.find('/')));
+    setStatusStd(StatusProperty::Ok, "Topic", it->datatype.substr(it->datatype.find('/')));
   } catch(const ros::Exception& e) {
     setStatus(StatusProperty::Error, "Topic", QString("error subscribing: ") + e.what());
   }
@@ -246,10 +246,6 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 
     // hide visuals if they are outdated
     if (msg.header.stamp != zeroStamp && msg.header.stamp + timeout < now) {
-      const std::string& tf_prefix = tf_prefix_property_->getStdString();
-      const std::string& frame = tf_prefix.empty() ? msg.header.frame_id
-                                                   : tf::resolve(tf_prefix, msg.header.frame_id);
-      setStatusStd(StatusProperty::Warn, frame, "no recent msg");
       if (visual) visual->setVisible(false);
       continue;  // skip further processing for this message
     }
@@ -269,7 +265,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
       if (visual) visual->setVisible(false);
       continue;
     } else {
-      setStatusStd(StatusProperty::Ok, frame, "");
+      deleteStatusStd(frame);
     }
 
     // create visual if not yet done
