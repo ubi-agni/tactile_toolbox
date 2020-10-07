@@ -134,7 +134,7 @@ void TactileContactDisplay::subscribe()
     auto it = topics.begin(), end = topics.end();
     for (; it != end && it->name != topic; ++it);
     if (it == end) {
-      setStatus(StatusProperty::Error, "Topic", "not published, cannot infer msg type");
+      setStatus(StatusProperty::Error, "Topic", "Not yet published, cannot infer msg type");
       return;
     }
 
@@ -148,7 +148,7 @@ void TactileContactDisplay::subscribe()
       // should not happen due to type filtering in TactileContactTopicProperty
       throw ros::Exception(std::string("unhandled msg type: " + it->datatype));
 
-    setStatus(StatusProperty::Ok, "Topic", "OK");
+    setStatus(StatusProperty::Ok, "Topic", it->datatype.substr(it->datatype.find('/')));
   } catch(const ros::Exception& e) {
     setStatus(StatusProperty::Error, "Topic", QString("error subscribing: ") + e.what());
   }
