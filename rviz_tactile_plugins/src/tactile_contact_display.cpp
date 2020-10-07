@@ -112,7 +112,9 @@ TactileContactDisplay::TactileContactDisplay()
   torque_scale_property_ = new rviz::FloatProperty
       ("Torque Arrow Scale", 1.0, "", scale_property_, SLOT(triggerFullUpdate()), this);
   width_property_ = new rviz::FloatProperty
-      ( "Arrow Width", 1.0, "", scale_property_, SLOT(triggerFullUpdate()), this);
+      ( "Arrow Width", 0.5, "", scale_property_, SLOT(triggerFullUpdate()), this);
+  hide_small_values_property_ = new rviz::BoolProperty("Hide Small Values", true, "Hide small values",
+                                                       this, SLOT(triggerFullUpdate()));
 }
 
 TactileContactDisplay::~TactileContactDisplay()
@@ -289,6 +291,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
       visual->setTorqueColor(torque_color.r, torque_color.g, torque_color.b, alpha);
       visual->setForceScale(force_scale);
       visual->setTorqueScale(torque_scale);
+      visual->setHideSmallValues(hide_small_values_property_->getBool());
       visual->setWidth(width);
     }
 
