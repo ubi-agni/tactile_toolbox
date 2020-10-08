@@ -328,7 +328,7 @@ void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::Const
     const std::string &channel = sensor->name;
     auto range = sensors_.equal_range(channel);
     for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
-      s->second->update(last_msg_, sensor->values);
+      s->second->update(msg->header.stamp, sensor->values);
     }
   }
 }
