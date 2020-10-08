@@ -321,8 +321,12 @@ void TactileStateDisplay::onAllVisibleChanged()
 // This is our callback to handle an incoming message.
 void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::ConstPtr& msg)
 {
-  setStatus(StatusProperty::Ok, "Topic", "Ok");
   last_msg_ = ros::Time::now();
+  if (msg->header.stamp + ros::Duration(timeout_property_->getFloat()) < last_msg_)
+    setStatus(StatusProperty::Error, "Topic", "Received an outdated msg");
+  else
+    setStatus(StatusProperty::Ok, "Topic", "Ok");
+
   for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
   {
     const std::string &channel = sensor->name;
