@@ -60,7 +60,7 @@ TactileStateDisplay::TactileStateDisplay()
   : mode_(::tactile::TactileValue::rawCurrent)
 {
   topic_property_ = new rviz::RosTopicProperty
-      ("topic", "/tactile_state", "tactile_msgs/TactileState", "",
+      ("Topic", "/tactile_states", "tactile_msgs/TactileState", "",
        this, SLOT(onTopicChanged()));
 
   robot_description_property_ = new rviz::StringProperty
@@ -251,9 +251,9 @@ void TactileStateDisplay::onRobotDescriptionChanged()
       }
     }
     if (sensors_.size())
-      setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("found %1 tactile sensors").arg(sensors_.size()));
+      setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("Found %1 tactile sensors").arg(sensors_.size()));
     else
-      setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "no tactile sensors found");
+      setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "No tactile sensors found");
   } catch (const std::exception &e) {
     setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
   }
