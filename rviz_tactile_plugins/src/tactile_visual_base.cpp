@@ -141,10 +141,10 @@ bool TactileVisualBase::updatePose()
   {
     std::string error;
 	 context_->getFrameManager()->transformHasProblems(frame, ros::Time(), error);
-    owner_->setStatusStd(rviz::StatusProperty::Error, getNameStd(), error);
+    owner_->setStatus(rviz::StatusProperty::Error, getName(), error.c_str());
     return false;
   }
-  owner_->setStatus(rviz::StatusProperty::Ok, getName(), "");
+  owner_->deleteStatus(getName());
   scene_node_->setPosition(pos);
   scene_node_->setOrientation(quat);
   return true;
