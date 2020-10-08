@@ -129,11 +129,12 @@ void TactileStateDisplay::subscribe()
     return;
 
   try {
+    last_msg_ = ros::Time();
+    setStatus(StatusProperty::Warn, "Topic", "No message received yet.");
     sub_ = nh_.subscribe(topic_property_->getTopicStd(), 10,
                          &TactileStateDisplay::processMessage, this);
-    setStatus(StatusProperty::Ok, "topic", "OK");
   } catch(const ros::Exception& e) {
-    setStatus(StatusProperty::Error, "topic", QString("error subscribing: ") + e.what());
+    setStatus(StatusProperty::Error, "Topic", e.what());
   }
 }
 
@@ -320,13 +321,14 @@ void TactileStateDisplay::onAllVisibleChanged()
 // This is our callback to handle an incoming message.
 void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::ConstPtr& msg)
 {
-  const ros::Time now = ros::Time::now();
+  setStatus(StatusProperty::Ok, "Topic", "Ok");
+  last_msg_ = ros::Time::now();
   for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
   {
     const std::string &channel = sensor->name;
     auto range = sensors_.equal_range(channel);
     for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
-      s->second->update(now, sensor->values);
+      s->second->update(last_msg_, sensor->values);
     }
   }
 }
@@ -345,6 +347,8 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
       sensor.second->resetTime();  // expire the sensor data
   }
   last_update_ = now;
+  if (!last_msg_.isZero() && last_msg_ + timeout < now)
+    setStatus(StatusProperty::Warn, "Topic", "No recent msg");
 
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
     TactileVisualBase &sensor = *it->second;
