@@ -106,7 +106,7 @@ TactileContactDisplay::TactileContactDisplay()
        this, SLOT(triggerFullUpdate()));
 
   scale_property_ = new rviz::FloatProperty
-      ("Overall Scale", 1.0, "", this, SLOT(triggerFullUpdate()));
+      ("Overall Scale", 0.02, "", this, SLOT(triggerFullUpdate()));
   force_scale_property_ = new rviz::FloatProperty
       ("Force Arrow Scale", 1.0, "", scale_property_, SLOT(triggerFullUpdate()), this);
   torque_scale_property_ = new rviz::FloatProperty
