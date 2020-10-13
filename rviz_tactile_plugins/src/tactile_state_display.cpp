@@ -154,7 +154,15 @@ void TactileStateDisplay::onInitialize()
 
 void TactileStateDisplay::reset()
 {
-  Display::reset();
+  // amongst others, this method is called when time was reset
+  ros::Time now = ros::Time::now();
+  if(now < last_update_) {
+    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing taxels.");
+    for (auto& sensor : sensors_)
+      sensor.second->resetTime();  // expire the sensor data
+  } else
+    // If time was reset, don't clear display statuses via Display::reset()
+    Display::reset();
 }
 
 void TactileStateDisplay::resetTactile()
@@ -345,11 +353,6 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 
   ros::Time now = ros::Time::now();
   ros::Duration timeout(timeout_property_->getFloat());
-  if(now < last_update_) {
-    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing taxels.");
-    for (auto& sensor : sensors_)
-      sensor.second->resetTime();  // expire the sensor data
-  }
   last_update_ = now;
   if (!last_msg_.isZero() && last_msg_ + timeout < now)
     setStatus(StatusProperty::Warn, "Topic", "No recent msg");
