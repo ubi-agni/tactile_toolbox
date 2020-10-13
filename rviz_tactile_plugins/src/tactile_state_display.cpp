@@ -60,7 +60,7 @@ TactileStateDisplay::TactileStateDisplay()
   : mode_(::tactile::TactileValue::rawCurrent)
 {
   topic_property_ = new rviz::RosTopicProperty
-      ("topic", "/tactile_state", "tactile_msgs/TactileState", "",
+      ("Topic", "/tactile_states", "tactile_msgs/TactileState", "",
        this, SLOT(onTopicChanged()));
 
   robot_description_property_ = new rviz::StringProperty
@@ -129,11 +129,12 @@ void TactileStateDisplay::subscribe()
     return;
 
   try {
+    last_msg_ = ros::Time();
+    setStatus(StatusProperty::Warn, "Topic", "No message received yet.");
     sub_ = nh_.subscribe(topic_property_->getTopicStd(), 10,
                          &TactileStateDisplay::processMessage, this);
-    setStatus(StatusProperty::Ok, "topic", "OK");
   } catch(const ros::Exception& e) {
-    setStatus(StatusProperty::Error, "topic", QString("error subscribing: ") + e.what());
+    setStatus(StatusProperty::Error, "Topic", e.what());
   }
 }
 
@@ -153,7 +154,15 @@ void TactileStateDisplay::onInitialize()
 
 void TactileStateDisplay::reset()
 {
-  Display::reset();
+  // amongst others, this method is called when time was reset
+  ros::Time now = ros::Time::now();
+  if(now < last_update_) {
+    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing taxels.");
+    for (auto& sensor : sensors_)
+      sensor.second->resetTime();  // expire the sensor data
+  } else
+    // If time was reset, don't clear display statuses via Display::reset()
+    Display::reset();
 }
 
 void TactileStateDisplay::resetTactile()
@@ -250,9 +259,9 @@ void TactileStateDisplay::onRobotDescriptionChanged()
       }
     }
     if (sensors_.size())
-      setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("found %1 tactile sensors").arg(sensors_.size()));
+      setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("Found %1 tactile sensors").arg(sensors_.size()));
     else
-      setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "no tactile sensors found");
+      setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "No tactile sensors found");
   } catch (const std::exception &e) {
     setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
   }
@@ -320,13 +329,18 @@ void TactileStateDisplay::onAllVisibleChanged()
 // This is our callback to handle an incoming message.
 void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::ConstPtr& msg)
 {
-  const ros::Time now = ros::Time::now();
+  last_msg_ = ros::Time::now();
+  if (msg->header.stamp + ros::Duration(timeout_property_->getFloat()) < last_msg_)
+    setStatus(StatusProperty::Error, "Topic", "Received an outdated msg");
+  else
+    setStatus(StatusProperty::Ok, "Topic", "Ok");
+
   for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
   {
     const std::string &channel = sensor->name;
     auto range = sensors_.equal_range(channel);
     for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
-      s->second->update(now, sensor->values);
+      s->second->update(msg->header.stamp, sensor->values);
     }
   }
 }
@@ -339,12 +353,9 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 
   ros::Time now = ros::Time::now();
   ros::Duration timeout(timeout_property_->getFloat());
-  if(now < last_update_) {
-    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing taxels.");
-    for (auto& sensor : sensors_)
-      sensor.second->resetTime();  // expire the sensor data
-  }
   last_update_ = now;
+  if (!last_msg_.isZero() && last_msg_ + timeout < now)
+    setStatus(StatusProperty::Warn, "Topic", "No recent msg");
 
   for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
     TactileVisualBase &sensor = *it->second;

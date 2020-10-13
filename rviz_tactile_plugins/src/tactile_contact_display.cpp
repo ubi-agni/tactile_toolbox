@@ -129,6 +129,9 @@ void TactileContactDisplay::subscribe()
     return;
 
   try {
+    last_msg_ = ros::Time();
+    setStatus(StatusProperty::Warn, "Topic", "No message received yet.");
+
     const std::string &topic = topic_property_->getTopicStd();
 
     // infer topic's msg type
@@ -152,10 +155,8 @@ void TactileContactDisplay::subscribe()
     else
       // should not happen due to type filtering in TactileContactTopicProperty
       throw ros::Exception(std::string("unhandled msg type: " + it->datatype));
-
-    setStatusStd(StatusProperty::Ok, "Topic", it->datatype.substr(it->datatype.find('/')));
   } catch(const ros::Exception& e) {
-    setStatus(StatusProperty::Error, "Topic", QString("error subscribing: ") + e.what());
+    setStatus(StatusProperty::Error, "Topic", e.what());
   }
 }
 
@@ -176,7 +177,14 @@ void TactileContactDisplay::onInitialize()
 
 void TactileContactDisplay::reset()
 {
-  Display::reset();
+  // amongst others, this method is called when time was reset
+  ros::Time now = ros::Time::now();
+  if(now < last_update_) {
+    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing contacts.");
+    contacts_.clear();
+  } else
+    // If time was reset, don't clear display statuses via Display::reset()
+    Display::reset();
 }
 
 void TactileContactDisplay::onEnable()
@@ -222,12 +230,16 @@ void TactileContactDisplay::processMessage(const tactile_msgs::TactileContact &m
 
 void TactileContactDisplay::processMessage(const tactile_msgs::TactileContact::ConstPtr& msg)
 {
+  setStatus(StatusProperty::Ok, "Topic", "Ok");
+  last_msg_ = ros::Time::now();
   boost::unique_lock<boost::mutex> lock(mutex_);
   processMessage(*msg);
 }
 
 void TactileContactDisplay::processMessages(const tactile_msgs::TactileContacts::ConstPtr& msg)
 {
+  setStatus(StatusProperty::Ok, "Topic", "Ok");
+  last_msg_ = ros::Time::now();
   boost::unique_lock<boost::mutex> lock(mutex_);
   for (auto it = msg->contacts.begin(), end = msg->contacts.end(); it != end; ++it) {
     processMessage(*it);
@@ -245,11 +257,9 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
   ros::Duration timeout(timeout_property_->getFloat());
   boost::unique_lock<boost::mutex> lock(mutex_);
 
-  if(now < last_update_) {
-    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing contacts.");
-    contacts_.clear();
-  }
   last_update_ = now;
+  if (!last_msg_.isZero() && last_msg_ + timeout < now)
+    setStatus(StatusProperty::Warn, "Topic", "No recent msg");
 
   for (auto it = contacts_.begin(), end = contacts_.end(); it != end; ++it) {
     const tactile_msgs::TactileContact &msg = it->second.first;
