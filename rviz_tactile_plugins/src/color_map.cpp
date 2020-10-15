@@ -57,22 +57,28 @@ void ColorMap::append(const QStringList &names)
 		colors.append(QColor(*it));
 }
 
+QColor interpolate(const QColor& lo, const QColor& hi, float b) {
+  float a = 1.0 - b;
+  return QColor(a*lo.red()+b*hi.red(), a*lo.green()+b*hi.green(), a*lo.blue()+b*hi.blue(), a*lo.alpha()+b*hi.alpha());
+}
+
 QColor ColorMap::map(float value) const
 {
-	static const QColor errColor("cyan");
-	assert(colors.size() > 1);
-	if (std::isnan(value)) return errColor;
+	static const QColor errColor("magenta");
+	if (!std::isfinite(value)) return errColor;
 
-	float ratio = (value-fMin) / (fMax-fMin) * (colors.size()-1);
-	if (ratio < 0) return colors[0];
-	int   idx = ratio;
-	if (idx >= colors.size()-1) return colors.last();
+	const int N = colors.size()-1;
+	assert(N > 0);
 
-	float b = ratio - idx; // in [0..1)
-	float a = 1.0 - b;
-	const QColor& lo = colors[idx];
-	const QColor& hi = colors[idx+1];
-	return QColor(a*lo.red()+b*hi.red(), a*lo.green()+b*hi.green(), a*lo.blue()+b*hi.blue(), a*lo.alpha()+b*hi.alpha());
+	float ratio = (value-fMin) / (fMax-fMin) * N;
+	if (ratio < 0)  // indicate undershooting with smooth transition to errColor
+		return interpolate(colors[0], errColor, 0.5f * std::min<float>(-ratio, 1.0f));
+
+	int idx = ratio;
+	if (idx >= N)  // indicate overshooting with smooth transition to errColor
+		return interpolate(colors.last(), errColor, 0.5f * std::min<float>(ratio - N, 1.0f));
+
+	return interpolate(colors[idx], colors[idx+1], ratio - idx);
 }
 
 }

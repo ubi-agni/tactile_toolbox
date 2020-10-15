@@ -113,9 +113,6 @@ float TactileVisualBase::mapValue(const ::tactile::TactileValue &value)
 
 QColor TactileVisualBase::mapColor(float v)
 {
-  static QColor errColor("magenta");
-  if (!std::isfinite(v)) return errColor;
-
   QColor color = color_map_->map(v);
   return color;
 }
