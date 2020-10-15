@@ -53,8 +53,9 @@ public:
    RangeFloatProperty (const QString& name = QString(), float fallback_value = 0,
                        const QString& description = QString(), Property* parent = 0,
                        const char *changed_slot = 0, QObject* receiver = 0);
-   bool  setValue(const QVariant& new_value);
-   float getFloat() const {return value_;}
+   bool  setValue(const QVariant& new_value) override;
+   float getFloat() const override {return value_;}
+   QVariant getViewData(int column, int role) const override;
    bool  manuallyEdited() const {return shouldBeSaved();}
 
    void load(const rviz::Config &config);
@@ -63,7 +64,9 @@ protected:
    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option);
 
 protected Q_SLOTS:
-   void setManuallyEditedFlag();
+   void setManuallyEdited() {
+      manually_edited_ = true;
+   }
 
 Q_SIGNALS:
    void edited();
@@ -71,7 +74,7 @@ Q_SIGNALS:
 protected:
    float value_;
    float fallback_value_;  // value to fallback on empty input
-   bool  manually_edited_; // flag temporally set after manual editing
+   bool  manually_edited_; // indicate manual editing
 };
 
 
@@ -87,6 +90,10 @@ public:
 
   void  reset();
   void  update(const ::tactile::Range &range);
+  unsigned int updateFlags() const {
+    return ((min_property_->manuallyEdited() ? 0u : 1u)) |
+           ((max_property_->manuallyEdited() ? 0u : 2u));
+  }
   float min() const {return min_property_->getFloat();}
   float max() const {return max_property_->getFloat();}
 

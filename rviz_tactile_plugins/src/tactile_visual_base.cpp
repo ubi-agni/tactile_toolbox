@@ -67,7 +67,10 @@ TactileVisualBase::TactileVisualBase(const std::string &name,
   pose_.orientation.z = origin.rotation.z;
 
   this->connect(this, SIGNAL(changed()), SLOT(onVisibleChanged()));
-  range_property_ = new RangeProperty("data range", "", this);
+  range_property_ = new RangeProperty("data range", "Raw data range of all taxels of this sensor.\n"
+                                      "Usually the values are auto-updated from sensor data  (indicated by italic font).\n"
+                                      "However, manually editing will lock them.",
+                                      this);
   connect(range_property_, SIGNAL(edited()), this, SLOT(setRawRangeFromProperty()));
   acc_value_property_ = new rviz::FloatProperty
       ("current value", 0, "current value across sensor according to accumulation mode", this);
@@ -120,8 +123,28 @@ QColor TactileVisualBase::mapColor(float v)
 void TactileVisualBase::updateRange(const ros::Time &stamp)
 {
   last_update_time_ = stamp;
-  for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
-    raw_range_.update(it->absRange());
+  switch (range_property_->updateFlags()) {
+    case 0: // don't update raw_range_ from values
+      break;
+    case 1: // update lower bound only
+      {
+        auto upper = raw_range_.max();
+        for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
+          raw_range_.update(::tactile::Range(it->absRange().min(), upper));
+        break;
+      }
+    case 2: // update upper bound only
+      {
+        auto lower = raw_range_.min();
+        for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
+          raw_range_.update(::tactile::Range(lower, it->absRange().max()));
+        break;
+      }
+    case 3: // update both bounds
+      for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
+        raw_range_.update(it->absRange());
+      break;
+  }
 }
 
 bool TactileVisualBase::expired(const ros::Time &now, const ros::Duration& timeout) const
@@ -150,8 +173,11 @@ bool TactileVisualBase::updatePose()
 void TactileVisualBase::setRawRangeFromProperty()
 {
   float fmin = range_property_->min(), fmax = range_property_->max();
-  for (auto &&v : values_)
+  for (auto &&v : values_) {
+    auto cur = v.value(::tactile::TactileValue::rawCurrent);
     v.init(fmin, fmax);
+    v.update(cur);
+  }
   raw_range_.init(fmin, fmax);
 }
 
