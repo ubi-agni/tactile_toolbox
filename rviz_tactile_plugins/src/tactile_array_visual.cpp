@@ -69,18 +69,18 @@ TactileArrayVisual::TactileArrayVisual(const std::string &name, const std::strin
   }
 }
 
-void TactileArrayVisual::update(const ros::Time &stamp,
-                                const sensor_msgs::ChannelFloat32::_values_type &values)
+void TactileArrayVisual::updateValues(const ros::Time &stamp,
+                                      const sensor_msgs::ChannelFloat32::_values_type &values)
 {
   if (values.size() == values_.size()) {
     values_.updateValues(values);
-    TactileVisualBase::update(stamp);
+    TactileVisualBase::updateRange(stamp);
   } else {
     ROS_ERROR_STREAM("invalid number of taxels for " << qPrintable(getName()));
   }
 }
 
-void TactileArrayVisual::update()
+void TactileArrayVisual::updateVisual()
 {
   auto p = points_.begin();
   for (auto it = values_.begin(), end = values_.end(); it != end; ++it, ++p) {

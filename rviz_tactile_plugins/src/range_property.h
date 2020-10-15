@@ -70,7 +70,7 @@ Q_SIGNALS:
 
 protected:
    float value_;
-   float fallback_value_;
+   float fallback_value_;  // value to fallback on empty input
    bool  manually_edited_; // flag temporally set after manual editing
 };
 

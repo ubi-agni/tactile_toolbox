@@ -120,7 +120,7 @@ QColor TactileVisualBase::mapColor(float v)
   return color;
 }
 
-void TactileVisualBase::update(const ros::Time &stamp)
+void TactileVisualBase::updateRange(const ros::Time &stamp)
 {
   last_update_time_ = stamp;
   for (auto it = values_.begin(), end = values_.end(); it != end; ++it)

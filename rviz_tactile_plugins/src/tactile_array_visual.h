@@ -45,8 +45,8 @@ public:
                      Ogre::SceneNode* parent_node, rviz::Property *parent_property=0);
 
 protected:
-  void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values);
-  void update();
+  void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) override;
+  void updateVisual() override;
 
 protected:
   rviz::PointCloud *cloud_;

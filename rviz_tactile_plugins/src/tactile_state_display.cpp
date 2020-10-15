@@ -143,7 +143,7 @@ void TactileStateDisplay::unsubscribe()
   sub_.shutdown();
 }
 
-void TactileStateDisplay::setTopic(const QString &topic, const QString &datatype)
+void TactileStateDisplay::setTopic(const QString &topic, const QString& /*datatype*/)
 {
   topic_property_->setString(topic);
 }
@@ -340,7 +340,7 @@ void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::Const
     const std::string &channel = sensor->name;
     auto range = sensors_.equal_range(channel);
     for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
-      s->second->update(msg->header.stamp, sensor->values);
+      s->second->updateValues(msg->header.stamp, sensor->values);
     }
   }
 }
@@ -366,7 +366,7 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
     sensor.setEnabled(enabled);
     if (!enabled) continue;
 
-    sensor.update();
+    sensor.updateVisual();
   }
 }
 
