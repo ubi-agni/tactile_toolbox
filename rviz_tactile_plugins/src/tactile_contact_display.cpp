@@ -36,6 +36,7 @@
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/default_plugin/wrench_visual.h>
+#include <tf/tf.h>
 #include <QApplication>
 #include <QTimer>
 #include <boost/thread/locks.hpp>
