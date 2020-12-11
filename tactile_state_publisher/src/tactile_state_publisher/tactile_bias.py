@@ -6,10 +6,10 @@ from std_srvs.srv import EmptyResponse, Empty
 from copy import deepcopy
 import numpy as np
 
-MAX_VAL = 65536
+SAMPLE_SIZE = 200
 
 class tactile_bias(object):
-	def __init__(self, count = 200):
+	def __init__(self, count = SAMPLE_SIZE):
 		self.initialized = False
 		self.initial_average_count = count
 		self.average_counter = count
@@ -22,6 +22,7 @@ class tactile_bias(object):
 
 	def handle_bias(self, req):
 		self.average_counter = self.initial_average_count
+		self.average_vec = []
 		self.initialized = False
 		return EmptyResponse()
 		
@@ -37,21 +38,22 @@ class tactile_bias(object):
 				self.average_vec = [0]*len(data.sensors[0].values)
 				for i,val in enumerate(data.sensors[0].values):
 					self.average_vec[i] = []
+			# accumulate values
 			if self.average_counter > 0:
 				for i,val in enumerate(data.sensors[0].values):
 					self.average_vec[i].append(val)
 				self.average_counter -= 1
+			# enough data to compute the average
 			if self.average_counter <= 0:
 				self.bias = self.compute_averages(self.average_vec)
-				print ("avg:", self.bias)
+				rospy.loginfo("computed bias:" + str(self.bias))
 				self.initialized = True
 		else:
 			newvals = []
 			for i,val in enumerate(data.sensors[0].values):
-				newvals.append(self.bias[i]-val) # values are decreasing when pressure augments, so bias - val is correct
-			newvals_pos = np.maximum(np.zeros(len(newvals)), newvals)
+				newvals.append(val-self.bias[i])
 			msg = deepcopy(data)
-			msg.sensors[0].values = newvals_pos
+			msg.sensors[0].values = newvals
 			self.pub.publish(msg)
 
 if __name__ == '__main__':
