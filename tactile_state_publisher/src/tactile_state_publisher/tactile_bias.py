@@ -3,7 +3,6 @@
 import rospy
 from tactile_msgs.msg import TactileState
 from std_srvs.srv import EmptyResponse, Empty
-from copy import deepcopy
 import numpy as np
 
 SAMPLE_SIZE = 200
@@ -14,16 +13,19 @@ class tactile_bias(object):
 		self.initial_average_count = count
 		self.average_counter = count
 		self.average_vec = []
-		self.bias = []
+		self.bias = None
 		self.pub = rospy.Publisher('/tactile_states_biased', TactileState, queue_size=10)
 		self.sub = rospy.Subscriber("/tactile_states", TactileState, self.callback)
 		self.service = rospy.Service('tactile_bias/bias', Empty, self.handle_bias)
 		rospy.spin()
 
-	def handle_bias(self, req):
+	def reset_bias(self):
 		self.average_counter = self.initial_average_count
 		self.average_vec = []
 		self.initialized = False
+
+	def handle_bias(self, req):
+		self.reset_bias()
 		return EmptyResponse()
 		
 	def compute_averages(self, vecs):
@@ -45,16 +47,17 @@ class tactile_bias(object):
 				self.average_counter -= 1
 			# enough data to compute the average
 			if self.average_counter <= 0:
-				self.bias = self.compute_averages(self.average_vec)
+				self.bias = np.asarray(self.compute_averages(self.average_vec))
 				rospy.loginfo("computed bias:" + str(self.bias))
 				self.initialized = True
 		else:
-			newvals = []
-			for i,val in enumerate(data.sensors[0].values):
-				newvals.append(val-self.bias[i])
-			msg = deepcopy(data)
-			msg.sensors[0].values = newvals
-			self.pub.publish(msg)
+			if len(data.sensors[0].values) != len(self.bias):
+				# reset the bias to new length
+				self.reset_bias()
+				return
+			newvals = np.asarray(data.sensors[0].values) - self.bias
+			data.sensors[0].values = newvals
+			self.pub.publish(data)
 
 if __name__ == '__main__':
 	rospy.init_node('tactile_bias', anonymous=False)
