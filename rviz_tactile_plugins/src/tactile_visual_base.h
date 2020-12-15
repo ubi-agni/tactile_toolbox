@@ -71,13 +71,13 @@ public:
   Qt::ItemFlags getViewFlags(int column) const;
 
   /// update data buffer from new readings
-  virtual void update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) = 0;
+  virtual void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) = 0;
   /// update sensor's scene_node_
   bool updatePose();
   /// update min/max properties from raw_range_
   void updateRangeProperty();
-  /// update taxels
-  virtual void update() = 0;
+  /// update taxel display
+  virtual void updateVisual() = 0;
 
   /// reset ranges
   virtual void reset();
@@ -112,7 +112,7 @@ public Q_SLOTS:
 protected:
   float mapValue(const::tactile::TactileValue &value);
   QColor mapColor(float value);
-  void update(const ros::Time &stamp);
+  void updateRange(const ros::Time &stamp);
 
 protected Q_SLOTS:
   void setRawRangeFromProperty();

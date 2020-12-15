@@ -214,7 +214,7 @@ TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::str
   values_.init(taxels_.size());
 }
 
-void TactileTaxelsVisual::update(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values)
+void TactileTaxelsVisual::updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values)
 {
   size_t N = values.size();
   auto vit = values_.begin();
@@ -222,10 +222,10 @@ void TactileTaxelsVisual::update(const ros::Time &stamp, const sensor_msgs::Chan
     if (*it < N) vit->update(values[*it]);
     else ROS_ERROR_STREAM("too short taxel msg for " << qPrintable(getName()));
   }
-  TactileVisualBase::update(stamp);
+  TactileVisualBase::updateRange(stamp);
 }
 
-void TactileTaxelsVisual::update()
+void TactileTaxelsVisual::updateVisual()
 {
   auto val_it = values_.begin();
   for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++val_it) {
