@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1.3)
 project(tactile_merger)
 
-add_definitions(-std=c++11)
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED urdf_tactile tactile_msgs)
 find_package(tactile_filters REQUIRED)

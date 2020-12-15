@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1.3)
 project(rviz_tactile_plugins)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED rviz tf urdf_tactile tactile_msgs)
+find_package(catkin REQUIRED rviz tf urdf_tactile tactile_msgs roscpp)
 if(rviz_QT_VERSION VERSION_LESS "5")
   find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
   include(${QT_USE_FILE})
@@ -31,7 +31,7 @@ find_package(tactile_filters REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES agni_tf_tools
-CATKIN_DEPENDS rviz tactile_msgs
+CATKIN_DEPENDS rviz tactile_msgs roscpp
 #  DEPENDS system_lib
 )
 

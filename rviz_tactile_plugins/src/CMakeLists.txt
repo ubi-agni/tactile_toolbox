@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 14)
+
 ## QT stuff ##
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -26,10 +28,6 @@ target_link_libraries(${PROJECT_NAME}
   tactile_filters
   ${QT_LIBRARIES}
 )
-
-add_definitions(-std=c++11)
-# only works since cmake 3.1:
-# target_compile_features(${PROJECT_NAME} PUBLIC cxx_auto_type)
 
 # Install rules
 install(TARGETS

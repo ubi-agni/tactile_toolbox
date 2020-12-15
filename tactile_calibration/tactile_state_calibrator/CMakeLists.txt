@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1.3)
 project(tactile_state_calibrator)
+
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED COMPONENTS roscpp tactile_msgs)
 find_package(tactile_filters REQUIRED)
@@ -18,7 +20,6 @@ include_directories(${catkin_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_calibrator.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters ${YAML_LIBRARIES})
-target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11)
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(urdf_tactile)
-set (${PROJECT_NAME}_VERSION_MAJOR 0)
-set (${PROJECT_NAME}_VERSION_MINOR 1)
+cmake_minimum_required(VERSION 3.1.3)
+project(urdf_tactile VERSION 0.1)
 
-add_definitions(-std=c++11)
+set(CMAKE_CXX_STANDARD 14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
