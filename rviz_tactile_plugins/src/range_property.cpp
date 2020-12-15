@@ -48,6 +48,9 @@ RangeFloatProperty::RangeFloatProperty(const QString &name, float fallback_value
 
 bool RangeFloatProperty::setValue(const QVariant &new_value)
 {
+  if (new_value == Property::getValue())
+    return true;
+
   bool ok = false;
   bool manually_changed = manually_edited_;
   manually_edited_ = false; // reset flag in any case
@@ -92,7 +95,7 @@ QWidget *RangeFloatProperty::createEditor(QWidget *parent, const QStyleOptionVie
 
   // allow to distinguish manual changes from programmatical ones in setValue()
   setManuallyEdited();
-  // ensure that edit_status_ is reset when editor gets destroyed
+  // ensure that manually_edited_ is reset when editor gets destroyed
   connect(editor, &QLineEdit::destroyed, [this](){manually_edited_ = false;});
   return editor;
 }
@@ -139,6 +142,8 @@ bool RangeProperty::updateFromChildren()
 
 bool RangeProperty::setValue(const QVariant &new_value)
 {
+  if (new_value == Property::getValue())
+    return true;
   QStringList values = new_value.toString().split(";", QString::KeepEmptyParts);
   if (values.size() != 2) {
     values.clear(); values << "" << "";
