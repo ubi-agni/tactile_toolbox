@@ -29,3 +29,6 @@ install(TARGETS ${PROJECT_NAME}
 
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
+catkin_install_python(PROGRAMS scripts/tactile_bias.py
+                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

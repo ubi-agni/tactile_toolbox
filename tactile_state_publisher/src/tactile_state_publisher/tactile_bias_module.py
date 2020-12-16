@@ -59,8 +59,3 @@ class tactile_bias(object):
             newvals = np.asarray(data.sensors[0].values) - self.bias
             data.sensors[0].values = newvals
             self.pub.publish(data)
-
-
-if __name__ == '__main__':
-    rospy.init_node('tactile_bias', anonymous=False)
-    tactile_bias()

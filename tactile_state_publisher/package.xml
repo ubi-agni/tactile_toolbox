@@ -2,7 +2,9 @@
 <package format="3">
   <name>tactile_state_publisher</name>
   <version>0.1.0</version>
-  <description>The tactile_state_publisher package</description>
+  <description>Publishes tactile_states as described in URDF,
+               offers concatenating several messages from a source of tactile_states
+               and provides a tactile_bias node</description>
 
   <maintainer email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</maintainer>
 
