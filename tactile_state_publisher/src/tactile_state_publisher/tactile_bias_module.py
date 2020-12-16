@@ -13,8 +13,9 @@ class tactile_bias(object):
         self.initialized = False
         self.initial_average_count = count
         self.average_counter = count
-        self.average_vec = []
+        self.average_vec = None
         self.bias = None
+        self.std = None
         self.pub = rospy.Publisher('/tactile_states_biased', TactileState, queue_size=10)
         self.sub = rospy.Subscriber("/tactile_states", TactileState, self.callback)
         self.service = rospy.Service('tactile_bias/bias', Empty, self.handle_bias)
@@ -22,38 +23,32 @@ class tactile_bias(object):
 
     def reset_bias(self):
         self.average_counter = self.initial_average_count
-        self.average_vec = []
+        self.average_vec = None
         self.initialized = False
 
     def handle_bias(self, req):
         self.reset_bias()
         return EmptyResponse()
 
-    def compute_averages(self, vecs):
-        avgs = []
-        for vec in vecs:
-            avgs.append(np.mean(np.array(vec)))
-        return avgs
-
     def callback(self, data):
         if not self.initialized:
-            if len(self.average_vec) == 0:
-                self.average_vec = [0]*len(data.sensors[0].values)
-                for i, val in enumerate(data.sensors[0].values):
-                    self.average_vec[i] = []
+            if self.average_vec is None:
+                self.average_vec = np.empty((0, len(data.sensors[0].values)), float)
             # accumulate values
             if self.average_counter > 0:
-                for i, val in enumerate(data.sensors[0].values):
-                    self.average_vec[i].append(val)
+                self.average_vec = np.vstack((self.average_vec, np.asarray(data.sensors[0].values)))
                 self.average_counter -= 1
-            # enough data to compute the average
-            if self.average_counter <= 0:
-                self.bias = np.asarray(self.compute_averages(self.average_vec))
+            else:  # enough data to compute the average
+                self.bias = self.average_vec.mean(0)
+                self.std = np.std(self.average_vec,  axis=0)
+                rospy.loginfo("Acquired " + str(self.initial_average_count) + " samples")
+                rospy.loginfo("  standard deviation:" + str(self.std))
                 rospy.loginfo("computed bias:" + str(self.bias))
                 self.initialized = True
         else:
             if len(data.sensors[0].values) != len(self.bias):
                 # reset the bias to new length
+                print self.bias.size
                 self.reset_bias()
                 return
             newvals = np.asarray(data.sensors[0].values) - self.bias
