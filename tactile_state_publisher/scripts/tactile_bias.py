@@ -2,7 +2,7 @@
 # license removed for brevity
 
 import rospy
-from tactile_state_publisher.tactile_bias_module import tactile_bias, SAMPLE_SIZE
+from tactile_state_publisher.tactile_bias import tactile_bias, SAMPLE_SIZE
 import argparse
 
 if __name__ == '__main__':

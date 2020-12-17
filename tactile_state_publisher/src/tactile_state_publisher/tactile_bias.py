@@ -15,19 +15,15 @@ class tactile_bias(object):
         self.average_counter = count
         self.average_vec = None
         self.bias = None
-        self.std = None
         self.pub = rospy.Publisher('/tactile_states_biased', TactileState, queue_size=10)
         self.sub = rospy.Subscriber("/tactile_states", TactileState, self.callback)
-        self.service = rospy.Service('tactile_bias/bias', Empty, self.handle_bias)
+        self.service = rospy.Service('tactile_bias/bias', Empty, self.reset_bias)
         rospy.spin()
 
-    def reset_bias(self):
+    def reset_bias(self, req=None):
         self.average_counter = self.initial_average_count
         self.average_vec = None
         self.initialized = False
-
-    def handle_bias(self, req):
-        self.reset_bias()
         return EmptyResponse()
 
     def callback(self, data):
@@ -40,15 +36,13 @@ class tactile_bias(object):
                 self.average_counter -= 1
             else:  # enough data to compute the average
                 self.bias = self.average_vec.mean(0)
-                self.std = np.std(self.average_vec,  axis=0)
                 rospy.loginfo("Acquired " + str(self.initial_average_count) + " samples")
-                rospy.loginfo("  standard deviation:" + str(self.std))
-                rospy.loginfo("computed bias:" + str(self.bias))
+                rospy.loginfo("  computed bias:" + str(self.bias))
+                rospy.loginfo("  standard deviation:" + str(np.std(self.average_vec,  axis=0)))
                 self.initialized = True
         else:
             if len(data.sensors[0].values) != len(self.bias):
                 # reset the bias to new length
-                print self.bias.size
                 self.reset_bias()
                 return
             newvals = np.asarray(data.sensors[0].values) - self.bias
