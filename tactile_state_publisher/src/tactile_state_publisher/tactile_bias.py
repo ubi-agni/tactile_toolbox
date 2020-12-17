@@ -17,7 +17,7 @@ class tactile_bias(object):
         self.bias = None
         self.pub = rospy.Publisher('/tactile_states_biased', TactileState, queue_size=10)
         self.sub = rospy.Subscriber("/tactile_states", TactileState, self.callback)
-        self.service = rospy.Service('tactile_bias/bias', Empty, self.reset_bias)
+        self.service = rospy.Service('tactile_bias/reset', Empty, self.reset_bias)
         rospy.spin()
 
     def reset_bias(self, req=None):
