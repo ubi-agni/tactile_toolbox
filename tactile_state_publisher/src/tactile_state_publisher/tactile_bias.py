@@ -1,50 +1,52 @@
 #!/usr/bin/env python
 # license removed for brevity
 import rospy
+from rospy.numpy_msg import numpy_msg
 from tactile_msgs.msg import TactileState
 from std_srvs.srv import EmptyResponse, Empty
-import numpy as np
+import numpy
 
 SAMPLE_SIZE = 200
 
 
+class Bias(object):
+    def __init__(self, values, count):
+        self.values = numpy.zeros(values.shape)
+        self.squared = numpy.zeros(values.shape)
+        self.count = count
+
+
 class tactile_bias(object):
     def __init__(self, count=SAMPLE_SIZE):
-        self.initialized = False
         self.initial_average_count = count
-        self.average_counter = count
-        self.average_vec = None
-        self.bias = None
-        self.pub = rospy.Publisher('/tactile_states_biased', TactileState, queue_size=10)
-        self.sub = rospy.Subscriber("/tactile_states", TactileState, self.callback)
+        self.reset_bias()
+        self.pub = rospy.Publisher('/tactile_states_biased', numpy_msg(TactileState), queue_size=10)
+        self.sub = rospy.Subscriber('/tactile_states', numpy_msg(TactileState), self.callback)
         self.service = rospy.Service('tactile_bias/reset', Empty, self.reset_bias)
         rospy.spin()
 
     def reset_bias(self, req=None):
-        self.average_counter = self.initial_average_count
-        self.average_vec = None
-        self.initialized = False
+        self.biases = dict()  # mapping sensor name to Bias objects
         return EmptyResponse()
 
     def callback(self, data):
-        if not self.initialized:
-            if self.average_vec is None:
-                self.average_vec = np.empty((0, len(data.sensors[0].values)), float)
-            # accumulate values
-            if self.average_counter > 0:
-                self.average_vec = np.vstack((self.average_vec, np.asarray(data.sensors[0].values)))
-                self.average_counter -= 1
-            else:  # enough data to compute the average
-                self.bias = self.average_vec.mean(0)
-                rospy.loginfo("Acquired " + str(self.initial_average_count) + " samples")
-                rospy.loginfo("  computed bias:" + str(self.bias))
-                rospy.loginfo("  standard deviation:" + str(np.std(self.average_vec,  axis=0)))
-                self.initialized = True
+        for sensor in data.sensors:
+            try:
+                bias = self.biases[sensor.name]
+            except KeyError:
+                bias = self.biases[sensor.name] = Bias(sensor.values, self.initial_average_count)
+            self.compute(sensor.values, bias)
+
+    def compute(self, values, bias):
+        if bias.count == 0:
+            values = values - bias.values
         else:
-            if len(data.sensors[0].values) != len(self.bias):
-                # reset the bias to new length
-                self.reset_bias()
-                return
-            newvals = np.asarray(data.sensors[0].values) - self.bias
-            data.sensors[0].values = newvals
-            self.pub.publish(data)
+            bias.values += values
+            bias.squared += values * values
+            bias.count -= 1  # decrement seen-samples-count
+            if bias.count == 0:
+                bias.values /= self.initial_average_count
+                rospy.loginfo("Acquired " + str(self.initial_average_count) + " samples")
+                rospy.loginfo("  computed bias: " + str(bias.values))
+                rospy.loginfo("  std deviation: " + str(numpy.sqrt(bias.squared / (self.initial_average_count-1)
+                                                                   - bias.values * bias.values)))
