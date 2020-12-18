@@ -45,8 +45,9 @@ class tactile_bias(object):
             bias.squared += values * values
             bias.count -= 1  # decrement seen-samples-count
             if bias.count == 0:
-                bias.values /= self.initial_average_count
-                rospy.loginfo("Acquired " + str(self.initial_average_count) + " samples")
+                N = float(self.initial_average_count)
+                bias.values /= N
+                rospy.loginfo("Acquired {} samples".format(self.initial_average_count))
                 rospy.loginfo("  computed bias: " + str(bias.values))
-                rospy.loginfo("  std deviation: " + str(numpy.sqrt(bias.squared / (self.initial_average_count-1)
-                                                                   - bias.values * bias.values)))
+                rospy.loginfo("  std deviation: " + str(numpy.sqrt(numpy.maximum(bias.squared / (N-1)
+                                                                                 - (N/(N-1)) * bias.values * bias.values, 0))))
