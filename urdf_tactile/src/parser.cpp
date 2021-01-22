@@ -65,7 +65,7 @@ tactile::Vector2<double> parseAttribute<tactile::Vector2<double> >(const char *v
 	std::vector<double> xy;
 	boost::split(pieces, value, boost::is_any_of(" "));
 	for (unsigned int i = 0; i < pieces.size(); ++i) {
-		if (pieces[i] != "") {
+		if (!pieces[i].empty()) {
 			xy.push_back(boost::lexical_cast<double>(pieces[i].c_str()));
 		}
 	}
@@ -157,7 +157,7 @@ SensorBaseSharedPtr TactileSensorParser::parse(TiXmlElement &config)
 		}
 	}
 
-	if (tactile->array_ && tactile->taxels_.size()) {
+	if (tactile->array_ && !tactile->taxels_.empty()) {
 		CONSOLE_BRIDGE_logWarn("Either an array or multiple taxel elements are allowed for a tactile sensor");
 		tactile->array_.reset();
 	}

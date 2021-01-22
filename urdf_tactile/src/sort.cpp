@@ -91,7 +91,7 @@ Result sort(const SensorMap &sensors)
 		Sensors &g = getOrInsertEntry<Result>(result, get<key>(it->second));
 		if (tactile->array_)
 			g.arrays.push_back(it);
-		else if (tactile->taxels_.size() > 0)
+		else if (!tactile->taxels_.empty())
 			g.taxels.push_back(it);
 	}
 	return result;

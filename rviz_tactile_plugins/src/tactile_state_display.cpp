@@ -237,7 +237,7 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 			if (sensor->array_) {
 				visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->array_,
 				                                this, context_, scene_node_);
-			} else if (sensor->taxels_.size()) {
+			} else if (!sensor->taxels_.empty()) {
 				visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->taxels_,
 				                                 this, context_, scene_node_);
 			}
@@ -255,7 +255,7 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 					visual->load(config->second);
 			}
 		}
-		if (sensors_.size())
+		if (!sensors_.empty())
 			setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("Found %1 tactile sensors").arg(sensors_.size()));
 		else
 			setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "No tactile sensors found");

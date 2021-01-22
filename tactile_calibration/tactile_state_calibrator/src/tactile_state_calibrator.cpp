@@ -140,16 +140,16 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 							sensor_name = yaml_calib["sensor_name"].as<std::string>();
 
 						// extract calibration type
-						TactileStateCalibrator::calib_type calib_type = TactileStateCalibrator::calib_type::RAW;
+						TactileStateCalibrator::CalibType calib_type = TactileStateCalibrator::CalibType::RAW;
 						if (yaml_calib["type"]) {
 							const std::string calib_type_str = yaml_calib["type"].as<std::string>();
 							if (calib_type_str == "PWL" || calib_type_str == "pwl" || calib_type_str == "PieceWiseLinear")
-								calib_type = TactileStateCalibrator::calib_type::PWL;
+								calib_type = TactileStateCalibrator::CalibType::PWL;
 						}
 
 						// search for parameters/values depending on calib_type
 						switch (calib_type) {
-							case TactileStateCalibrator::calib_type::PWL:
+							case TactileStateCalibrator::CalibType::PWL:
 								// search for mapping values
 								// check if the sequence is defining calibration mappings
 								if (yaml_calib["values"]) {
@@ -165,7 +165,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 									ROS_ERROR("Values not found but Piece Wise Linear requires values");
 								break;
 
-							case TactileStateCalibrator::calib_type::RAW:
+							case TactileStateCalibrator::CalibType::RAW:
 							default:
 								calib_ptr.reset();
 						}
@@ -176,7 +176,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 							if (extract_idx_range(yaml_calib["idx_range"], idx_to_calib_map, calib_ptr)) {
 								// check the result
 								if (!single_calib_) {
-									if (idx_to_calib_map.size() == 0) {
+									if (idx_to_calib_map.empty()) {
 										ROS_ERROR(" No calibration assigned, something went wrong");
 										throw std::runtime_error("No calibration assigned, something went wrong");
 										return;
@@ -197,7 +197,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 					}
 
 					// if required, prepare the calibs_ vector from the idx_to_calib map
-					if (!single_calib_ && idx_to_calib_map.size() > 0) {
+					if (!single_calib_ && !idx_to_calib_map.empty()) {
 						// fill calibs_
 						ROS_DEBUG_STREAM_NAMED(detail, " filling range");
 						fill_calibs(idx_to_calib_map);
@@ -215,7 +215,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 			ROS_DEBUG_STREAM_NAMED(detail, "found a single map");
 			single_calib_ = std::make_shared<PieceWiseLinearCalib>(PieceWiseLinearCalib::load(yaml_node));
 		}
-		if (!single_calib_ && calibs_.size() == 0) {
+		if (!single_calib_ && calibs_.empty()) {
 			ROS_DEBUG_STREAM_NAMED(detail, " calibs and single_calib empty");
 			throw std::runtime_error("unable to create PieceWiseLinearCalib");
 			return;

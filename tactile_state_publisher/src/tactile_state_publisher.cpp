@@ -95,7 +95,7 @@ void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
 			// TODO: Guillaume handle the fact that only one array can exist per tactile channel
 			tactile_msg_.sensors[sensor_idx].values.resize(tactile_sensor_ptr->array_->rows *
 			                                               tactile_sensor_ptr->array_->cols);
-		} else if (tactile_sensor_ptr->taxels_.size()) {
+		} else if (!tactile_sensor_ptr->taxels_.empty()) {
 			// find highest taxel index used
 			unsigned int maxIdx = 0;
 			for (auto it = tactile_sensor_ptr->taxels_.begin(), end = tactile_sensor_ptr->taxels_.end(); it != end; ++it) {

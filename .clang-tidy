@@ -7,6 +7,12 @@ Checks:          '-*,
                   modernize-use-default,
                   modernize-use-override,
                   modernize-use-using,
+                  readability-named-parameter,
+                  readability-redundant-smartptr-get,
+                  readability-redundant-string-cstr,
+                  readability-simplify-boolean-expr,
+                  readability-container-size-empty,
+                  readability-identifier-naming,
                   '
 HeaderFilterRegex: '.*/moveit/task_constructor/.*\.h'
 AnalyzeTemporaryDtors: false

@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(test_tactile_array)
 	TactileSensorSharedPtr tactile = tactile_sensor_cast(parser->parse(*tactile_xml));
 	BOOST_REQUIRE(tactile);
 
-	BOOST_CHECK(tactile->taxels_.size() == 0);
+	BOOST_CHECK(tactile->taxels_.empty());
 	BOOST_REQUIRE(tactile->array_);
 
 	BOOST_CHECK(tactile->array_->order == TactileArray::ROWMAJOR);

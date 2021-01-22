@@ -297,7 +297,7 @@ TaxelInfoIterator TaxelInfoIterator::begin(const urdf::SensorConstSharedPtr &sen
 		impl.reset(new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor, 0));
 	else {
 		impl.reset(new TaxelInfoIteratorBase<VectorBaseIterator>(sensor, tactile.taxels_.begin()));
-		valid = (tactile.taxels_.size() > 0);
+		valid = (!tactile.taxels_.empty());
 	}
 	return TaxelInfoIterator(impl, valid);
 }

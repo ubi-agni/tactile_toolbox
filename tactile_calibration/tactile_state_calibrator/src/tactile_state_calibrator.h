@@ -28,7 +28,7 @@ public:
 	TactileStateCalibrator(const std::string &calib_filename);
 	~TactileStateCalibrator();
 
-	enum calib_type
+	enum CalibType
 	{
 		RAW = 0,
 		PWL = 1
