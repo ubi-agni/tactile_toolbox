@@ -41,4 +41,4 @@ struct Taxel
 	double weight;
 };
 
-} // namespace tactile
+}  // namespace tactile

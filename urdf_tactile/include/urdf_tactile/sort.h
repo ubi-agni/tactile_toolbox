@@ -40,23 +40,24 @@ namespace tactile {
  ******************************************************************************/
 typedef urdf::SensorMap::const_iterator iterator;
 typedef std::deque<iterator> iterator_list;
-struct Sensors {
-  // sensors that define a vector of taxels
-  iterator_list taxels;
-  // sensors that define a 2D taxel array
-  iterator_list arrays;
+struct Sensors
+{
+	// sensors that define a vector of taxels
+	iterator_list taxels;
+	// sensors that define a 2D taxel array
+	iterator_list arrays;
 };
 typedef std::map<std::string, Sensors> SensorsMap;
 
-struct SensorsTree : Sensors {
-  typedef std::map<std::string, SensorsTree> map_type;
-  map_type children;
+struct SensorsTree : Sensors
+{
+	typedef std::map<std::string, SensorsTree> map_type;
+	map_type children;
 };
 
-SensorsMap  sortByGroups(const urdf::SensorMap &sensors);
+SensorsMap sortByGroups(const urdf::SensorMap &sensors);
 SensorsTree sortByGroupsHierarchical(const urdf::SensorMap &sensors);
-SensorsMap  sortByChannels(const urdf::SensorMap &sensors);
-
+SensorsMap sortByChannels(const urdf::SensorMap &sensors);
 
 /******************************************************************************
  * retrieving taxels
@@ -66,11 +67,11 @@ typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
 typedef std::deque<TaxelInfoIteratorIPtr> taxel_list;
 typedef std::map<std::string, taxel_list> TaxelsMap;
 /// retrieve all taxels
-taxel_list& getTaxels(const iterator_list &sensors, taxel_list &target);
+taxel_list &getTaxels(const iterator_list &sensors, taxel_list &target);
 /// retrieve all taxels
-taxel_list& getTaxels(const Sensors &sensors, taxel_list &target);
+taxel_list &getTaxels(const Sensors &sensors, taxel_list &target);
 /// retrieve all taxels
-TaxelsMap& getTaxels(const SensorsMap &sensors, TaxelsMap &target);
+TaxelsMap &getTaxels(const SensorsMap &sensors, TaxelsMap &target);
 
 /// versions without providing the target
 taxel_list getTaxels(const iterator_list &sensors);
@@ -79,5 +80,5 @@ TaxelsMap getTaxels(const SensorsMap &sensors);
 
 size_t maxIndex(const taxel_list &taxels);
 
-} // end namespace tactile
-} // end namespace urdf
+}  // end namespace tactile
+}  // end namespace urdf

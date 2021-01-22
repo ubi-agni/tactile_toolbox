@@ -35,30 +35,30 @@
 
 namespace tactile {
 
-TaxelGroup::TaxelGroup(const std::string &frame)
-   : frame_(frame)
-{
-}
+TaxelGroup::TaxelGroup(const std::string &frame) : frame_(frame) {}
 
 void TaxelGroup::addTaxel(const Taxel &taxel)
 {
 	taxels_.push_back(taxel);
 }
 
-static TaxelGroupPtr&
-getGroup(TaxelGroupMap &groups, const std::string &frame) {
+static TaxelGroupPtr &getGroup(TaxelGroupMap &groups, const std::string &frame)
+{
 	TaxelGroupMap::iterator it = groups.find(frame);
-	if (it != groups.end()) return it->second;
+	if (it != groups.end())
+		return it->second;
 	auto res = groups.insert(std::make_pair(frame, TaxelGroupPtr(new TaxelGroup(frame))));
 	return res.first->second;
 }
 
-void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor) {
+void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor)
+{
 	TaxelGroup::TaxelMapping mapping;
-	const urdf::tactile::TactileSensor& tactile = urdf::tactile::tactile_sensor_cast(*sensor);
+	const urdf::tactile::TactileSensor &tactile = urdf::tactile::tactile_sensor_cast(*sensor);
 
 	for (auto taxel = urdf::tactile::TaxelInfoIterator::begin(sensor),
-	     end = urdf::tactile::TaxelInfoIterator::end(sensor); taxel != end; ++taxel) {
+	          end = urdf::tactile::TaxelInfoIterator::end(sensor);
+	     taxel != end; ++taxel) {
 		mapping[taxel->idx] = size();
 		addTaxel(Taxel(taxel->position, taxel->normal));
 	}
@@ -69,14 +69,16 @@ void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor) {
  *  A TaxelGroup is identified by link name.
  *  A TaxelGroup can hold several tactile sensors if they are attached to the same link.
  */
-TaxelGroupMap TaxelGroup::load (const std::string &desc_param) {
+TaxelGroupMap TaxelGroup::load(const std::string &desc_param)
+{
 	TaxelGroupMap result;
 
 	urdf::SensorMap sensors = urdf::parseSensorsFromParam(desc_param, urdf::getSensorParser("tactile"));
 	// create a TaxelGroup for each tactile sensor
 	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
 		urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
-		if (!sensor) continue;  // some other sensor than tactile
+		if (!sensor)
+			continue;  // some other sensor than tactile
 
 		TaxelGroupPtr &group = getGroup(result, it->second->parent_link_);
 		group->addTaxels(it->second);
@@ -92,12 +94,12 @@ void TaxelGroup::update(const TaxelMapping &mapping, Iterator input_begin, Itera
 		taxels_[it->second].weight = *(input_begin + it->first);
 	}
 }
-template void TaxelGroup::update<std::vector<float>::const_iterator>
-(const TaxelMapping &mapping,
-std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
+template void TaxelGroup::update<std::vector<float>::const_iterator>(const TaxelMapping &mapping,
+                                                                     std::vector<float>::const_iterator begin,
+                                                                     std::vector<float>::const_iterator end);
 
-inline void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos,
-                      const Eigen::Vector3d &normal, const Eigen::Vector3d &force, const Eigen::Vector3d& torque)
+inline void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector3d &pos, const Eigen::Vector3d &normal,
+                      const Eigen::Vector3d &force, const Eigen::Vector3d &torque)
 {
 	contact.position.x = pos.x();
 	contact.position.y = pos.y();
@@ -116,16 +118,17 @@ inline void toContact(tactile_msgs::TactileContact &contact, const Eigen::Vector
 	contact.wrench.torque.z = torque.z();
 }
 
-bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts, const tactile_msgs::TactileContact &contact_template)
+bool TaxelGroup::all(std::vector<tactile_msgs::TactileContact> &contacts,
+                     const tactile_msgs::TactileContact &contact_template)
 {
-	unsigned int i=0;
+	unsigned int i = 0;
 	Eigen::Vector3d force;
 	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it, ++i) {
 		tactile_msgs::TactileContact contact = contact_template;  // copy header and name
 		contact.name.append("_");
 		contact.name.append(std::to_string(i));
 
-		force = (-it->weight)*it->normal;
+		force = (-it->weight) * it->normal;
 		toContact(contact, it->position, it->normal, force, it->position.cross(force));
 		contacts.push_back(contact);
 	}
@@ -158,4 +161,4 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	return true;
 }
 
-} // namespace tactile
+}  // namespace tactile

@@ -30,11 +30,10 @@
 
 namespace tactile {
 
-Taxel::Taxel(const urdf::Vector3 &p, const urdf::Vector3 &n)
-   : weight(0)
+Taxel::Taxel(const urdf::Vector3 &p, const urdf::Vector3 &n) : weight(0)
 {
 	position << p.x, p.y, p.z;
 	normal << n.x, n.y, n.z;
 }
 
-} // namespace tactile
+}  // namespace tactile

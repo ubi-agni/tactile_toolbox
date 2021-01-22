@@ -58,15 +58,14 @@ public:
 	TaxelGroup(const std::string &frame);
 	void addTaxels(const urdf::SensorConstSharedPtr &sensor);
 
-	const std::string& frame() const {return frame_;}
-	const std::vector<Taxel>& taxels() const {return taxels_;}
-	size_t size() const {return taxels_.size();}
-	const SensorToTaxelMapping& mappings() const {return mappings_;}
+	const std::string &frame() const { return frame_; }
+	const std::vector<Taxel> &taxels() const { return taxels_; }
+	size_t size() const { return taxels_.size(); }
+	const SensorToTaxelMapping &mappings() const { return mappings_; }
 
 	template <typename Iterator>
 	void update(const TaxelMapping &mapping, Iterator begin, Iterator end);
-	bool all(std::vector<tactile_msgs::TactileContact> &contacts,
-	         const tactile_msgs::TactileContact &contact_template);
+	bool all(std::vector<tactile_msgs::TactileContact> &contacts, const tactile_msgs::TactileContact &contact_template);
 	bool average(tactile_msgs::TactileContact &contact);
 
 private:
@@ -81,4 +80,4 @@ private:
 	SensorToTaxelMapping mappings_;
 };
 
-} // namespace tactile
+}  // namespace tactile

@@ -24,22 +24,24 @@ class PCLCollector : public boost::mutex
 public:
 	typedef pcl::PointXYZINormal ContactPoint;
 
-	PCLCollector(const std::string &target_frame="", const double threshold=0.0);
-	void initFromRobotDescription(const std::string &param="robot_description");
+	PCLCollector(const std::string &target_frame = "", const double threshold = 0.0);
+	void initFromRobotDescription(const std::string &param = "robot_description");
 
 	template <typename M, typename F>
-	void setSource(F &f, unsigned int queue_size) {
+	void setSource(F &f, unsigned int queue_size)
+	{
 		// connect F to a tf filter that signals to process()
-		tf2_ros::MessageFilter<M> *tf_filter = new tf2_ros::MessageFilter<M>(f, tf_buffer_, target_frame_, queue_size, NULL);
+		tf2_ros::MessageFilter<M> *tf_filter =
+		    new tf2_ros::MessageFilter<M>(f, tf_buffer_, target_frame_, queue_size, NULL);
 		tf_filter_.reset(tf_filter);
 		tf_filter->registerCallback(&PCLCollector::process<M>, this);
 	}
 
 	void setTargetFrame(const std::string &frame);
-	const std::string& targetFrame() const {return target_frame_;}
+	const std::string &targetFrame() const { return target_frame_; }
 
 	void clear();
-	const pcl::PointCloud<ContactPoint>& pcl();
+	const pcl::PointCloud<ContactPoint> &pcl();
 
 protected:
 	template <typename M>
@@ -48,9 +50,9 @@ protected:
 
 protected:
 	std::string robot_root_frame_;
-	urdf::SensorMap sensors_; //< tactile sensors
+	urdf::SensorMap sensors_;  //< tactile sensors
 
-	std::string target_frame_; //< target frame, the PCL should be expressed in
+	std::string target_frame_;  //< target frame, the PCL should be expressed in
 	pcl::PointCloud<ContactPoint> pcl_;
 
 	tf2_ros::Buffer tf_buffer_;
@@ -63,4 +65,4 @@ protected:
 	double threshold_;
 };
 
-} // namespace tactile
+}  // namespace tactile

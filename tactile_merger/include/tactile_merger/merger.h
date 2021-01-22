@@ -37,11 +37,10 @@ class Merger
 {
 public:
 	Merger();
-	void init(const std::string &param="robot_description");
+	void init(const std::string &param = "robot_description");
 
 	template <typename Iterator>
-	void update(const ros::Time &stamp, const std::string &channel,
-	            Iterator begin, Iterator end);
+	void update(const ros::Time &stamp, const std::string &channel, Iterator begin, Iterator end);
 	void reset();
 
 	tactile_msgs::TactileContacts getGroupAveragedContacts();
@@ -52,7 +51,7 @@ private:
 	typedef boost::shared_ptr<GroupData> GroupDataPtr;
 
 	std::map<std::string, GroupDataPtr> groups_;
-	std::multimap<std::string, std::pair<GroupDataPtr, const TaxelGroup::TaxelMapping*> > sensors_;
+	std::multimap<std::string, std::pair<GroupDataPtr, const TaxelGroup::TaxelMapping *> > sensors_;
 };
 
-} // namespace tactile
+}  // namespace tactile

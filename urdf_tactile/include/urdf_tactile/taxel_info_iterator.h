@@ -42,40 +42,48 @@ typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
 /// common iterator for vector of taxels or taxel array
 class TaxelInfoIterator
 {
-  TaxelInfoIteratorIPtr impl_;  //! iterator
-  TaxelInfo info_;              //! lazily evaluated
-  mutable bool valid_;          //! is info valid?
+	TaxelInfoIteratorIPtr impl_;  //! iterator
+	TaxelInfo info_;  //! lazily evaluated
+	mutable bool valid_;  //! is info valid?
 
 public:
-  static TaxelInfoIterator begin(const urdf::SensorConstSharedPtr &sensor);
-  static TaxelInfoIterator end(const urdf::SensorConstSharedPtr &sensor);
+	static TaxelInfoIterator begin(const urdf::SensorConstSharedPtr& sensor);
+	static TaxelInfoIterator end(const urdf::SensorConstSharedPtr& sensor);
 
-  TaxelInfoIterator() : impl_(0), valid_(false) {}
-  TaxelInfoIterator(const TaxelInfoIterator &other);
-  ~TaxelInfoIterator();
-  TaxelInfoIterator &operator=(const TaxelInfoIterator &other);
+	TaxelInfoIterator() : impl_(0), valid_(false) {}
+	TaxelInfoIterator(const TaxelInfoIterator& other);
+	~TaxelInfoIterator();
+	TaxelInfoIterator& operator=(const TaxelInfoIterator& other);
 
-  TaxelInfoIterator& operator++();
-  TaxelInfoIterator operator++(int);
+	TaxelInfoIterator& operator++();
+	TaxelInfoIterator operator++(int);
 
-  TaxelInfoIterator& operator--();
-  TaxelInfoIterator operator--(int);
+	TaxelInfoIterator& operator--();
+	TaxelInfoIterator operator--(int);
 
-  bool operator==(const TaxelInfoIterator& other) const;
-  bool operator!=(const TaxelInfoIterator& other) const {return !(*this == other);}
+	bool operator==(const TaxelInfoIterator& other) const;
+	bool operator!=(const TaxelInfoIterator& other) const { return !(*this == other); }
 
-  const TaxelInfo& operator*() const { validate(); return info_; }
-  const TaxelInfo* operator->() const { validate(); return &info_; }
+	const TaxelInfo& operator*() const
+	{
+		validate();
+		return info_;
+	}
+	const TaxelInfo* operator->() const
+	{
+		validate();
+		return &info_;
+	}
 
-  /// allow implicit type conversion to TaxelInfoIteratorIPtr
-  operator TaxelInfoIteratorIPtr();
+	/// allow implicit type conversion to TaxelInfoIteratorIPtr
+	operator TaxelInfoIteratorIPtr();
 
 private:
-  explicit TaxelInfoIterator(TaxelInfoIteratorIPtr impl_, bool valid);
-  void validate() const;
+	explicit TaxelInfoIterator(TaxelInfoIteratorIPtr impl_, bool valid);
+	void validate() const;
 };
 
-size_t index(const TaxelInfoIteratorIPtr &it);
+size_t index(const TaxelInfoIteratorIPtr& it);
 
-} // end namespace tactile
-} // end namespace urdf
+}  // end namespace tactile
+}  // end namespace urdf

@@ -38,8 +38,7 @@
 #include <ros/time.h>
 #include <QColor>
 
-namespace Ogre
-{
+namespace Ogre {
 class SceneNode;
 }
 
@@ -61,86 +60,85 @@ class RangeProperty;
  */
 class TactileVisualBase : public GroupProperty
 {
-Q_OBJECT
+	Q_OBJECT
 public:
-  TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-                    rviz::Display *owner, rviz::DisplayContext *context,
-                    Ogre::SceneNode* parent_node, rviz::Property *parent_property=0);
-  virtual ~TactileVisualBase();
+	TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin, rviz::Display *owner,
+	                  rviz::DisplayContext *context, Ogre::SceneNode *parent_node, rviz::Property *parent_property = 0);
+	virtual ~TactileVisualBase();
 
-  Qt::ItemFlags getViewFlags(int column) const;
+	Qt::ItemFlags getViewFlags(int column) const;
 
-  /// update data buffer from new readings
-  virtual void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) = 0;
-  /// update sensor's scene_node_
-  bool updatePose();
-  /// update min/max properties from raw_range_
-  void updateRangeProperty();
-  /// update taxel display
-  virtual void updateVisual() = 0;
+	/// update data buffer from new readings
+	virtual void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) = 0;
+	/// update sensor's scene_node_
+	bool updatePose();
+	/// update min/max properties from raw_range_
+	void updateRangeProperty();
+	/// update taxel display
+	virtual void updateVisual() = 0;
 
-  /// reset ranges
-  virtual void reset();
-  void resetTime();
+	/// reset ranges
+	virtual void reset();
+	void resetTime();
 
-  /// most recent update time + timeout older than now?
-  bool expired(const ros::Time &now, const ros::Duration &timeout) const;
+	/// most recent update time + timeout older than now?
+	bool expired(const ros::Time &now, const ros::Duration &timeout) const;
 
-  /// isVisible() simply returns status of this' BoolProperty
-  bool isVisible() const {return this->getBool();}
-  /// enabled status of Property
-  bool isEnabled() const {return enabled_;}
+	/// isVisible() simply returns status of this' BoolProperty
+	bool isVisible() const { return this->getBool(); }
+	/// enabled status of Property
+	bool isEnabled() const { return enabled_; }
 
-  void setColorMap(const ColorMap* color_map);
-  void setMode(::tactile::TactileValue::Mode mode);
-  void setAccumulationMode(::tactile::TactileValueArray::AccMode mode, bool mean);
-  void setMeanLambda (float fLambda) {values_.setMeanLambda(fLambda);}
-  void setRangeLambda (float fLambda) {values_.setRangeLambda(fLambda);}
-  void setReleaseDecay (float fDecay) {values_.setReleaseDecay(fDecay);}
+	void setColorMap(const ColorMap *color_map);
+	void setMode(::tactile::TactileValue::Mode mode);
+	void setAccumulationMode(::tactile::TactileValueArray::AccMode mode, bool mean);
+	void setMeanLambda(float fLambda) { values_.setMeanLambda(fLambda); }
+	void setRangeLambda(float fLambda) { values_.setRangeLambda(fLambda); }
+	void setReleaseDecay(float fDecay) { values_.setReleaseDecay(fDecay); }
 
-  // accessor functions
-  const QString &getGroup() const {return group_;}
-  void  setGroup(const QString &group) {group_ = group;}
-  const std::string &getLinkFrame() const {return frame_;}
-  void  setTFPrefix(const std::string &tf_prefix);
+	// accessor functions
+	const QString &getGroup() const { return group_; }
+	void setGroup(const QString &group) { group_ = group; }
+	const std::string &getLinkFrame() const { return frame_; }
+	void setTFPrefix(const std::string &tf_prefix);
 
 public Q_SLOTS:
-  virtual void onVisibleChanged();
-  void setVisible(bool visible);
-  void setEnabled(bool enabled);
+	virtual void onVisibleChanged();
+	void setVisible(bool visible);
+	void setEnabled(bool enabled);
 
 protected:
-  float mapValue(const::tactile::TactileValue &value);
-  QColor mapColor(float value);
-  void updateRange(const ros::Time &stamp);
+	float mapValue(const ::tactile::TactileValue &value);
+	QColor mapColor(float value);
+	void updateRange(const ros::Time &stamp);
 
 protected Q_SLOTS:
-  void setRawRangeFromProperty();
+	void setRawRangeFromProperty();
 
 protected:
-  rviz::Display *owner_;
-  rviz::DisplayContext *context_;
-  Ogre::SceneNode *scene_node_;
+	rviz::Display *owner_;
+	rviz::DisplayContext *context_;
+	Ogre::SceneNode *scene_node_;
 
-  QString group_;  // display group
-  std::string frame_;  // frame this sensor is attached to
-  std::string tf_prefix_;
-  geometry_msgs::Pose pose_; // pose relative to this frame_
+	QString group_;  // display group
+	std::string frame_;  // frame this sensor is attached to
+	std::string tf_prefix_;
+	geometry_msgs::Pose pose_;  // pose relative to this frame_
 
-  ::tactile::TactileValueArray values_;  /// tactile values
-  ros::Time last_update_time_;
+	::tactile::TactileValueArray values_;  /// tactile values
+	ros::Time last_update_time_;
 
-  const ColorMap *color_map_;
-  ::tactile::TactileValue::Mode mode_;
-  ::tactile::TactileValueArray::AccMode acc_mode_;
-  bool acc_mean_;
+	const ColorMap *color_map_;
+	::tactile::TactileValue::Mode mode_;
+	::tactile::TactileValueArray::AccMode acc_mode_;
+	bool acc_mean_;
 
-  ::tactile::Range raw_range_;
-  RangeProperty *range_property_;
-  rviz::FloatProperty *acc_value_property_;
+	::tactile::Range raw_range_;
+	RangeProperty *range_property_;
+	rviz::FloatProperty *acc_value_property_;
 
-  bool enabled_;
+	bool enabled_;
 };
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

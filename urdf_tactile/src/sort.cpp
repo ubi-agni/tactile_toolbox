@@ -38,111 +38,139 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
-
 namespace urdf {
 namespace tactile {
 
-enum SortKey {byGroup, byChannel};
-template <SortKey key> const std::string& get(const urdf::SensorConstSharedPtr& sensor);
-template <> const std::string& get<byGroup>(const urdf::SensorConstSharedPtr& sensor)
+enum SortKey
 {
-  return sensor->group_;
+	byGroup,
+	byChannel
+};
+template <SortKey key>
+const std::string &get(const urdf::SensorConstSharedPtr &sensor);
+template <>
+const std::string &get<byGroup>(const urdf::SensorConstSharedPtr &sensor)
+{
+	return sensor->group_;
 }
-template <> const std::string& get<byChannel>(const urdf::SensorConstSharedPtr& sensor)
+template <>
+const std::string &get<byChannel>(const urdf::SensorConstSharedPtr &sensor)
 {
-  return tactile_sensor_cast(*sensor).channel_;
+	return tactile_sensor_cast(*sensor).channel_;
 }
 
-
-template <typename Result> Sensors& getOrInsertEntry(Result &result, const std::string &name);
-template <> Sensors& getOrInsertEntry<SensorsMap>(SensorsMap &result, const std::string &name)
+template <typename Result>
+Sensors &getOrInsertEntry(Result &result, const std::string &name);
+template <>
+Sensors &getOrInsertEntry<SensorsMap>(SensorsMap &result, const std::string &name)
 {
-  return result.insert(std::make_pair(name, Sensors())).first->second;
+	return result.insert(std::make_pair(name, Sensors())).first->second;
 }
-template <> Sensors& getOrInsertEntry<SensorsTree>(SensorsTree &parent, const std::string &name)
+template <>
+Sensors &getOrInsertEntry<SensorsTree>(SensorsTree &parent, const std::string &name)
 {
-  std::vector<std::string> names;
-  SensorsTree &node = parent;
-  boost::algorithm::split(names, name, boost::algorithm::is_any_of("/"), boost::token_compress_on);
-  for (auto it = names.begin(), end = names.end(); it != end; ++it) {
-    node = node.children.insert(std::make_pair(*it, SensorsTree())).first->second;
-  }
-  return node;
+	std::vector<std::string> names;
+	SensorsTree &node = parent;
+	boost::algorithm::split(names, name, boost::algorithm::is_any_of("/"), boost::token_compress_on);
+	for (auto it = names.begin(), end = names.end(); it != end; ++it) {
+		node = node.children.insert(std::make_pair(*it, SensorsTree())).first->second;
+	}
+	return node;
 }
 
 template <typename Result, SortKey key>
 Result sort(const SensorMap &sensors)
 {
-  Result result;
+	Result result;
 
-  for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
-  {
-    TactileSensorSharedPtr tactile = tactile_sensor_cast(it->second);
-    if (!tactile) continue;  // some other sensor than tactile
+	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
+		TactileSensorSharedPtr tactile = tactile_sensor_cast(it->second);
+		if (!tactile)
+			continue;  // some other sensor than tactile
 
-    Sensors &g = getOrInsertEntry<Result>(result, get<key>(it->second));
-    if (tactile->array_) g.arrays.push_back(it);
-    else if (tactile->taxels_.size() > 0) g.taxels.push_back(it);
-  }
-  return result;
+		Sensors &g = getOrInsertEntry<Result>(result, get<key>(it->second));
+		if (tactile->array_)
+			g.arrays.push_back(it);
+		else if (tactile->taxels_.size() > 0)
+			g.taxels.push_back(it);
+	}
+	return result;
 }
 
-SensorsMap sortByGroups(const SensorMap &sensors) { return sort<SensorsMap, byGroup>(sensors); }
-SensorsTree sortByGroupsHierarchical(const SensorMap &sensors) { return sort<SensorsTree, byGroup>(sensors); }
-SensorsMap sortByChannels(const SensorMap &sensors) { return sort<SensorsMap, byChannel>(sensors); }
+SensorsMap sortByGroups(const SensorMap &sensors)
+{
+	return sort<SensorsMap, byGroup>(sensors);
+}
+SensorsTree sortByGroupsHierarchical(const SensorMap &sensors)
+{
+	return sort<SensorsTree, byGroup>(sensors);
+}
+SensorsMap sortByChannels(const SensorMap &sensors)
+{
+	return sort<SensorsMap, byChannel>(sensors);
+}
 
 /******************************************************************************
  * retrieving taxels
  ******************************************************************************/
-taxel_list& getTaxels(const iterator_list &sensors, taxel_list &target)
+taxel_list &getTaxels(const iterator_list &sensors, taxel_list &target)
 {
-  for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-    const urdf::SensorConstSharedPtr &sensor = (*it)->second;
-    for (auto taxel_it = TaxelInfoIterator::begin(sensor), end = TaxelInfoIterator::end(sensor);
-         taxel_it != end; ++taxel_it) {
-      target.push_back(taxel_it);
-    }
-  }
-  return target;
+	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
+		const urdf::SensorConstSharedPtr &sensor = (*it)->second;
+		for (auto taxel_it = TaxelInfoIterator::begin(sensor), end = TaxelInfoIterator::end(sensor); taxel_it != end;
+		     ++taxel_it) {
+			target.push_back(taxel_it);
+		}
+	}
+	return target;
 }
 
-taxel_list& getTaxels(const Sensors &sensors, taxel_list &target)
+taxel_list &getTaxels(const Sensors &sensors, taxel_list &target)
 {
-  getTaxels(sensors.taxels, target);
-  getTaxels(sensors.arrays, target);
-  return target;
+	getTaxels(sensors.taxels, target);
+	getTaxels(sensors.arrays, target);
+	return target;
 }
 
-TaxelsMap& getTaxels(const SensorsMap &sensors, TaxelsMap &target)
+TaxelsMap &getTaxels(const SensorsMap &sensors, TaxelsMap &target)
 {
-  for (auto sensor_it = sensors.begin(), end = sensors.end(); sensor_it != end; ++sensor_it)
-  {
-    auto tgt = target.insert(std::make_pair(sensor_it->first, TaxelsMap::mapped_type())).first->second;
-    getTaxels(sensor_it->second, tgt);
-  }
-  return target;
+	for (auto sensor_it = sensors.begin(), end = sensors.end(); sensor_it != end; ++sensor_it) {
+		auto tgt = target.insert(std::make_pair(sensor_it->first, TaxelsMap::mapped_type())).first->second;
+		getTaxels(sensor_it->second, tgt);
+	}
+	return target;
 }
 
 // common template for all type combinations
 template <typename TargetType, typename SourceType>
-TargetType getTaxels(const SourceType &source) {
-  TargetType target;
-  getTaxels(source, target);
-  return target;
+TargetType getTaxels(const SourceType &source)
+{
+	TargetType target;
+	getTaxels(source, target);
+	return target;
 }
-taxel_list getTaxels(const iterator_list &sensors) { return getTaxels<taxel_list, iterator_list>(sensors); }
-taxel_list getTaxels(const Sensors &sensors) { return getTaxels<taxel_list, Sensors>(sensors); }
-TaxelsMap getTaxels(const SensorsMap &sensors) { return getTaxels<TaxelsMap, SensorsMap>(sensors); }
+taxel_list getTaxels(const iterator_list &sensors)
+{
+	return getTaxels<taxel_list, iterator_list>(sensors);
+}
+taxel_list getTaxels(const Sensors &sensors)
+{
+	return getTaxels<taxel_list, Sensors>(sensors);
+}
+TaxelsMap getTaxels(const SensorsMap &sensors)
+{
+	return getTaxels<TaxelsMap, SensorsMap>(sensors);
+}
 
 size_t maxIndex(const taxel_list &taxels)
 {
-  size_t m=0;
-  for (auto it = taxels.begin(), end = taxels.end(); it != end; ++it) {
-    if (index(*it) > m) m = index(*it);
-  }
-  return m;
+	size_t m = 0;
+	for (auto it = taxels.begin(), end = taxels.end(); it != end; ++it) {
+		if (index(*it) > m)
+			m = index(*it);
+	}
+	return m;
 }
 
-
-} // end namespace tactile
-} // end namespace urdf
+}  // end namespace tactile
+}  // end namespace urdf

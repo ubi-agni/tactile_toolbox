@@ -46,37 +46,35 @@ namespace tactile {
 class TaxelEntity;
 typedef boost::shared_ptr<TaxelEntity> TaxelEntityPtr;
 
-
 class TactileTaxelsVisual : public TactileVisualBase
 {
-  Q_OBJECT
+	Q_OBJECT
 public:
-  TactileTaxelsVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-                      const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels,
-                      rviz::Display *owner, rviz::DisplayContext *context,
-                      Ogre::SceneNode* parent_node, Property *parent_property=0);
+	TactileTaxelsVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
+	                    const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels, rviz::Display *owner,
+	                    rviz::DisplayContext *context, Ogre::SceneNode *parent_node, Property *parent_property = 0);
 
 protected:
-  void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) override;
-  void updateVisual() override;
+	void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) override;
+	void updateVisual() override;
 
 #if ENABLE_ARROWS
 protected Q_SLOTS:
-  void onVisibleChanged();
-  void onArrowsEnabled();
+	void onVisibleChanged();
+	void onArrowsEnabled();
 #endif
 
 protected:
-  std::vector<unsigned int> mapping_;  /// mapping raw data indeces to taxels_
-  std::vector<TaxelEntityPtr> taxels_;
+	std::vector<unsigned int> mapping_;  /// mapping raw data indeces to taxels_
+	std::vector<TaxelEntityPtr> taxels_;
 
 #if ENABLE_ARROWS
-  rviz::BoolProperty *arrows_property_;
-  rviz::FloatProperty *arrows_scale_property_;
-  Ogre::SceneNode *arrows_node_;
-  std::vector<rviz::ArrowPtr> arrows_;
+	rviz::BoolProperty *arrows_property_;
+	rviz::FloatProperty *arrows_scale_property_;
+	Ogre::SceneNode *arrows_node_;
+	std::vector<rviz::ArrowPtr> arrows_;
 #endif
 };
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

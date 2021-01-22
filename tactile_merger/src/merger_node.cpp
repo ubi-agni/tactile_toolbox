@@ -34,8 +34,8 @@
 
 static bool have_new_data = false;
 
-void message_handler(tactile::Merger &merger,
-                     const tactile_msgs::TactileStateConstPtr &msg) {
+void message_handler(tactile::Merger &merger, const tactile_msgs::TactileStateConstPtr &msg)
+{
 	have_new_data = true;
 	for (auto it = msg->sensors.begin(), end = msg->sensors.end(); it != end; ++it) {
 		merger.update(msg->header.stamp, it->name, it->values.begin(), it->values.end());
@@ -53,18 +53,17 @@ int main(int argc, char *argv[])
 
 	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
 
-	const boost::function<void (const tactile_msgs::TactileStateConstPtr&)>
-	      callback = boost::bind(message_handler, boost::ref(merger), _1);
+	const boost::function<void(const tactile_msgs::TactileStateConstPtr &)> callback =
+	    boost::bind(message_handler, boost::ref(merger), _1);
 	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
 	ros::Time last_update_;
 	ros::Rate rate(nh_priv.param("rate", 100.));
 	bool no_clustering = nh_priv.param("no_clustering", false);
-	while (ros::ok())
-	{
+	while (ros::ok()) {
 		ros::spinOnce();
 		ros::Time now = ros::Time::now();
-		if(now < last_update_) {
+		if (now < last_update_) {
 			ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Resetting data.");
 			merger.reset();
 			have_new_data = false;

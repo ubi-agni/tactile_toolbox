@@ -31,34 +31,34 @@
 namespace rviz {
 namespace tactile {
 
-GroupProperty::GroupProperty(const QString &name, bool default_value, const QString &description,
-                             Property *parent, const char *changed_slot, QObject *receiver)
+GroupProperty::GroupProperty(const QString &name, bool default_value, const QString &description, Property *parent,
+                             const char *changed_slot, QObject *receiver)
   : rviz::BoolProperty(name, default_value, description, parent, changed_slot, receiver)
-{
-}
+{}
 
 void GroupProperty::setBoolRecursively(bool new_value)
 {
-  blockSignals(true);
-  setValue(new_value);
-  blockSignals(false);
-  for (int i=0, end=numChildren(); i < end; ++i) {
-    GroupProperty *child = dynamic_cast<GroupProperty*>(childAtUnchecked(i));
-    if (child)
-      child->setBoolRecursively(new_value);
-  }
+	blockSignals(true);
+	setValue(new_value);
+	blockSignals(false);
+	for (int i = 0, end = numChildren(); i < end; ++i) {
+		GroupProperty *child = dynamic_cast<GroupProperty *>(childAtUnchecked(i));
+		if (child)
+			child->setBoolRecursively(new_value);
+	}
 }
 
 void GroupProperty::removeEmptyChildren()
 {
-  for (int i=numChildren()-1; i >= 0; --i) {
-    GroupProperty *child = dynamic_cast<GroupProperty*>(childAtUnchecked(i));
-    if (!child) continue;
-    child->removeEmptyChildren();
-    if (child->numChildren() == 0)
-      delete child;
-  }
+	for (int i = numChildren() - 1; i >= 0; --i) {
+		GroupProperty *child = dynamic_cast<GroupProperty *>(childAtUnchecked(i));
+		if (!child)
+			continue;
+		child->removeEmptyChildren();
+		if (child->numChildren() == 0)
+			delete child;
+	}
 }
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

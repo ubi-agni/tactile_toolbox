@@ -36,20 +36,16 @@ namespace tactile {
 // BoolProperty which propagates changed value down to children
 class GroupProperty : public rviz::BoolProperty
 {
-  Q_OBJECT
+	Q_OBJECT
 public:
-  GroupProperty(const QString& name = QString(),
-                bool default_value = true,
-                const QString& description = QString(),
-                Property* parent = 0,
-                const char *changed_slot = 0,
-                QObject* receiver = 0);
+	GroupProperty(const QString& name = QString(), bool default_value = true, const QString& description = QString(),
+	              Property* parent = 0, const char* changed_slot = 0, QObject* receiver = 0);
 
-  /** recursively set new_value for all GroupProperty children,
-   *  but block signals */
-  void setBoolRecursively(bool new_value);
-  void removeEmptyChildren();
+	/** recursively set new_value for all GroupProperty children,
+	 *  but block signals */
+	void setBoolRecursively(bool new_value);
+	void removeEmptyChildren();
 };
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

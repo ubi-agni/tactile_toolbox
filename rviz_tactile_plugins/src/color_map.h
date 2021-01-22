@@ -34,9 +34,9 @@ namespace tactile {
 class ColorMap
 {
 public:
-	ColorMap(float fMin=0, float fMax=1);
+	ColorMap(float fMin = 0, float fMax = 1);
 
-	void init(float fMin=0, float fMax=1);
+	void init(float fMin = 0, float fMax = 1);
 	void append(const QColor &c);
 	void append(const QList<QColor> &cols);
 	void append(const QStringList &names);
@@ -49,5 +49,5 @@ private:
 	float fMin, fMax;
 };
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

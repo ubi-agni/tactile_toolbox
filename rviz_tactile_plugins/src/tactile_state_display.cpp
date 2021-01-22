@@ -56,319 +56,318 @@ using namespace urdf::tactile;
 namespace rviz {
 namespace tactile {
 
-TactileStateDisplay::TactileStateDisplay()
-  : mode_(::tactile::TactileValue::rawCurrent)
+TactileStateDisplay::TactileStateDisplay() : mode_(::tactile::TactileValue::rawCurrent)
 {
-  topic_property_ = new rviz::RosTopicProperty
-      ("Topic", "/tactile_states", "tactile_msgs/TactileState", "",
-       this, SLOT(onTopicChanged()));
+	topic_property_ = new rviz::RosTopicProperty("Topic", "/tactile_states", "tactile_msgs/TactileState", "", this,
+	                                             SLOT(onTopicChanged()));
 
-  robot_description_property_ = new rviz::StringProperty
-      (ROBOT_DESC, "robot_description",
-       ROBOT_DESC + " defining tactile sensors",
-       this, SLOT(onRobotDescriptionChanged()));
+	robot_description_property_ =
+	    new rviz::StringProperty(ROBOT_DESC, "robot_description", ROBOT_DESC + " defining tactile sensors", this,
+	                             SLOT(onRobotDescriptionChanged()));
 
-  tf_prefix_property_ = new StringProperty
-      ("TF Prefix", "",
-       "Usually the robot link names are the same as the tf frame names. "
-       "This option allows you to set a prefix. Mainly useful for multi-robot situations.",
-       this, SLOT(onTFPrefixChanged()));
+	tf_prefix_property_ =
+	    new StringProperty("TF Prefix", "",
+	                       "Usually the robot link names are the same as the tf frame names. "
+	                       "This option allows you to set a prefix. Mainly useful for multi-robot situations.",
+	                       this, SLOT(onTFPrefixChanged()));
 
-  mode_property_ = new rviz::EnumProperty
-      ("display mode", QString::fromStdString(::tactile::TactileValue::getModeName(mode_)),
-       "", this, SLOT(onModeChanged()));
+	mode_property_ =
+	    new rviz::EnumProperty("display mode", QString::fromStdString(::tactile::TactileValue::getModeName(mode_)), "",
+	                           this, SLOT(onModeChanged()));
 
-  mean_lambda_property_ = new rviz::FloatProperty
-      ("mean lambda", 0.7, "sliding average discount for mean computation",
-       mode_property_, SLOT(onModeParamsChanged()), this);
-  mean_lambda_property_->setMin(0.0); mean_lambda_property_->setMax(1.0);
+	mean_lambda_property_ = new rviz::FloatProperty("mean lambda", 0.7, "sliding average discount for mean computation",
+	                                                mode_property_, SLOT(onModeParamsChanged()), this);
+	mean_lambda_property_->setMin(0.0);
+	mean_lambda_property_->setMax(1.0);
 
-  range_lambda_property_ = new rviz::FloatProperty
-      ("range lambda", 0.9995, "sliding average discount for range computation",
-       mode_property_, SLOT(onModeParamsChanged()), this);
-  range_lambda_property_->setMin(0.0); range_lambda_property_->setMax(1.0);
+	range_lambda_property_ =
+	    new rviz::FloatProperty("range lambda", 0.9995, "sliding average discount for range computation", mode_property_,
+	                            SLOT(onModeParamsChanged()), this);
+	range_lambda_property_->setMin(0.0);
+	range_lambda_property_->setMax(1.0);
 
-  release_decay_property_ = new rviz::FloatProperty
-      ("release decay", 0.05, "linear decay for release",
-       mode_property_, SLOT(onModeParamsChanged()), this);
-  release_decay_property_->setMin(0.0); release_decay_property_->setMax(1.0);
+	release_decay_property_ = new rviz::FloatProperty("release decay", 0.05, "linear decay for release", mode_property_,
+	                                                  SLOT(onModeParamsChanged()), this);
+	release_decay_property_->setMin(0.0);
+	release_decay_property_->setMax(1.0);
 
-  timeout_property_ = new rviz::FloatProperty
-      ("display timeout", 1, "", this);
+	timeout_property_ = new rviz::FloatProperty("display timeout", 1, "", this);
 
-  sensors_property_ = new GroupProperty("sensors", true, "", this,
-                                        SLOT(onAllVisibleChanged()));
-  sensors_property_->collapse();
+	sensors_property_ = new GroupProperty("sensors", true, "", this, SLOT(onAllVisibleChanged()));
+	sensors_property_->collapse();
 
-  // init mode_property_
-  for (unsigned int m = ::tactile::TactileValue::rawCurrent, end = ::tactile::TactileValue::lastMode; m != end; ++m) {
-    mode_property_->addOptionStd(::tactile::TactileValue::getModeName(::tactile::TactileValue::Mode(m)), m);
-  }
+	// init mode_property_
+	for (unsigned int m = ::tactile::TactileValue::rawCurrent, end = ::tactile::TactileValue::lastMode; m != end; ++m) {
+		mode_property_->addOptionStd(::tactile::TactileValue::getModeName(::tactile::TactileValue::Mode(m)), m);
+	}
 
-  // init color maps
-  QStringList colorNames;
-  abs_color_map_.init(0,1);
-  colorNames << "black" << "lime" << "yellow" << "red";
-  abs_color_map_.append(colorNames);
+	// init color maps
+	QStringList colorNames;
+	abs_color_map_.init(0, 1);
+	colorNames << "black"
+	           << "lime"
+	           << "yellow"
+	           << "red";
+	abs_color_map_.append(colorNames);
 
-  rel_color_map_.init(-1,1);
-  colorNames.clear(); colorNames << "red" << "black" << "lime";
-  rel_color_map_.append(colorNames);
+	rel_color_map_.init(-1, 1);
+	colorNames.clear();
+	colorNames << "red"
+	           << "black"
+	           << "lime";
+	rel_color_map_.append(colorNames);
 }
 
 TactileStateDisplay::~TactileStateDisplay()
 {
-  unsubscribe();
+	unsubscribe();
 }
 
 void TactileStateDisplay::subscribe()
 {
-  if (!isEnabled() ||
-      topic_property_->getTopicStd().empty() ||
-      sensors_.empty())
-    return;
+	if (!isEnabled() || topic_property_->getTopicStd().empty() || sensors_.empty())
+		return;
 
-  try {
-    last_msg_ = ros::Time();
-    setStatus(StatusProperty::Warn, "Topic", "No message received yet.");
-    sub_ = nh_.subscribe(topic_property_->getTopicStd(), 10,
-                         &TactileStateDisplay::processMessage, this);
-  } catch(const ros::Exception& e) {
-    setStatus(StatusProperty::Error, "Topic", e.what());
-  }
+	try {
+		last_msg_ = ros::Time();
+		setStatus(StatusProperty::Warn, "Topic", "No message received yet.");
+		sub_ = nh_.subscribe(topic_property_->getTopicStd(), 10, &TactileStateDisplay::processMessage, this);
+	} catch (const ros::Exception &e) {
+		setStatus(StatusProperty::Error, "Topic", e.what());
+	}
 }
 
 void TactileStateDisplay::unsubscribe()
 {
-  sub_.shutdown();
+	sub_.shutdown();
 }
 
-void TactileStateDisplay::setTopic(const QString &topic, const QString& /*datatype*/)
+void TactileStateDisplay::setTopic(const QString &topic, const QString & /*datatype*/)
 {
-  topic_property_->setString(topic);
+	topic_property_->setString(topic);
 }
 
-void TactileStateDisplay::onInitialize()
-{
-}
+void TactileStateDisplay::onInitialize() {}
 
 void TactileStateDisplay::reset()
 {
-  // amongst others, this method is called when time was reset
-  ros::Time now = ros::Time::now();
-  if(now < last_update_) {
-    ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing taxels.");
-    for (auto& sensor : sensors_)
-      sensor.second->resetTime();  // expire the sensor data
-  } else
-    // If time was reset, don't clear display statuses via Display::reset()
-    Display::reset();
+	// amongst others, this method is called when time was reset
+	ros::Time now = ros::Time::now();
+	if (now < last_update_) {
+		ROS_WARN_STREAM("Detected jump back in time of " << (last_update_ - now).toSec() << "s. Clearing taxels.");
+		for (auto &sensor : sensors_)
+			sensor.second->resetTime();  // expire the sensor data
+	} else
+		// If time was reset, don't clear display statuses via Display::reset()
+		Display::reset();
 }
 
 void TactileStateDisplay::resetTactile()
 {
-  // reset tactile_filters
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it)
-    it->second->reset();
+	// reset tactile_filters
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it)
+		it->second->reset();
 }
 
 void TactileStateDisplay::onEnable()
 {
-  onRobotDescriptionChanged();
+	onRobotDescriptionChanged();
 }
 
 void TactileStateDisplay::onDisable()
 {
-  unsubscribe();
-  reset();
-  resetTactile();
+	unsubscribe();
+	reset();
+	resetTactile();
 }
 
 void TactileStateDisplay::onTopicChanged()
 {
-  unsubscribe();
-  subscribe();
-  context_->queueRender();
+	unsubscribe();
+	subscribe();
+	context_->queueRender();
 }
 
-GroupProperty* TactileStateDisplay::getGroupProperty(const QString &path, GroupProperty *parent)
+GroupProperty *TactileStateDisplay::getGroupProperty(const QString &path, GroupProperty *parent)
 {
-  assert(parent);
-  QStringList names = path.split("/", QString::SkipEmptyParts);
-  Q_FOREACH(const QString &name, names) {
-    GroupProperty *child = 0;
-    for(int i=0, end=parent->numChildren(); i < end && !child; ++i) {
-      rviz::Property *prop = parent->childAtUnchecked(i);
-      if (prop->getName() != name) continue;
-      child = dynamic_cast<GroupProperty*>(prop);
-    }
-    if (child)
-      parent = child;
-    else
-      parent = new GroupProperty(name, parent->getBool(), "", parent,
-                                 SLOT(onAllVisibleChanged()), this);
-  }
-  return parent;
+	assert(parent);
+	QStringList names = path.split("/", QString::SkipEmptyParts);
+	Q_FOREACH (const QString &name, names) {
+		GroupProperty *child = 0;
+		for (int i = 0, end = parent->numChildren(); i < end && !child; ++i) {
+			rviz::Property *prop = parent->childAtUnchecked(i);
+			if (prop->getName() != name)
+				continue;
+			child = dynamic_cast<GroupProperty *>(prop);
+		}
+		if (child)
+			parent = child;
+		else
+			parent = new GroupProperty(name, parent->getBool(), "", parent, SLOT(onAllVisibleChanged()), this);
+	}
+	return parent;
 }
 
 void TactileStateDisplay::onRobotDescriptionChanged()
 {
-  // save settings of old sensors to restore them later
-  std::map<QString, rviz::Config> configs;
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    rviz::Config config;
-    it->second->save(config);
-    configs[it->second->getName()] = config;
-    delete it->second;
-  }
+	// save settings of old sensors to restore them later
+	std::map<QString, rviz::Config> configs;
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+		rviz::Config config;
+		it->second->save(config);
+		configs[it->second->getName()] = config;
+		delete it->second;
+	}
 
-  sensors_.clear();
-  urdf::SensorMap sensors;
-  const std::string &tf_prefix = tf_prefix_property_->getStdString();
+	sensors_.clear();
+	urdf::SensorMap sensors;
+	const std::string &tf_prefix = tf_prefix_property_->getStdString();
 
-  try {
-    sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(),
-                                          urdf::getSensorParser("tactile"));
+	try {
+		sensors =
+		    urdf::parseSensorsFromParam(robot_description_property_->getStdString(), urdf::getSensorParser("tactile"));
 
-    // create a TactileVisual for each tactile sensor listed in the URDF model
-    for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it)
-    {
-      urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
-      if (!sensor) continue;  // some other sensor than tactile
+		// create a TactileVisual for each tactile sensor listed in the URDF model
+		for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
+			urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
+			if (!sensor)
+				continue;  // some other sensor than tactile
 
-      TactileVisualBase *visual=0;
-      if (sensor->array_) {
-        visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_,
-                                        sensor->array_, this, context_, scene_node_);
-      } else if (sensor->taxels_.size()) {
-        visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_,
-                                         sensor->taxels_, this, context_, scene_node_);
-      }
-      if (visual) {
-        GroupProperty *group_property
-            = getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
-        group_property->addChild(visual);
-        visual->setGroup(QString::fromStdString(it->second->group_));
-        visual->setTFPrefix(tf_prefix);
-        sensors_.insert(std::make_pair(sensor->channel_,visual));
+			TactileVisualBase *visual = 0;
+			if (sensor->array_) {
+				visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->array_,
+				                                this, context_, scene_node_);
+			} else if (sensor->taxels_.size()) {
+				visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->taxels_,
+				                                 this, context_, scene_node_);
+			}
+			if (visual) {
+				GroupProperty *group_property =
+				    getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
+				group_property->addChild(visual);
+				visual->setGroup(QString::fromStdString(it->second->group_));
+				visual->setTFPrefix(tf_prefix);
+				sensors_.insert(std::make_pair(sensor->channel_, visual));
 
-        // restore sensor settings (if available)
-        auto config = configs.find(visual->getName());
-        if (config != configs.end())
-          visual->load(config->second);
-      }
-    }
-    if (sensors_.size())
-      setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("Found %1 tactile sensors").arg(sensors_.size()));
-    else
-      setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "No tactile sensors found");
-  } catch (const std::exception &e) {
-    setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
-  }
+				// restore sensor settings (if available)
+				auto config = configs.find(visual->getName());
+				if (config != configs.end())
+					visual->load(config->second);
+			}
+		}
+		if (sensors_.size())
+			setStatus(rviz::StatusProperty::Ok, ROBOT_DESC, QString("Found %1 tactile sensors").arg(sensors_.size()));
+		else
+			setStatus(rviz::StatusProperty::Warn, ROBOT_DESC, "No tactile sensors found");
+	} catch (const std::exception &e) {
+		setStatus(rviz::StatusProperty::Error, ROBOT_DESC, e.what());
+	}
 
-  sensors_property_->removeEmptyChildren();
+	sensors_property_->removeEmptyChildren();
 
-  onModeChanged();
-  onModeParamsChanged();
-  subscribe();
-  context_->queueRender();
+	onModeChanged();
+	onModeParamsChanged();
+	subscribe();
+	context_->queueRender();
 }
 
 void TactileStateDisplay::onTFPrefixChanged()
 {
-  const std::string &tf_prefix = tf_prefix_property_->getStdString();
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    it->second->setTFPrefix(tf_prefix);
-  }
-  clearStatuses();
-  context_->queueRender();
+	const std::string &tf_prefix = tf_prefix_property_->getStdString();
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+		it->second->setTFPrefix(tf_prefix);
+	}
+	clearStatuses();
+	context_->queueRender();
 }
 
 void TactileStateDisplay::onModeChanged()
 {
-  mode_ = ::tactile::TactileValue::getMode(mode_property_->getStdString());
-  ColorMap *color_map = 0;
+	mode_ = ::tactile::TactileValue::getMode(mode_property_->getStdString());
+	ColorMap *color_map = 0;
 
-  // choose color map based on mode
-  switch (mode_) {
-    case ::tactile::TactileValue::dynCurrentRelease:
-    case ::tactile::TactileValue::dynMeanRelease:
-      color_map = &rel_color_map_;
-      break;
-    default:
-      color_map = &abs_color_map_;
-      break;
-  }
+	// choose color map based on mode
+	switch (mode_) {
+		case ::tactile::TactileValue::dynCurrentRelease:
+		case ::tactile::TactileValue::dynMeanRelease:
+			color_map = &rel_color_map_;
+			break;
+		default:
+			color_map = &abs_color_map_;
+			break;
+	}
 
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    it->second->setMode(mode_);
-    it->second->setColorMap(color_map);
-  }
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+		it->second->setMode(mode_);
+		it->second->setColorMap(color_map);
+	}
 }
 
 void TactileStateDisplay::onModeParamsChanged()
 {
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    it->second->setMeanLambda(mean_lambda_property_->getFloat());
-    it->second->setRangeLambda(range_lambda_property_->getFloat());
-    it->second->setReleaseDecay(release_decay_property_->getFloat());
-  }
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+		it->second->setMeanLambda(mean_lambda_property_->getFloat());
+		it->second->setRangeLambda(range_lambda_property_->getFloat());
+		it->second->setReleaseDecay(release_decay_property_->getFloat());
+	}
 }
 
 void TactileStateDisplay::onAllVisibleChanged()
 {
-  GroupProperty *parent = dynamic_cast<GroupProperty*>(sender());
-  parent->setBoolRecursively(parent->getBool());
+	GroupProperty *parent = dynamic_cast<GroupProperty *>(sender());
+	parent->setBoolRecursively(parent->getBool());
 
-  // once hide/show the actual sensors in the end
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    it->second->onVisibleChanged();
-  }
+	// once hide/show the actual sensors in the end
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+		it->second->onVisibleChanged();
+	}
 }
 
 // This is our callback to handle an incoming message.
-void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::ConstPtr& msg)
+void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::ConstPtr &msg)
 {
-  last_msg_ = ros::Time::now();
-  if (msg->header.stamp + ros::Duration(timeout_property_->getFloat()) < last_msg_)
-    setStatus(StatusProperty::Error, "Topic", "Received an outdated msg");
-  else
-    setStatus(StatusProperty::Ok, "Topic", "Ok");
+	last_msg_ = ros::Time::now();
+	if (msg->header.stamp + ros::Duration(timeout_property_->getFloat()) < last_msg_)
+		setStatus(StatusProperty::Error, "Topic", "Received an outdated msg");
+	else
+		setStatus(StatusProperty::Ok, "Topic", "Ok");
 
-  for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor)
-  {
-    const std::string &channel = sensor->name;
-    auto range = sensors_.equal_range(channel);
-    for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
-      s->second->updateValues(msg->header.stamp, sensor->values);
-    }
-  }
+	for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor) {
+		const std::string &channel = sensor->name;
+		auto range = sensors_.equal_range(channel);
+		for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
+			s->second->updateValues(msg->header.stamp, sensor->values);
+		}
+	}
 }
 
 void TactileStateDisplay::update(float wall_dt, float ros_dt)
 {
-  if (!this->isEnabled()) return;
+	if (!this->isEnabled())
+		return;
 
-  Display::update(wall_dt, ros_dt);
+	Display::update(wall_dt, ros_dt);
 
-  ros::Time now = ros::Time::now();
-  ros::Duration timeout(timeout_property_->getFloat());
-  last_update_ = now;
-  if (!last_msg_.isZero() && last_msg_ + timeout < now)
-    setStatus(StatusProperty::Warn, "Topic", "No recent msg");
+	ros::Time now = ros::Time::now();
+	ros::Duration timeout(timeout_property_->getFloat());
+	last_update_ = now;
+	if (!last_msg_.isZero() && last_msg_ + timeout < now)
+		setStatus(StatusProperty::Warn, "Topic", "No recent msg");
 
-  for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-    TactileVisualBase &sensor = *it->second;
-    sensor.updateRangeProperty();
-    if (!sensor.isVisible()) continue;
+	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+		TactileVisualBase &sensor = *it->second;
+		sensor.updateRangeProperty();
+		if (!sensor.isVisible())
+			continue;
 
-    bool enabled = !sensor.expired(now, timeout) && sensor.updatePose();
-    sensor.setEnabled(enabled);
-    if (!enabled) continue;
+		bool enabled = !sensor.expired(now, timeout) && sensor.updatePose();
+		sensor.setEnabled(enabled);
+		if (!enabled)
+			continue;
 
-    sensor.updateVisual();
-  }
+		sensor.updateVisual();
+	}
 }
 
-} // end namespace tactile
-} // end namespace rviz
+}  // end namespace tactile
+}  // end namespace rviz

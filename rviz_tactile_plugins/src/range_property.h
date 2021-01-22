@@ -36,82 +36,79 @@ namespace rviz {
 namespace tactile {
 
 // double validator that allows for empty string too
-class EmptyOrDoubleValidator : public QDoubleValidator {
-  Q_OBJECT
+class EmptyOrDoubleValidator : public QDoubleValidator
+{
+	Q_OBJECT
 public:
-  EmptyOrDoubleValidator(QObject *parent) : QDoubleValidator(parent) {}
-  QValidator::State validate(QString &input, int &pos) const {
-    if (input.isEmpty()) return QValidator::Acceptable;
-    return QDoubleValidator::validate(input, pos);
-  }
+	EmptyOrDoubleValidator(QObject* parent) : QDoubleValidator(parent) {}
+	QValidator::State validate(QString& input, int& pos) const
+	{
+		if (input.isEmpty())
+			return QValidator::Acceptable;
+		return QDoubleValidator::validate(input, pos);
+	}
 };
 
-class RangeFloatProperty : public rviz::FloatProperty {
-  friend class RangeProperty;
-  Q_OBJECT
+class RangeFloatProperty : public rviz::FloatProperty
+{
+	friend class RangeProperty;
+	Q_OBJECT
 public:
-   RangeFloatProperty (const QString& name = QString(), float fallback_value = 0,
-                       const QString& description = QString(), Property* parent = 0,
-                       const char *changed_slot = 0, QObject* receiver = 0);
-   bool  setValue(const QVariant& new_value) override;
-   float getFloat() const override {return value_;}
-   QVariant getViewData(int column, int role) const override;
-   bool  manuallyEdited() const {return shouldBeSaved();}
+	RangeFloatProperty(const QString& name = QString(), float fallback_value = 0, const QString& description = QString(),
+	                   Property* parent = 0, const char* changed_slot = 0, QObject* receiver = 0);
+	bool setValue(const QVariant& new_value) override;
+	float getFloat() const override { return value_; }
+	QVariant getViewData(int column, int role) const override;
+	bool manuallyEdited() const { return shouldBeSaved(); }
 
-   void load(const rviz::Config &config);
+	void load(const rviz::Config& config);
 
 protected:
-   QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option);
+	QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option);
 
 protected Q_SLOTS:
-   void setManuallyEdited() {
-      manually_edited_ = true;
-   }
+	void setManuallyEdited() { manually_edited_ = true; }
 
 Q_SIGNALS:
-   void edited();
+	void edited();
 
 protected:
-   float value_;
-   float fallback_value_;  // value to fallback on empty input
-   bool  manually_edited_; // indicate manual editing
+	float value_;
+	float fallback_value_;  // value to fallback on empty input
+	bool manually_edited_;  // indicate manual editing
 };
-
 
 class RangeProperty : public rviz::Property
 {
-  Q_OBJECT
+	Q_OBJECT
 public:
-  RangeProperty(const QString& name = QString(),
-                const QString& description = QString(),
-                Property* parent = 0,
-                const char *changed_slot = 0,
-                QObject* receiver = 0);
+	RangeProperty(const QString& name = QString(), const QString& description = QString(), Property* parent = 0,
+	              const char* changed_slot = 0, QObject* receiver = 0);
 
-  void  reset();
-  void  update(const ::tactile::Range &range);
-  unsigned int updateFlags() const {
-    return ((min_property_->manuallyEdited() ? 0u : 1u)) |
-           ((max_property_->manuallyEdited() ? 0u : 2u));
-  }
-  float min() const {return min_property_->getFloat();}
-  float max() const {return max_property_->getFloat();}
+	void reset();
+	void update(const ::tactile::Range& range);
+	unsigned int updateFlags() const
+	{
+		return ((min_property_->manuallyEdited() ? 0u : 1u)) | ((max_property_->manuallyEdited() ? 0u : 2u));
+	}
+	float min() const { return min_property_->getFloat(); }
+	float max() const { return max_property_->getFloat(); }
 
-  bool setValue(const QVariant &new_value);
-  void save(Config config) const;
-  void load(const Config &config);
+	bool setValue(const QVariant& new_value);
+	void save(Config config) const;
+	void load(const Config& config);
 
 protected Q_SLOTS:
-  bool updateFromChildren();
+	bool updateFromChildren();
 
 Q_SIGNALS:
-   void edited();
+	void edited();
 
 protected:
-  RangeFloatProperty *min_property_;
-  RangeFloatProperty *max_property_;
-  bool ignore_children_updates_;
+	RangeFloatProperty* min_property_;
+	RangeFloatProperty* max_property_;
+	bool ignore_children_updates_;
 };
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

@@ -40,60 +40,59 @@ namespace rviz {
 namespace tactile {
 
 TactileArrayVisual::TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-                                       const TactileArraySharedPtr &array,
-                                       rviz::Display *owner, DisplayContext *context,
-                                       Ogre::SceneNode *parent_node, rviz::Property *parent_property)
-   : TactileVisualBase(name, frame, origin, owner, context, parent_node, parent_property)
+                                       const TactileArraySharedPtr &array, rviz::Display *owner,
+                                       DisplayContext *context, Ogre::SceneNode *parent_node,
+                                       rviz::Property *parent_property)
+  : TactileVisualBase(name, frame, origin, owner, context, parent_node, parent_property)
 {
-  cloud_ = new rviz::PointCloud();
-  scene_node_->attachObject(cloud_);
-  cloud_->setRenderMode(rviz::PointCloud::RM_BOXES);
-  cloud_->setDimensions(array->size.x, array->size.y, 0.0f);
+	cloud_ = new rviz::PointCloud();
+	scene_node_->attachObject(cloud_);
+	cloud_->setRenderMode(rviz::PointCloud::RM_BOXES);
+	cloud_->setDimensions(array->size.x, array->size.y, 0.0f);
 
-  points_.resize(array->rows * array->cols);
-  values_.init(points_.size());
+	points_.resize(array->rows * array->cols);
+	values_.init(points_.size());
 
-  size_t idx = 0;
-  for (auto it = points_.begin(), end = points_.end(); it != end; ++it, ++idx) {
-    size_t row, col;
-    if (array->order == TactileArray::ROWMAJOR) {
-      row = idx / array->cols;
-      col = idx % array->cols;
-    } else {
-      row = idx % array->rows;
-      col = idx / array->rows;
-    }
-    it->position.x = row * array->spacing.x - array->offset.x;
-    it->position.y = col * array->spacing.y - array->offset.y;
-    it->position.z = 0;
-  }
+	size_t idx = 0;
+	for (auto it = points_.begin(), end = points_.end(); it != end; ++it, ++idx) {
+		size_t row, col;
+		if (array->order == TactileArray::ROWMAJOR) {
+			row = idx / array->cols;
+			col = idx % array->cols;
+		} else {
+			row = idx % array->rows;
+			col = idx / array->rows;
+		}
+		it->position.x = row * array->spacing.x - array->offset.x;
+		it->position.y = col * array->spacing.y - array->offset.y;
+		it->position.z = 0;
+	}
 }
 
-void TactileArrayVisual::updateValues(const ros::Time &stamp,
-                                      const sensor_msgs::ChannelFloat32::_values_type &values)
+void TactileArrayVisual::updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values)
 {
-  if (values.size() == values_.size()) {
-    values_.updateValues(values);
-    TactileVisualBase::updateRange(stamp);
-  } else {
-    ROS_ERROR_STREAM("invalid number of taxels for " << qPrintable(getName()));
-  }
+	if (values.size() == values_.size()) {
+		values_.updateValues(values);
+		TactileVisualBase::updateRange(stamp);
+	} else {
+		ROS_ERROR_STREAM("invalid number of taxels for " << qPrintable(getName()));
+	}
 }
 
 void TactileArrayVisual::updateVisual()
 {
-  auto p = points_.begin();
-  for (auto it = values_.begin(), end = values_.end(); it != end; ++it, ++p) {
-    const QColor &c = mapColor(mapValue(*it));
-    p->color.r = c.redF();
-    p->color.g = c.greenF();
-    p->color.b = c.blueF();
-    p->color.a = c.alphaF();
-  }
+	auto p = points_.begin();
+	for (auto it = values_.begin(), end = values_.end(); it != end; ++it, ++p) {
+		const QColor &c = mapColor(mapValue(*it));
+		p->color.r = c.redF();
+		p->color.g = c.greenF();
+		p->color.b = c.blueF();
+		p->color.a = c.alphaF();
+	}
 
-  cloud_->clear();
-  cloud_->addPoints(&points_.front(), points_.size());
+	cloud_->clear();
+	cloud_->addPoints(&points_.front(), points_.size());
 }
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

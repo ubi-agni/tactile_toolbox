@@ -7,11 +7,11 @@
 
 using namespace tactile;
 
-void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
+void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate)
+{
 	sensor_msgs::PointCloud2 msg;
 	bool send_empty = false;  // should we send an empty message?
-	while (ros::ok())
-	{
+	while (ros::ok()) {
 		ros::spinOnce();
 		{
 			boost::unique_lock<boost::mutex> lock(collector);
@@ -19,8 +19,7 @@ void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 			msg.header.frame_id = collector.targetFrame();
 			collector.clear();
 		}
-		if (!msg.data.empty() || send_empty)
-		{
+		if (!msg.data.empty() || send_empty) {
 			send_empty = !msg.data.empty();  // only send a single empty message in a row
 			msg.header.stamp = ros::Time::now();
 			msg.header.seq++;
@@ -30,7 +29,8 @@ void run(ros::Publisher &pub, PCLCollector &collector, ros::Rate &rate) {
 	}
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	ros::init(argc, argv, ROS_PACKAGE_NAME);
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_priv("~");
@@ -40,22 +40,22 @@ int main(int argc, char **argv) {
 	ros::Rate rate(nh_priv.param("rate", 100.));
 
 	switch (1) {
-	case 0: {
-		message_filters::Subscriber<tactile_msgs::TactileContact> sub(nh, "tactile_contact_state", 100);
-		collector.setSource<tactile_msgs::TactileContact>(sub, 10);
-		run(pub, collector, rate);
-	} break;
-	case 1: {
-		message_filters::Subscriber<tactile_msgs::TactileContacts> sub(nh, "tactile_contact_states", 10);
-		ContactForwarder forwarder(sub);
-		collector.setSource<tactile_msgs::TactileContact>(forwarder, 100);
-		run(pub, collector, rate);
-	} break;
-	case 2: {
-//		message_filters::Subscriber<tactile_msgs::TactileState> sub(nh, "tactile_states", 10);
-//		collector.setSource(sub);
-//		run(pub, collector, rate);
-	} break;
+		case 0: {
+			message_filters::Subscriber<tactile_msgs::TactileContact> sub(nh, "tactile_contact_state", 100);
+			collector.setSource<tactile_msgs::TactileContact>(sub, 10);
+			run(pub, collector, rate);
+		} break;
+		case 1: {
+			message_filters::Subscriber<tactile_msgs::TactileContacts> sub(nh, "tactile_contact_states", 10);
+			ContactForwarder forwarder(sub);
+			collector.setSource<tactile_msgs::TactileContact>(forwarder, 100);
+			run(pub, collector, rate);
+		} break;
+		case 2: {
+			//		message_filters::Subscriber<tactile_msgs::TactileState> sub(nh, "tactile_states", 10);
+			//		collector.setSource(sub);
+			//		run(pub, collector, rate);
+		} break;
 	}
 
 	return 0;

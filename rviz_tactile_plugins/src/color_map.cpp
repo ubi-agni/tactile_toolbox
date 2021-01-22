@@ -53,24 +53,27 @@ void ColorMap::append(const QList<QColor> &cols)
 
 void ColorMap::append(const QStringList &names)
 {
-	for (QStringList::const_iterator it=names.begin(), end=names.end(); it!=end; ++it)
+	for (QStringList::const_iterator it = names.begin(), end = names.end(); it != end; ++it)
 		colors.append(QColor(*it));
 }
 
-QColor interpolate(const QColor& lo, const QColor& hi, float b) {
-  float a = 1.0 - b;
-  return QColor(a*lo.red()+b*hi.red(), a*lo.green()+b*hi.green(), a*lo.blue()+b*hi.blue(), a*lo.alpha()+b*hi.alpha());
+QColor interpolate(const QColor &lo, const QColor &hi, float b)
+{
+	float a = 1.0 - b;
+	return QColor(a * lo.red() + b * hi.red(), a * lo.green() + b * hi.green(), a * lo.blue() + b * hi.blue(),
+	              a * lo.alpha() + b * hi.alpha());
 }
 
 QColor ColorMap::map(float value) const
 {
 	static const QColor errColor("magenta");
-	if (!std::isfinite(value)) return errColor;
+	if (!std::isfinite(value))
+		return errColor;
 
-	const int N = colors.size()-1;
+	const int N = colors.size() - 1;
 	assert(N > 0);
 
-	float ratio = (value-fMin) / (fMax-fMin) * N;
+	float ratio = (value - fMin) / (fMax - fMin) * N;
 	if (ratio < 0)  // indicate undershooting with smooth transition to errColor
 		return interpolate(colors[0], errColor, 0.5f * std::min<float>(-ratio, 1.0f));
 
@@ -78,8 +81,8 @@ QColor ColorMap::map(float value) const
 	if (idx >= N)  // indicate overshooting with smooth transition to errColor
 		return interpolate(colors.last(), errColor, 0.5f * std::min<float>(ratio - N, 1.0f));
 
-	return interpolate(colors[idx], colors[idx+1], ratio - idx);
+	return interpolate(colors[idx], colors[idx + 1], ratio - idx);
 }
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

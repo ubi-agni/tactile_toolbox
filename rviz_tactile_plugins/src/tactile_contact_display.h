@@ -36,76 +36,72 @@
 #include <tactile_msgs/TactileContacts.h>
 #include <boost/thread/mutex.hpp>
 
-namespace rviz
-{
+namespace rviz {
 class FloatProperty;
 class ColorProperty;
 class WrenchVisual;
 
-namespace tactile
-{
+namespace tactile {
 
-class TactileContactTopicProperty : public rviz::RosTopicProperty {
-Q_OBJECT
+class TactileContactTopicProperty : public rviz::RosTopicProperty
+{
+	Q_OBJECT
 public:
-  TactileContactTopicProperty(const QString& name = QString(),
-                            const QString& default_value = QString(),
-                            const QString& description = QString(),
-                            rviz::Property* parent = 0,
-                            const char *changed_slot = 0,
-                            QObject* receiver = 0);
+	TactileContactTopicProperty(const QString& name = QString(), const QString& default_value = QString(),
+	                            const QString& description = QString(), rviz::Property* parent = 0,
+	                            const char* changed_slot = 0, QObject* receiver = 0);
 protected Q_SLOTS:
-  virtual void fillTopicList();
+	virtual void fillTopicList();
 };
 
 typedef boost::shared_ptr<WrenchVisual> WrenchVisualPtr;
 
 class TactileContactDisplay : public rviz::Display
 {
-  Q_OBJECT
+	Q_OBJECT
 
 public:
-  TactileContactDisplay();
-  ~TactileContactDisplay();
+	TactileContactDisplay();
+	~TactileContactDisplay();
 
 protected:
-  void subscribe();
-  void unsubscribe();
+	void subscribe();
+	void unsubscribe();
 
-  void setTopic(const QString &topic, const QString &datatype);
-  void onInitialize();
-  void reset();
-  void onEnable();
-  void onDisable();
-  void update(float wall_dt, float ros_dt);
+	void setTopic(const QString& topic, const QString& datatype);
+	void onInitialize();
+	void reset();
+	void onEnable();
+	void onDisable();
+	void update(float wall_dt, float ros_dt);
 
-  void processMessage(const tactile_msgs::TactileContact &msg);
-  void processMessage(const tactile_msgs::TactileContact::ConstPtr& msg);
-  void processMessages(const tactile_msgs::TactileContacts::ConstPtr& msg);
+	void processMessage(const tactile_msgs::TactileContact& msg);
+	void processMessage(const tactile_msgs::TactileContact::ConstPtr& msg);
+	void processMessages(const tactile_msgs::TactileContacts::ConstPtr& msg);
 
 protected Q_SLOTS:
-  void onTopicChanged();
-  void onTFPrefixChanged();
-  void triggerFullUpdate();
+	void onTopicChanged();
+	void onTFPrefixChanged();
+	void triggerFullUpdate();
 
 private:
-  TactileContactTopicProperty* topic_property_;
-  rviz::StringProperty* tf_prefix_property_;
-  rviz::BoolProperty* at_contact_point_property_;
-  rviz::FloatProperty* timeout_property_;
-  rviz::ColorProperty *force_color_property_, *torque_color_property_;
-  rviz::FloatProperty *alpha_property_;
-  rviz::FloatProperty *scale_property_, *force_scale_property_, *torque_scale_property_, *width_property_;
-  rviz::BoolProperty* hide_small_values_property_;
-  bool full_update_; // update all visual properties?
+	TactileContactTopicProperty* topic_property_;
+	rviz::StringProperty* tf_prefix_property_;
+	rviz::BoolProperty* at_contact_point_property_;
+	rviz::FloatProperty* timeout_property_;
+	rviz::ColorProperty *force_color_property_, *torque_color_property_;
+	rviz::FloatProperty* alpha_property_;
+	rviz::FloatProperty *scale_property_, *force_scale_property_, *torque_scale_property_, *width_property_;
+	rviz::BoolProperty* hide_small_values_property_;
+	bool full_update_;  // update all visual properties?
 
-  ros::NodeHandle  nh_;
-  ros::Subscriber  sub_;
-  std::map<std::string, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
-  boost::mutex mutex_;
-  ros::Time last_update_;  // last seen ROS timestamp
-  ros::Time last_msg_;     // timestamp when last received a message
+	ros::NodeHandle nh_;
+	ros::Subscriber sub_;
+	std::map<std::string, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
+	boost::mutex mutex_;
+	ros::Time last_update_;  // last seen ROS timestamp
+	ros::Time last_msg_;  // timestamp when last received a message
 };
 
-} // namespace tactile
-} // namespace rviz
+}  // namespace tactile
+}  // namespace rviz

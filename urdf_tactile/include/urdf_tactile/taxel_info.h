@@ -40,22 +40,22 @@ typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
 
 struct TaxelInfo
 {
-  TaxelInfo() {}
-  TaxelInfo(const TaxelInfoIteratorIPtr& it);
+	TaxelInfo() {}
+	TaxelInfo(const TaxelInfoIteratorIPtr& it);
 
-  std::string group;
-  std::string link;
+	std::string group;
+	std::string link;
 
-  std::string channel;  /// name of channel
-  size_t      idx;      /// index into channel of TactileState
+	std::string channel;  /// name of channel
+	size_t idx;  /// index into channel of TactileState
 
-  urdf::GeometrySharedPtr geometry; /// geometry of taxel
-  urdf::Pose geometry_origin;       /// geometry origin w.r.t. link frame
+	urdf::GeometrySharedPtr geometry;  /// geometry of taxel
+	urdf::Pose geometry_origin;  /// geometry origin w.r.t. link frame
 
-  urdf::Pose taxel_origin;          /// taxel origin w.r.t. link frame
-  urdf::Vector3 position;           /// position of taxel_origin
-  urdf::Vector3 normal;             /// z-axis of taxel_origin
+	urdf::Pose taxel_origin;  /// taxel origin w.r.t. link frame
+	urdf::Vector3 position;  /// position of taxel_origin
+	urdf::Vector3 normal;  /// z-axis of taxel_origin
 };
 
-} // end namespace tactile
-} // end namespace urdf
+}  // end namespace tactile
+}  // end namespace urdf

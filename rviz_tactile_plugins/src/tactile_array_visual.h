@@ -39,19 +39,18 @@ namespace tactile {
 class TactileArrayVisual : public TactileVisualBase
 {
 public:
-  TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-                     const urdf::tactile::TactileArraySharedPtr &array,
-                     Display *owner, DisplayContext *context,
-                     Ogre::SceneNode* parent_node, rviz::Property *parent_property=0);
+	TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
+	                   const urdf::tactile::TactileArraySharedPtr &array, Display *owner, DisplayContext *context,
+	                   Ogre::SceneNode *parent_node, rviz::Property *parent_property = 0);
 
 protected:
-  void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) override;
-  void updateVisual() override;
+	void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) override;
+	void updateVisual() override;
 
 protected:
-  rviz::PointCloud *cloud_;
-  std::vector<rviz::PointCloud::Point> points_;
+	rviz::PointCloud *cloud_;
+	std::vector<rviz::PointCloud::Point> points_;
 };
 
-}
-}
+}  // namespace tactile
+}  // namespace rviz

@@ -35,7 +35,8 @@
 
 namespace tactile {
 
-struct Merger::GroupData {
+struct Merger::GroupData
+{
 	GroupData(const TaxelGroupPtr &group);
 
 	mutable boost::mutex mutex;
@@ -43,15 +44,9 @@ struct Merger::GroupData {
 	ros::Time timestamp;
 };
 
-Merger::GroupData::GroupData(const TaxelGroupPtr &group)
-   : group(group)
-{
-}
+Merger::GroupData::GroupData(const TaxelGroupPtr &group) : group(group) {}
 
-
-Merger::Merger()
-{
-}
+Merger::Merger() {}
 
 void Merger::init(const std::string &param)
 {
@@ -63,7 +58,7 @@ void Merger::init(const std::string &param)
 		TaxelGroupPtr group = it->second;
 		GroupDataPtr data(new GroupData(group));
 		groups_.insert(std::make_pair(it->first, data));
-		const TaxelGroup::SensorToTaxelMapping& m = group->mappings();
+		const TaxelGroup::SensorToTaxelMapping &m = group->mappings();
 		for (auto sit = m.begin(), send = m.end(); sit != send; ++sit) {
 			// create mapping from channel name to (data, m)
 			auto pair = std::make_pair(data, &sit->second);
@@ -74,13 +69,13 @@ void Merger::init(const std::string &param)
 
 void Merger::reset()
 {
-	for (auto& group : groups_)
+	for (auto &group : groups_)
 		group.second->timestamp = ros::Time();
 }
 
 template <typename Iterator>
-void Merger::update(const ros::Time &stamp, const std::string &channel,
-                    Iterator begin, Iterator end) {
+void Merger::update(const ros::Time &stamp, const std::string &channel, Iterator begin, Iterator end)
+{
 	auto range = sensors_.equal_range(channel);
 	if (range.first == range.second) {
 		ROS_ERROR_STREAM_ONCE("unknown channel: " << channel);
@@ -98,11 +93,12 @@ void Merger::update(const ros::Time &stamp, const std::string &channel,
 		}
 	}
 }
-template void Merger::update<std::vector<float>::const_iterator>
-(const ros::Time &stamp, const std::string &sensor_name,
-std::vector<float>::const_iterator begin, std::vector<float>::const_iterator end);
+template void Merger::update<std::vector<float>::const_iterator>(const ros::Time &stamp, const std::string &sensor_name,
+                                                                 std::vector<float>::const_iterator begin,
+                                                                 std::vector<float>::const_iterator end);
 
-tactile_msgs::TactileContacts Merger::getAllTaxelContacts() {
+tactile_msgs::TactileContacts Merger::getAllTaxelContacts()
+{
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
 
@@ -111,10 +107,10 @@ tactile_msgs::TactileContacts Merger::getAllTaxelContacts() {
 		const GroupDataPtr &data = it->second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
 		if (data->timestamp + timeout < now)
-			continue; // ignore stalled groups
+			continue;  // ignore stalled groups
 
 		tactile_msgs::TactileContact contact;
-		contact.name = it->first; // group name
+		contact.name = it->first;  // group name
 		contact.header.frame_id = data->group->frame();
 		contact.header.stamp = data->timestamp;
 		// insert all contacts of the group into result array
@@ -123,7 +119,8 @@ tactile_msgs::TactileContacts Merger::getAllTaxelContacts() {
 	return contacts;
 }
 
-tactile_msgs::TactileContacts Merger::getGroupAveragedContacts() {
+tactile_msgs::TactileContacts Merger::getGroupAveragedContacts()
+{
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
 
@@ -131,19 +128,19 @@ tactile_msgs::TactileContacts Merger::getGroupAveragedContacts() {
 	for (auto it = groups_.begin(), end = groups_.end(); it != end; ++it) {
 		const GroupDataPtr &data = it->second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
-		if (data->timestamp + timeout < now)
-		{
-			ROS_DEBUG_STREAM_NAMED("timeouts", "getGroupAveragedContacts timed out " << data->timestamp + timeout << " < " << now);
-			continue; // ignore stalled groups
+		if (data->timestamp + timeout < now) {
+			ROS_DEBUG_STREAM_NAMED("timeouts",
+			                       "getGroupAveragedContacts timed out " << data->timestamp + timeout << " < " << now);
+			continue;  // ignore stalled groups
 		}
 		tactile_msgs::TactileContact contact;
-		contact.name = it->first; // group name
+		contact.name = it->first;  // group name
 		contact.header.frame_id = data->group->frame();
 		contact.header.stamp = data->timestamp;
-		if (!data->group->average(contact))
-		{
-			ROS_DEBUG_STREAM_NAMED("contacts", "getGroupAveragedContacts no contact for group of frame_id " << contact.header.frame_id);
-			continue; // ignore not contacted groups
+		if (!data->group->average(contact)) {
+			ROS_DEBUG_STREAM_NAMED("contacts", "getGroupAveragedContacts no contact for group of frame_id "
+			                                       << contact.header.frame_id);
+			continue;  // ignore not contacted groups
 		}
 
 		// insert all contacts of the group into result array
@@ -152,4 +149,4 @@ tactile_msgs::TactileContacts Merger::getGroupAveragedContacts() {
 	return contacts;
 }
 
-} // namespace tactile
+}  // namespace tactile
