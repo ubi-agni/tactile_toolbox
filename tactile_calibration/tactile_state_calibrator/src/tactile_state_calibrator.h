@@ -25,7 +25,7 @@ class TactileStateCalibrator
 	ros::Publisher tactile_pub_;  //! publisher
 
 public:
-	TactileStateCalibrator(const std::string calib_filename);
+	TactileStateCalibrator(const std::string &calib_filename);
 	~TactileStateCalibrator();
 
 	enum calib_type

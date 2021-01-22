@@ -57,7 +57,7 @@ class TactileStateDisplay : public rviz::Display
 
 public:
 	TactileStateDisplay();
-	~TactileStateDisplay();
+	~TactileStateDisplay() override;
 
 	void resetTactile();
 
@@ -65,12 +65,12 @@ protected:
 	void subscribe();
 	void unsubscribe();
 
-	void setTopic(const QString& topic, const QString& datatype);
-	void onInitialize();
-	void reset();
-	void onEnable();
-	void onDisable();
-	void update(float wall_dt, float ros_dt);
+	void setTopic(const QString& topic, const QString& datatype) override;
+	void onInitialize() override;
+	void reset() override;
+	void onEnable() override;
+	void onDisable() override;
+	void update(float wall_dt, float ros_dt) override;
 
 	void processMessage(const tactile_msgs::TactileState::ConstPtr& msg);
 	GroupProperty* getGroupProperty(const QString& path, GroupProperty* parent);

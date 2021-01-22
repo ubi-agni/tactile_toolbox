@@ -44,7 +44,7 @@ namespace tactile {
 class URDFDOM_DLLAPI TactileSensorParser : public urdf::SensorParser
 {
 public:
-	SensorBaseSharedPtr parse(TiXmlElement &sensor_element);
+	SensorBaseSharedPtr parse(TiXmlElement &sensor_element) override;
 };
 
 }  // namespace tactile

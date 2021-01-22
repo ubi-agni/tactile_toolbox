@@ -193,7 +193,7 @@ GroupProperty *TactileStateDisplay::getGroupProperty(const QString &path, GroupP
 	assert(parent);
 	QStringList names = path.split("/", QString::SkipEmptyParts);
 	Q_FOREACH (const QString &name, names) {
-		GroupProperty *child = 0;
+		GroupProperty *child = nullptr;
 		for (int i = 0, end = parent->numChildren(); i < end && !child; ++i) {
 			rviz::Property *prop = parent->childAtUnchecked(i);
 			if (prop->getName() != name)
@@ -233,7 +233,7 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 			if (!sensor)
 				continue;  // some other sensor than tactile
 
-			TactileVisualBase *visual = 0;
+			TactileVisualBase *visual = nullptr;
 			if (sensor->array_) {
 				visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->array_,
 				                                this, context_, scene_node_);
@@ -284,7 +284,7 @@ void TactileStateDisplay::onTFPrefixChanged()
 void TactileStateDisplay::onModeChanged()
 {
 	mode_ = ::tactile::TactileValue::getMode(mode_property_->getStdString());
-	ColorMap *color_map = 0;
+	ColorMap *color_map = nullptr;
 
 	// choose color map based on mode
 	switch (mode_) {

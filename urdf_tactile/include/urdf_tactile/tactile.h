@@ -116,8 +116,8 @@ public:
 	}
 };
 
-typedef std::shared_ptr<TactileTaxel> TactileTaxelSharedPtr;
-typedef std::shared_ptr<TactileArray> TactileArraySharedPtr;
+using TactileTaxelSharedPtr = std::shared_ptr<TactileTaxel>;
+using TactileArraySharedPtr = std::shared_ptr<TactileArray>;
 
 class TactileSensor : public urdf::SensorBase
 {
@@ -127,7 +127,7 @@ public:
 	TactileArraySharedPtr array_;
 	std::string channel_;
 
-	void clear()
+	void clear() override
 	{
 		taxels_.clear();
 		array_.reset();

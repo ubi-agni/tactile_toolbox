@@ -39,7 +39,7 @@ class GroupProperty : public rviz::BoolProperty
 	Q_OBJECT
 public:
 	GroupProperty(const QString& name = QString(), bool default_value = true, const QString& description = QString(),
-	              Property* parent = 0, const char* changed_slot = 0, QObject* receiver = 0);
+	              Property* parent = nullptr, const char* changed_slot = nullptr, QObject* receiver = nullptr);
 
 	/** recursively set new_value for all GroupProperty children,
 	 *  but block signals */

@@ -89,7 +89,7 @@ TaxelEntity::~TaxelEntity()
 
 Ogre::Entity *TaxelEntity::createEntityFromGeometry(const urdf::Geometry &geom, const urdf::Pose &origin)
 {
-	Ogre::Entity *entity = NULL;  // default in case nothing works.
+	Ogre::Entity *entity = nullptr;  // default in case nothing works.
 	Ogre::SceneNode *offset_node = taxel_node_->createChildSceneNode();
 
 	static int count = 0;

@@ -63,10 +63,11 @@ class TactileVisualBase : public GroupProperty
 	Q_OBJECT
 public:
 	TactileVisualBase(const std::string &name, const std::string &frame, const urdf::Pose &origin, rviz::Display *owner,
-	                  rviz::DisplayContext *context, Ogre::SceneNode *parent_node, rviz::Property *parent_property = 0);
-	virtual ~TactileVisualBase();
+	                  rviz::DisplayContext *context, Ogre::SceneNode *parent_node,
+	                  rviz::Property *parent_property = nullptr);
+	~TactileVisualBase() override;
 
-	Qt::ItemFlags getViewFlags(int column) const;
+	Qt::ItemFlags getViewFlags(int column) const override;
 
 	/// update data buffer from new readings
 	virtual void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) = 0;

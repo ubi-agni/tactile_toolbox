@@ -41,7 +41,7 @@ class EmptyOrDoubleValidator : public QDoubleValidator
 	Q_OBJECT
 public:
 	EmptyOrDoubleValidator(QObject* parent) : QDoubleValidator(parent) {}
-	QValidator::State validate(QString& input, int& pos) const
+	QValidator::State validate(QString& input, int& pos) const override
 	{
 		if (input.isEmpty())
 			return QValidator::Acceptable;
@@ -55,16 +55,16 @@ class RangeFloatProperty : public rviz::FloatProperty
 	Q_OBJECT
 public:
 	RangeFloatProperty(const QString& name = QString(), float fallback_value = 0, const QString& description = QString(),
-	                   Property* parent = 0, const char* changed_slot = 0, QObject* receiver = 0);
+	                   Property* parent = nullptr, const char* changed_slot = nullptr, QObject* receiver = nullptr);
 	bool setValue(const QVariant& new_value) override;
 	float getFloat() const override { return value_; }
 	QVariant getViewData(int column, int role) const override;
 	bool manuallyEdited() const { return shouldBeSaved(); }
 
-	void load(const rviz::Config& config);
+	void load(const rviz::Config& config) override;
 
 protected:
-	QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option);
+	QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option) override;
 
 protected Q_SLOTS:
 	void setManuallyEdited() { manually_edited_ = true; }
@@ -82,8 +82,8 @@ class RangeProperty : public rviz::Property
 {
 	Q_OBJECT
 public:
-	RangeProperty(const QString& name = QString(), const QString& description = QString(), Property* parent = 0,
-	              const char* changed_slot = 0, QObject* receiver = 0);
+	RangeProperty(const QString& name = QString(), const QString& description = QString(), Property* parent = nullptr,
+	              const char* changed_slot = nullptr, QObject* receiver = nullptr);
 
 	void reset();
 	void update(const ::tactile::Range& range);
@@ -94,9 +94,9 @@ public:
 	float min() const { return min_property_->getFloat(); }
 	float max() const { return max_property_->getFloat(); }
 
-	bool setValue(const QVariant& new_value);
-	void save(Config config) const;
-	void load(const Config& config);
+	bool setValue(const QVariant& new_value) override;
+	void save(Config config) const override;
+	void load(const Config& config) override;
 
 protected Q_SLOTS:
 	bool updateFromChildren();

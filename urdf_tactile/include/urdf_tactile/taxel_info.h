@@ -36,7 +36,7 @@ namespace urdf {
 namespace tactile {
 
 class TaxelInfoIteratorI;
-typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
+using TaxelInfoIteratorIPtr = std::shared_ptr<TaxelInfoIteratorI>;
 
 struct TaxelInfo
 {

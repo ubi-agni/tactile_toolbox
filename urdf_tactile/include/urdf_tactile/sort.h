@@ -39,7 +39,7 @@ namespace tactile {
  * sort sensors by group or channel name
  ******************************************************************************/
 typedef urdf::SensorMap::const_iterator iterator;
-typedef std::deque<iterator> iterator_list;
+using iterator_list = std::deque<iterator>;
 struct Sensors
 {
 	// sensors that define a vector of taxels
@@ -47,11 +47,11 @@ struct Sensors
 	// sensors that define a 2D taxel array
 	iterator_list arrays;
 };
-typedef std::map<std::string, Sensors> SensorsMap;
+using SensorsMap = std::map<std::string, Sensors>;
 
 struct SensorsTree : Sensors
 {
-	typedef std::map<std::string, SensorsTree> map_type;
+	using map_type = std::map<std::string, SensorsTree>;
 	map_type children;
 };
 
@@ -63,9 +63,9 @@ SensorsMap sortByChannels(const urdf::SensorMap &sensors);
  * retrieving taxels
  ******************************************************************************/
 class TaxelInfoIteratorI;
-typedef std::shared_ptr<TaxelInfoIteratorI> TaxelInfoIteratorIPtr;
-typedef std::deque<TaxelInfoIteratorIPtr> taxel_list;
-typedef std::map<std::string, taxel_list> TaxelsMap;
+using TaxelInfoIteratorIPtr = std::shared_ptr<TaxelInfoIteratorI>;
+using taxel_list = std::deque<TaxelInfoIteratorIPtr>;
+using TaxelsMap = std::map<std::string, taxel_list>;
 /// retrieve all taxels
 taxel_list &getTaxels(const iterator_list &sensors, taxel_list &target);
 /// retrieve all taxels

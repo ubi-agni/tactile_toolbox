@@ -17,7 +17,7 @@ using namespace tactile;
 
 constexpr char detail[] = "detail";
 
-TactileStateCalibrator::TactileStateCalibrator(const std::string calib_filename)
+TactileStateCalibrator::TactileStateCalibrator(const std::string &calib_filename)
 {
 	// init publisher/subscribers
 	init(calib_filename);

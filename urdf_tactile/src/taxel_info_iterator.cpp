@@ -107,32 +107,32 @@ public:
 	  : TaxelInfoIteratorI(sensor), it(it)
 	{}
 
-	TaxelInfoIteratorIPtr clone() const { return TaxelInfoIteratorIPtr(new TaxelInfoIteratorBase(*this)); }
-	TaxelInfoIteratorI &operator++()
+	TaxelInfoIteratorIPtr clone() const override { return TaxelInfoIteratorIPtr(new TaxelInfoIteratorBase(*this)); }
+	TaxelInfoIteratorI &operator++() override
 	{
 		++it;
 		return *this;
 	}
-	TaxelInfoIteratorI &operator--()
+	TaxelInfoIteratorI &operator--() override
 	{
 		--it;
 		return *this;
 	}
-	bool operator==(const TaxelInfoIteratorI &other) const
+	bool operator==(const TaxelInfoIteratorI &other) const override
 	{
 		// if sensors are equal, iterator types are actually identical and we can safely static_cast
 		return (sensor == other.sensor) && (it == static_cast<const TaxelInfoIteratorBase &>(other).it);
 	}
 
-	size_t index() const;
-	void initInfo(TaxelInfo &info);
-	void updateInfo(TaxelInfo &info);
+	size_t index() const override;
+	void initInfo(TaxelInfo &info) override;
+	void updateInfo(TaxelInfo &info) override;
 };
 
 /******************************************************************************
  * TaxelInfoIterator for vector of taxels
  ******************************************************************************/
-typedef std::vector<TactileTaxelSharedPtr>::const_iterator VectorBaseIterator;
+using VectorBaseIterator = std::vector<TactileTaxelSharedPtr>::const_iterator;
 template <>
 size_t TaxelInfoIteratorBase<VectorBaseIterator>::index() const
 {
@@ -160,7 +160,7 @@ void TaxelInfoIteratorBase<VectorBaseIterator>::updateInfo(TaxelInfo &info)
 /******************************************************************************
  * TaxelInfoIterator for 2D taxel array
  ******************************************************************************/
-typedef size_t ArrayBaseIterator;
+using ArrayBaseIterator = size_t;
 template <>
 size_t TaxelInfoIteratorBase<ArrayBaseIterator>::index() const
 {
@@ -210,7 +210,7 @@ void TaxelInfoIteratorBase<ArrayBaseIterator>::updateInfo(TaxelInfo &info)
  * http://www.ocoudert.com/blog/2010/07/07/how-to-write-abstract-iterators-in-c
  ******************************************************************************/
 TaxelInfoIterator::TaxelInfoIterator(const TaxelInfoIterator &other)
-  : impl_(other.impl_ ? other.impl_->clone() : NULL), valid_(false)
+  : impl_(other.impl_ ? other.impl_->clone() : nullptr), valid_(false)
 {
 	info_ = other.info_;
 }
@@ -270,7 +270,7 @@ TaxelInfoIterator::operator TaxelInfoIteratorIPtr()
 	return TaxelInfoIteratorIPtr(impl_->clone());
 }
 
-TaxelInfoIterator::TaxelInfoIterator(TaxelInfoIteratorIPtr impl, bool valid) : impl_(impl), valid_(valid)
+TaxelInfoIterator::TaxelInfoIterator(const TaxelInfoIteratorIPtr &impl, bool valid) : impl_(impl), valid_(valid)
 {
 	// THIS SHOULD BE THE ONE AND ONLY PLACE WHERE initInfo() IS CALLED
 	impl->initInfo(info_);

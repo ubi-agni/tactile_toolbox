@@ -48,10 +48,10 @@ class TactileContactTopicProperty : public rviz::RosTopicProperty
 	Q_OBJECT
 public:
 	TactileContactTopicProperty(const QString& name = QString(), const QString& default_value = QString(),
-	                            const QString& description = QString(), rviz::Property* parent = 0,
-	                            const char* changed_slot = 0, QObject* receiver = 0);
+	                            const QString& description = QString(), rviz::Property* parent = nullptr,
+	                            const char* changed_slot = nullptr, QObject* receiver = nullptr);
 protected Q_SLOTS:
-	virtual void fillTopicList();
+	void fillTopicList() override;
 };
 
 typedef boost::shared_ptr<WrenchVisual> WrenchVisualPtr;
@@ -62,18 +62,18 @@ class TactileContactDisplay : public rviz::Display
 
 public:
 	TactileContactDisplay();
-	~TactileContactDisplay();
+	~TactileContactDisplay() override;
 
 protected:
 	void subscribe();
 	void unsubscribe();
 
-	void setTopic(const QString& topic, const QString& datatype);
-	void onInitialize();
-	void reset();
-	void onEnable();
-	void onDisable();
-	void update(float wall_dt, float ros_dt);
+	void setTopic(const QString& topic, const QString& datatype) override;
+	void onInitialize() override;
+	void reset() override;
+	void onEnable() override;
+	void onDisable() override;
+	void update(float wall_dt, float ros_dt) override;
 
 	void processMessage(const tactile_msgs::TactileContact& msg);
 	void processMessage(const tactile_msgs::TactileContact::ConstPtr& msg);

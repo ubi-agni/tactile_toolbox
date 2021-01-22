@@ -54,7 +54,7 @@ TactileVisualBase::TactileVisualBase(const std::string &name, const std::string 
   , context_(context)
   , scene_node_(parent_node->createChildSceneNode())
   , frame_(frame)
-  , color_map_(0)
+  , color_map_(nullptr)
   , mode_(::tactile::TactileValue::rawCurrent)
   , acc_mode_(::tactile::TactileValueArray::Sum)
   , acc_mean_(true)
