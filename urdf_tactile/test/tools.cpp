@@ -34,9 +34,9 @@ urdf::SensorSharedPtr create_array(unsigned int rows, unsigned int cols,
 
 void test_array_iterator(TactileArray::DataOrder order)
 {
-	urdf::SensorSharedPtr sensor = create_array(5, 3, order);
-	auto it = TaxelInfoIterator::begin(sensor);
-	auto end = TaxelInfoIterator::end(sensor);
+	auto taxels = TaxelInfoIterable(create_array(5, 3, order));
+	auto it = taxels.begin();
+	auto end = taxels.end();
 	urdf::GeometryConstSharedPtr geom = it->geometry;
 	BOOST_ASSERT(geom);
 	BOOST_ASSERT(it->idx == 0);
@@ -95,9 +95,9 @@ urdf::SensorSharedPtr create_taxels(unsigned int num = 10)
 }
 BOOST_AUTO_TEST_CASE(test_vector_iterator)
 {
-	urdf::SensorSharedPtr sensor = create_taxels();
-	auto it = TaxelInfoIterator::begin(sensor);
-	auto end = TaxelInfoIterator::end(sensor);
+	auto taxels = TaxelInfoIterable(create_taxels());
+	auto it = taxels.begin();
+	auto end = taxels.end();
 	BOOST_ASSERT(it != end);
 	for (size_t idx = 0; it != end; ++it, ++idx) {
 		BOOST_ASSERT(it != end);

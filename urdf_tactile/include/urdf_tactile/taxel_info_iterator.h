@@ -39,6 +39,8 @@ namespace tactile {
 class TaxelInfoIteratorI;
 using TaxelInfoIteratorIPtr = std::shared_ptr<TaxelInfoIteratorI>;
 
+class TaxelInfoIterable;
+
 /// common iterator for vector of taxels or taxel array
 class TaxelInfoIterator
 {
@@ -47,9 +49,6 @@ class TaxelInfoIterator
 	mutable bool valid_;  //! is info valid?
 
 public:
-	static TaxelInfoIterator begin(const urdf::SensorConstSharedPtr& sensor);
-	static TaxelInfoIterator end(const urdf::SensorConstSharedPtr& sensor);
-
 	TaxelInfoIterator() : impl_(nullptr), valid_(false) {}
 	TaxelInfoIterator(const TaxelInfoIterator& other);
 	~TaxelInfoIterator();
@@ -79,8 +78,19 @@ public:
 	operator TaxelInfoIteratorIPtr();
 
 private:
+	friend class TaxelInfoIterable;
 	explicit TaxelInfoIterator(const TaxelInfoIteratorIPtr& impl_, bool valid);
 	void validate() const;
+};
+
+class TaxelInfoIterable
+{
+	const urdf::SensorConstSharedPtr sensor_;
+
+public:
+	TaxelInfoIterable(const urdf::SensorConstSharedPtr& sensor) : sensor_(sensor) {}
+	TaxelInfoIterator begin();
+	TaxelInfoIterator end();
 };
 
 size_t index(const TaxelInfoIteratorIPtr& it);

@@ -116,9 +116,8 @@ SensorsMap sortByChannels(const SensorMap &sensors)
 taxel_list &getTaxels(const iterator_list &sensors, taxel_list &target)
 {
 	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-		const urdf::SensorConstSharedPtr &sensor = (*it)->second;
-		for (auto taxel_it = TaxelInfoIterator::begin(sensor), end = TaxelInfoIterator::end(sensor); taxel_it != end;
-		     ++taxel_it) {
+		auto taxels = TaxelInfoIterable((*it)->second);
+		for (auto taxel_it = taxels.begin(), end = taxels.end(); taxel_it != end; ++taxel_it) {
 			target.push_back(taxel_it);
 		}
 	}

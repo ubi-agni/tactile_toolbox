@@ -56,9 +56,8 @@ void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor)
 	TaxelGroup::TaxelMapping mapping;
 	const urdf::tactile::TactileSensor &tactile = urdf::tactile::tactile_sensor_cast(*sensor);
 
-	for (auto taxel = urdf::tactile::TaxelInfoIterator::begin(sensor),
-	          end = urdf::tactile::TaxelInfoIterator::end(sensor);
-	     taxel != end; ++taxel) {
+	auto taxels = urdf::tactile::TaxelInfoIterable(sensor);
+	for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
 		mapping[taxel->idx] = size();
 		addTaxel(Taxel(taxel->position, taxel->normal));
 	}
