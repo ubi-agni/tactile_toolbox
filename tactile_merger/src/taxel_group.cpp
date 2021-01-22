@@ -74,13 +74,13 @@ TaxelGroupMap TaxelGroup::load(const std::string &desc_param)
 
 	urdf::SensorMap sensors = urdf::parseSensorsFromParam(desc_param, urdf::getSensorParser("tactile"));
 	// create a TaxelGroup for each tactile sensor
-	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-		urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
-		if (!sensor)
+	for (auto &sensor : sensors) {
+		urdf::tactile::TactileSensorConstSharedPtr tactile = urdf::tactile::tactile_sensor_cast(sensor.second);
+		if (!tactile)
 			continue;  // some other sensor than tactile
 
-		TaxelGroupPtr &group = getGroup(result, it->second->parent_link_);
-		group->addTaxels(it->second);
+		TaxelGroupPtr &group = getGroup(result, sensor.second->parent_link_);
+		group->addTaxels(sensor.second);
 	}
 	return result;
 }

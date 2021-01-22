@@ -72,8 +72,8 @@ Sensors &getOrInsertEntry<SensorsTree>(SensorsTree &parent, const std::string &n
 	std::vector<std::string> names;
 	SensorsTree &node = parent;
 	boost::algorithm::split(names, name, boost::algorithm::is_any_of("/"), boost::token_compress_on);
-	for (auto it = names.begin(), end = names.end(); it != end; ++it) {
-		node = node.children.insert(std::make_pair(*it, SensorsTree())).first->second;
+	for (const auto &name : names) {
+		node = node.children.insert(std::make_pair(name, SensorsTree())).first->second;
 	}
 	return node;
 }
@@ -115,10 +115,10 @@ SensorsMap sortByChannels(const SensorMap &sensors)
  ******************************************************************************/
 taxel_list &getTaxels(const iterator_list &sensors, taxel_list &target)
 {
-	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-		auto taxels = TaxelInfoIterable((*it)->second);
-		for (auto taxel_it = taxels.begin(), end = taxels.end(); taxel_it != end; ++taxel_it) {
-			target.push_back(taxel_it);
+	for (auto sensor : sensors) {
+		auto taxels = TaxelInfoIterable(sensor->second);
+		for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
+			target.push_back(taxel);
 		}
 	}
 	return target;
@@ -133,9 +133,9 @@ taxel_list &getTaxels(const Sensors &sensors, taxel_list &target)
 
 TaxelsMap &getTaxels(const SensorsMap &sensors, TaxelsMap &target)
 {
-	for (auto sensor_it = sensors.begin(), end = sensors.end(); sensor_it != end; ++sensor_it) {
-		auto tgt = target.insert(std::make_pair(sensor_it->first, TaxelsMap::mapped_type())).first->second;
-		getTaxels(sensor_it->second, tgt);
+	for (const auto &sensor : sensors) {
+		auto tgt = target.insert(std::make_pair(sensor.first, TaxelsMap::mapped_type())).first->second;
+		getTaxels(sensor.second, tgt);
 	}
 	return target;
 }
@@ -165,8 +165,7 @@ size_t maxIndex(const taxel_list &taxels)
 {
 	size_t m = 0;
 	for (auto it = taxels.begin(), end = taxels.end(); it != end; ++it) {
-		if (index(*it) > m)
-			m = index(*it);
+		m = std::max(m, index(*it));
 	}
 	return m;
 }

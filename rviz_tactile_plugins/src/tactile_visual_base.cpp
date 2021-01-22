@@ -132,20 +132,20 @@ void TactileVisualBase::updateRange(const ros::Time &stamp)
 		case 1:  // update lower bound only
 		{
 			auto upper = raw_range_.max();
-			for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
-				raw_range_.update(::tactile::Range(it->absRange().min(), upper));
+			for (const auto &value : values_)
+				raw_range_.update(::tactile::Range(value.absRange().min(), upper));
 			break;
 		}
 		case 2:  // update upper bound only
 		{
 			auto lower = raw_range_.min();
-			for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
-				raw_range_.update(::tactile::Range(lower, it->absRange().max()));
+			for (const auto &value : values_)
+				raw_range_.update(::tactile::Range(lower, value.absRange().max()));
 			break;
 		}
 		case 3:  // update both bounds
-			for (auto it = values_.begin(), end = values_.end(); it != end; ++it)
-				raw_range_.update(it->absRange());
+			for (const auto &value : values_)
+				raw_range_.update(value.absRange());
 			break;
 	}
 }

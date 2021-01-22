@@ -70,19 +70,19 @@ void TactileStatePublisher::config()
 void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
 {
 	// loop over all the sensor found in the URDF
-	for (auto it = sensors.begin(); it != sensors.end(); it++) {
-		TactileSensorSharedPtr tactile_sensor_ptr = tactile_sensor_cast(it->second);
-		if (!tactile_sensor_ptr)
+	for (const auto &sensor : sensors) {
+		TactileSensorSharedPtr tactile = tactile_sensor_cast(sensor.second);
+		if (!tactile)
 			continue;  // some other sensor than tactile
 
 		int sensor_idx = -1;
 
 		// find if the channel exists in the map
-		std::map<std::string, size_t>::iterator sensor_it = sensor_data_map_.find(tactile_sensor_ptr->channel_);
+		std::map<std::string, size_t>::iterator sensor_it = sensor_data_map_.find(tactile->channel_);
 		if (sensor_it == sensor_data_map_.end()) {
 			// if not, create a sensor_msgs for this channel.
 			sensor_msgs::ChannelFloat32 sensor_data;
-			sensor_data.name = tactile_sensor_ptr->channel_;  // size will be updated later
+			sensor_data.name = tactile->channel_;  // size will be updated later
 			tactile_msg_.sensors.push_back(sensor_data);
 			sensor_idx = tactile_msg_.sensors.size() - 1;
 			// add the index to sensor_data_map
@@ -91,16 +91,15 @@ void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
 			sensor_idx = sensor_it->second;
 		}
 
-		if (tactile_sensor_ptr->array_) {
+		if (tactile->array_) {
 			// TODO: Guillaume handle the fact that only one array can exist per tactile channel
-			tactile_msg_.sensors[sensor_idx].values.resize(tactile_sensor_ptr->array_->rows *
-			                                               tactile_sensor_ptr->array_->cols);
-		} else if (!tactile_sensor_ptr->taxels_.empty()) {
+			tactile_msg_.sensors[sensor_idx].values.resize(tactile->array_->rows * tactile->array_->cols);
+		} else if (!tactile->taxels_.empty()) {
 			// find highest taxel index used
 			unsigned int maxIdx = 0;
-			for (auto it = tactile_sensor_ptr->taxels_.begin(), end = tactile_sensor_ptr->taxels_.end(); it != end; ++it) {
-				if (maxIdx < (*it)->idx)
-					maxIdx = (*it)->idx;
+			for (auto &taxel : tactile->taxels_) {
+				if (maxIdx < taxel->idx)
+					maxIdx = taxel->idx;
 			}
 			// resize only if this channel was smaller
 			if (tactile_msg_.sensors[sensor_idx].values.size() < maxIdx + 1)

@@ -53,8 +53,8 @@ void ColorMap::append(const QList<QColor> &cols)
 
 void ColorMap::append(const QStringList &names)
 {
-	for (QStringList::const_iterator it = names.begin(), end = names.end(); it != end; ++it)
-		colors.append(QColor(*it));
+	for (const auto &name : names)
+		colors.append(QColor(name));
 }
 
 QColor interpolate(const QColor &lo, const QColor &hi, float b)

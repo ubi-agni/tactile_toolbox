@@ -165,8 +165,8 @@ void TactileStateDisplay::reset()
 void TactileStateDisplay::resetTactile()
 {
 	// reset tactile_filters
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it)
-		it->second->reset();
+	for (auto &sensor : sensors_)
+		sensor.second->reset();
 }
 
 void TactileStateDisplay::onEnable()
@@ -212,11 +212,11 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 {
 	// save settings of old sensors to restore them later
 	std::map<QString, rviz::Config> configs;
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
+	for (auto &sensor : sensors_) {
 		rviz::Config config;
-		it->second->save(config);
-		configs[it->second->getName()] = config;
-		delete it->second;
+		sensor.second->save(config);
+		configs[sensor.second->getName()] = config;
+		delete sensor.second;
 	}
 
 	sensors_.clear();
@@ -228,26 +228,26 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 		    urdf::parseSensorsFromParam(robot_description_property_->getStdString(), urdf::getSensorParser("tactile"));
 
 		// create a TactileVisual for each tactile sensor listed in the URDF model
-		for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-			urdf::tactile::TactileSensorConstSharedPtr sensor = urdf::tactile::tactile_sensor_cast(it->second);
-			if (!sensor)
+		for (const auto &sensor : sensors) {
+			urdf::tactile::TactileSensorConstSharedPtr tactile = urdf::tactile::tactile_sensor_cast(sensor.second);
+			if (!tactile)
 				continue;  // some other sensor than tactile
 
 			TactileVisualBase *visual = nullptr;
-			if (sensor->array_) {
-				visual = new TactileArrayVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->array_,
-				                                this, context_, scene_node_);
-			} else if (!sensor->taxels_.empty()) {
-				visual = new TactileTaxelsVisual(it->first, it->second->parent_link_, it->second->origin_, sensor->taxels_,
-				                                 this, context_, scene_node_);
+			if (tactile->array_) {
+				visual = new TactileArrayVisual(sensor.first, sensor.second->parent_link_, sensor.second->origin_,
+				                                tactile->array_, this, context_, scene_node_);
+			} else if (!tactile->taxels_.empty()) {
+				visual = new TactileTaxelsVisual(sensor.first, sensor.second->parent_link_, sensor.second->origin_,
+				                                 tactile->taxels_, this, context_, scene_node_);
 			}
 			if (visual) {
 				GroupProperty *group_property =
-				    getGroupProperty(QString::fromStdString(it->second->group_), sensors_property_);
+				    getGroupProperty(QString::fromStdString(sensor.second->group_), sensors_property_);
 				group_property->addChild(visual);
-				visual->setGroup(QString::fromStdString(it->second->group_));
+				visual->setGroup(QString::fromStdString(sensor.second->group_));
 				visual->setTFPrefix(tf_prefix);
-				sensors_.insert(std::make_pair(sensor->channel_, visual));
+				sensors_.insert(std::make_pair(tactile->channel_, visual));
 
 				// restore sensor settings (if available)
 				auto config = configs.find(visual->getName());
@@ -274,8 +274,8 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 void TactileStateDisplay::onTFPrefixChanged()
 {
 	const std::string &tf_prefix = tf_prefix_property_->getStdString();
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-		it->second->setTFPrefix(tf_prefix);
+	for (auto &sensor : sensors_) {
+		sensor.second->setTFPrefix(tf_prefix);
 	}
 	clearStatuses();
 	context_->queueRender();
@@ -297,18 +297,18 @@ void TactileStateDisplay::onModeChanged()
 			break;
 	}
 
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-		it->second->setMode(mode_);
-		it->second->setColorMap(color_map);
+	for (auto &sensor : sensors_) {
+		sensor.second->setMode(mode_);
+		sensor.second->setColorMap(color_map);
 	}
 }
 
 void TactileStateDisplay::onModeParamsChanged()
 {
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-		it->second->setMeanLambda(mean_lambda_property_->getFloat());
-		it->second->setRangeLambda(range_lambda_property_->getFloat());
-		it->second->setReleaseDecay(release_decay_property_->getFloat());
+	for (auto &sensor : sensors_) {
+		sensor.second->setMeanLambda(mean_lambda_property_->getFloat());
+		sensor.second->setRangeLambda(range_lambda_property_->getFloat());
+		sensor.second->setReleaseDecay(release_decay_property_->getFloat());
 	}
 }
 
@@ -318,8 +318,8 @@ void TactileStateDisplay::onAllVisibleChanged()
 	parent->setBoolRecursively(parent->getBool());
 
 	// once hide/show the actual sensors in the end
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-		it->second->onVisibleChanged();
+	for (auto &sensor : sensors_) {
+		sensor.second->onVisibleChanged();
 	}
 }
 
@@ -354,8 +354,8 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 	if (!last_msg_.isZero() && last_msg_ + timeout < now)
 		setStatus(StatusProperty::Warn, "Topic", "No recent msg");
 
-	for (auto it = sensors_.begin(), end = sensors_.end(); it != end; ++it) {
-		TactileVisualBase &sensor = *it->second;
+	for (auto &it : sensors_) {
+		TactileVisualBase &sensor = *it.second;
 		sensor.updateRangeProperty();
 		if (!sensor.isVisible())
 			continue;

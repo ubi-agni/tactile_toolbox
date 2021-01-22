@@ -64,9 +64,9 @@ tactile::Vector2<double> parseAttribute<tactile::Vector2<double> >(const char *v
 	std::vector<std::string> pieces;
 	std::vector<double> xy;
 	boost::split(pieces, value, boost::is_any_of(" "));
-	for (unsigned int i = 0; i < pieces.size(); ++i) {
-		if (!pieces[i].empty()) {
-			xy.push_back(boost::lexical_cast<double>(pieces[i].c_str()));
+	for (const auto &piece : pieces) {
+		if (!piece.empty()) {
+			xy.push_back(boost::lexical_cast<double>(piece.c_str()));
 		}
 	}
 
