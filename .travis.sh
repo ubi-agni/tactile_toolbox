@@ -35,7 +35,7 @@ mkdir -p /tmp/catkin/src
 cd /tmp/catkin/src
 
 travis_run wstool init
-travis_run wstool merge file://$REPO/.travis.rosinstall
+travis_run wstool merge file://$REPO/rosinstall
 travis_run wstool update
 
 # link in source
@@ -43,7 +43,11 @@ ln -s $REPO .
 
 ### fetch system packages
 travis_run apt-get -qq update
-travis_run apt-get -qq install -y sudo python-rosdep python-catkin-tools
+if [ "$ROS_PYTHON_VERSION" == "3" ] ; then
+  travis_run apt-get -qq install -y sudo python3-rosdep python3-catkin-tools
+else
+  travis_run apt-get -qq install -y sudo python-rosdep python-catkin-tools
+fi
 
 travis_run rosdep update
 travis_run rosdep install -r -y -q -n --from-paths . --ignore-src --rosdistro $ROS_DISTRO
