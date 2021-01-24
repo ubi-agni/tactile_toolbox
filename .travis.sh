@@ -30,6 +30,15 @@ function travis_run_true() {
 
 REPO="${BASH_SOURCE[0]%/*}"
 
+### fetch system packages
+export DEBIAN_FRONTEND=noninteractive
+travis_run apt-get -qq update
+if [ "$ROS_PYTHON_VERSION" == "3" ] ; then
+  travis_run apt-get -qq install -y sudo python3-wstool python3-rosdep python3-catkin-tools python3-osrf-pycommon git
+else
+  travis_run apt-get -qq install -y sudo python-wstools python-rosdep python-catkin-tools
+fi
+
 ### setup catkin workspace
 mkdir -p /tmp/catkin/src
 cd /tmp/catkin/src
@@ -41,14 +50,6 @@ travis_run wstool update
 # link in source
 ln -s $REPO .
 
-### fetch system packages
-travis_run apt-get -qq update
-if [ "$ROS_PYTHON_VERSION" == "3" ] ; then
-  travis_run apt-get -qq install -y sudo python3-rosdep python3-catkin-tools
-else
-  travis_run apt-get -qq install -y sudo python-rosdep python-catkin-tools
-fi
-
 travis_run rosdep update
 travis_run rosdep install -r -y -q -n --from-paths . --ignore-src --rosdistro $ROS_DISTRO
 
@@ -57,7 +58,7 @@ cd ..
 export PYTHONIOENCODING=UTF-8
 export TERM=xterm
 
-travis_run catkin config --extend /opt/ros/$ROS_DISTRO --install --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -Dtactile_filters_DIR=$(pwd)/install/share --
+travis_run catkin config --extend /opt/ros/$ROS_DISTRO --install --cmake-args -DCMAKE_BUILD_TYPE=Release --
 travis_run catkin build --no-status --continue-on-failure --summarize
 
 source install/setup.bash

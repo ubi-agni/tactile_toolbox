@@ -10,6 +10,7 @@ notifications:
 env:
   matrix:
     - ROS_DISTRO="melodic"
+    - ROS_DISTRO="noetic"
 
 before_script:
   - docker pull ros:$ROS_DISTRO-ros-base
