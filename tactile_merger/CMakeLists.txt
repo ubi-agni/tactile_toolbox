@@ -10,8 +10,8 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS tactile_msgs
-#  DEPENDS system_lib
+  CATKIN_DEPENDS urdf_tactile tactile_msgs
+  DEPENDS
 )
 
 include_directories(
