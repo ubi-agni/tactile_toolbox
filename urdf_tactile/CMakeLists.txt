@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(Boost REQUIRED system)
+find_package(urdfdom REQUIRED)
 find_package(catkin REQUIRED pluginlib urdf)
 
 ###################################
