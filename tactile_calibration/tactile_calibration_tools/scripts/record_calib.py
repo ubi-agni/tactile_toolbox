@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
 from __future__ import print_function
-import rospy
+if 'raw_input' not in __builtins__.__dict__:
+    raw_input = input  # Python3 renamed raw_input to input
 
+import rospy
 import numpy as np
 import rosbag
 from rospy.rostime import Duration, Time
@@ -187,7 +189,7 @@ def user_menu(choices={'c': "continue", 'r':"retry", 's': "save", 'q': "quit wit
     #print "press c to continue, r to retry, d to detect a new channel, s to save and quit, or q to quit without saving"
     tcflush(sys.stdin, TCIFLUSH)
     #user_choice = stdscr.getch()
-    return raw_input(letter_string)
+    return input(letter_string)
 
 def user_yesno(default=True):
     if default:
@@ -196,7 +198,7 @@ def user_yesno(default=True):
         text = "y/[n] ?"
     tcflush(sys.stdin, TCIFLUSH)
     while(1):
-        ret = raw_input(text)
+        ret = input(text)
         if ret == "":
             return default
         else:
@@ -360,7 +362,7 @@ if __name__ == "__main__":
                 else:  # no provided list
                     # check if a range is given
                     if args.num_channels:
-                        channel_list = range(0, args.num_channels)
+                        channel_list = list(range(0, args.num_channels))
                         # handle ref in case it is in the same vector
                         if not args.ref_topic:  # remove the ref_channel from the list
                             if args.ref_channel in channel_list:
@@ -662,7 +664,7 @@ if __name__ == "__main__":
                 quit_request = True
                 state=RecordingState.SAVE
             else:
-                print("Channels recorded ", processed_channels.keys())
+                print("Channels recorded ", list(processed_channels.keys()))
                 if channel_list is not None and len(channel_list) > 0:
                     print("some channels were not recorded :", channel_list)
                 
