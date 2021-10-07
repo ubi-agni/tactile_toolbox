@@ -54,15 +54,14 @@ void Merger::init(const std::string &param)
 	groups_.clear();
 
 	const TaxelGroupMap &groups = TaxelGroup::load(param);
-	for (auto it = groups.begin(), end = groups.end(); it != end; ++it) {
-		TaxelGroupPtr group = it->second;
+	for (const auto &name_group : groups) {
+		TaxelGroupPtr group = name_group.second;
 		GroupDataPtr data(new GroupData(group));
-		groups_.insert(std::make_pair(it->first, data));
-		const TaxelGroup::SensorToTaxelMapping &m = group->mappings();
-		for (auto sit = m.begin(), send = m.end(); sit != send; ++sit) {
+		groups_.insert(std::make_pair(name_group.first, data));
+		for (const auto &sensor_taxel : group->mappings()) {
 			// create mapping from channel name to (data, m)
-			auto pair = std::make_pair(data, &sit->second);
-			sensors_.insert(std::make_pair(sit->first, pair));
+			auto pair = std::make_pair(data, &sensor_taxel.second);
+			sensors_.insert(std::make_pair(sensor_taxel.first, pair));
 		}
 	}
 }
@@ -103,14 +102,14 @@ tactile_msgs::TactileContacts Merger::getAllTaxelContacts()
 	ros::Time now = ros::Time::now();
 
 	tactile_msgs::TactileContacts contacts;
-	for (auto it = groups_.begin(), end = groups_.end(); it != end; ++it) {
-		const GroupDataPtr &data = it->second;
+	for (auto &name_data : groups_) {
+		const GroupDataPtr &data = name_data.second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
 		if (data->timestamp + timeout < now)
 			continue;  // ignore stalled groups
 
 		tactile_msgs::TactileContact contact;
-		contact.name = it->first;  // group name
+		contact.name = name_data.first;  // group name
 		contact.header.frame_id = data->group->frame();
 		contact.header.stamp = data->timestamp;
 		// insert all contacts of the group into result array
@@ -125,8 +124,8 @@ tactile_msgs::TactileContacts Merger::getGroupAveragedContacts()
 	ros::Time now = ros::Time::now();
 
 	tactile_msgs::TactileContacts contacts;
-	for (auto it = groups_.begin(), end = groups_.end(); it != end; ++it) {
-		const GroupDataPtr &data = it->second;
+	for (auto &name_data : groups_) {
+		const GroupDataPtr &data = name_data.second;
 		boost::unique_lock<boost::mutex> lock(data->mutex);
 		if (data->timestamp + timeout < now) {
 			ROS_DEBUG_STREAM_NAMED("timeouts",
@@ -134,7 +133,7 @@ tactile_msgs::TactileContacts Merger::getGroupAveragedContacts()
 			continue;  // ignore stalled groups
 		}
 		tactile_msgs::TactileContact contact;
-		contact.name = it->first;  // group name
+		contact.name = name_data.first;  // group name
 		contact.header.frame_id = data->group->frame();
 		contact.header.stamp = data->timestamp;
 		if (!data->group->average(contact)) {

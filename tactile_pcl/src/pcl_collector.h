@@ -32,7 +32,7 @@ public:
 	{
 		// connect F to a tf filter that signals to process()
 		tf2_ros::MessageFilter<M> *tf_filter =
-		    new tf2_ros::MessageFilter<M>(f, tf_buffer_, target_frame_, queue_size, NULL);
+		    new tf2_ros::MessageFilter<M>(f, tf_buffer_, target_frame_, queue_size, nullptr);
 		tf_filter_.reset(tf_filter);
 		tf_filter->registerCallback(&PCLCollector::process<M>, this);
 	}

@@ -57,9 +57,9 @@ void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor)
 	const urdf::tactile::TactileSensor &tactile = urdf::tactile::tactile_sensor_cast(*sensor);
 
 	auto taxels = urdf::tactile::TaxelInfoIterable(sensor);
-	for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
-		mapping[taxel->idx] = size();
-		addTaxel(Taxel(taxel->position, taxel->normal));
+	for (const auto &taxel : taxels) {
+		mapping[taxel.idx] = size();
+		addTaxel(Taxel(taxel.position, taxel.normal));
 	}
 	mappings_.insert(std::make_pair(tactile.channel_, mapping));
 }
@@ -88,9 +88,9 @@ TaxelGroupMap TaxelGroup::load(const std::string &desc_param)
 template <typename Iterator>
 void TaxelGroup::update(const TaxelMapping &mapping, Iterator input_begin, Iterator input_end)
 {
-	for (auto it = mapping.begin(), end = mapping.end(); it != end; ++it) {
-		assert(input_begin + it->first < input_end);
-		taxels_[it->second].weight = *(input_begin + it->first);
+	for (const auto &pair : mapping) {
+		assert(input_begin + pair.first < input_end);
+		taxels_[pair.second].weight = *(input_begin + pair.first);
 	}
 }
 template void TaxelGroup::update<std::vector<float>::const_iterator>(const TaxelMapping &mapping,
@@ -139,14 +139,14 @@ bool TaxelGroup::average(tactile_msgs::TactileContact &contact)
 	double sum = 0;
 	Eigen::Vector3d pos, normal, force, torque;
 	pos = normal = force = torque = Eigen::Vector3d::Zero();
-	for (auto it = taxels_.begin(), end = taxels_.end(); it != end; ++it) {
-		double w = std::abs(it->weight);
+	for (const auto &taxel : taxels_) {
+		double w = std::abs(taxel.weight);
 		sum += w;
-		pos += w * it->position;
-		normal += w * it->normal;
-		Eigen::Vector3d f = (-it->weight) * it->normal;  // force is pointing opposite to normal
+		pos += w * taxel.position;
+		normal += w * taxel.normal;
+		Eigen::Vector3d f = (-taxel.weight) * taxel.normal;  // force is pointing opposite to normal
 		force += f;
-		torque += it->position.cross(f);
+		torque += taxel.position.cross(f);
 	}
 	// Is overall force magnitude large enough to compute location?
 	if (sum > Eigen::NumTraits<float>::dummy_precision())

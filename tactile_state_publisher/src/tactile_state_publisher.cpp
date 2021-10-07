@@ -55,7 +55,7 @@ void TactileStatePublisher::config()
 	// parse the parameter list
 	if (source_list_raw.getType() == XmlRpc::XmlRpcValue::TypeArray) {
 		// iterate on all the elements
-		for (int32_t index = 0; index < source_list_raw.size(); ++index) {
+		for (int32_t index = 0; index < source_list_raw.size(); ++index) {  // NOLINT(modernize-loop-convert)
 			// check the source is well formatted:
 			if (source_list_raw[index].getType() == XmlRpc::XmlRpcValue::TypeString) {
 				std::string source_name = static_cast<std::string>(source_list_raw[index]);
@@ -96,14 +96,14 @@ void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
 			tactile_msg_.sensors[sensor_idx].values.resize(tactile->array_->rows * tactile->array_->cols);
 		} else if (!tactile->taxels_.empty()) {
 			// find highest taxel index used
-			unsigned int maxIdx = 0;
+			unsigned int max_idx = 0;
 			for (auto &taxel : tactile->taxels_) {
-				if (maxIdx < taxel->idx)
-					maxIdx = taxel->idx;
+				if (max_idx < taxel->idx)
+					max_idx = taxel->idx;
 			}
 			// resize only if this channel was smaller
-			if (tactile_msg_.sensors[sensor_idx].values.size() < maxIdx + 1)
-				tactile_msg_.sensors[sensor_idx].values.resize(maxIdx + 1);
+			if (tactile_msg_.sensors[sensor_idx].values.size() < max_idx + 1)
+				tactile_msg_.sensors[sensor_idx].values.resize(max_idx + 1);
 		}
 	}
 }
@@ -114,9 +114,9 @@ void TactileStatePublisher::init()
 	tactile_pub_ = nh_.advertise<tactile_msgs::TactileState>("tactile_states", 5);
 
 	// initialize subscribers from source list if any
-	for (size_t i = 0; i < source_list_.size(); ++i) {
+	for (auto &topic : source_list_) {
 		std::shared_ptr<ros::Subscriber> tactile_subscriber(
-		    new ros::Subscriber(nh_.subscribe(source_list_[i], 1, &TactileStatePublisher::tactile_state_cb, this)));
+		    new ros::Subscriber(nh_.subscribe(topic, 1, &TactileStatePublisher::tactile_state_cb, this)));
 		tactile_subs_.push_back(tactile_subscriber);
 	}
 }
@@ -124,14 +124,14 @@ void TactileStatePublisher::init()
 void TactileStatePublisher::tactile_state_cb(const tactile_msgs::TactileStateConstPtr &msg)
 {
 	// loop on the sensors
-	for (size_t i = 0; i < msg->sensors.size(); ++i) {
-		const std::string &name = msg->sensors[i].name;
+	for (const auto &sensor : msg->sensors) {
+		const std::string &name = sensor.name;
 		std::map<std::string, size_t>::iterator it = sensor_data_map_.find(name);
 		if (it == sensor_data_map_.end())
 			continue;
 
 		// store new data in the tactile_msg
-		const sensor_msgs::ChannelFloat32::_values_type &src = msg->sensors[i].values;
+		const sensor_msgs::ChannelFloat32::_values_type &src = sensor.values;
 		sensor_msgs::ChannelFloat32::_values_type &dst = tactile_msg_.sensors[it->second].values;
 		if (dst.size() <= src.size()) {
 			boost::unique_lock<boost::shared_mutex> lock(msg_mutex_);

@@ -119,9 +119,9 @@ Ogre::Entity *TaxelEntity::createEntityFromGeometry(const urdf::Geometry &geom, 
 		case urdf::Geometry::CYLINDER: {
 			const urdf::Cylinder &cylinder = static_cast<const urdf::Cylinder &>(geom);
 
-			Ogre::Quaternion rotX;
-			rotX.FromAngleAxis(Ogre::Degree(90), Ogre::Vector3::UNIT_X);
-			orientation = orientation * rotX;
+			Ogre::Quaternion rot_x;
+			rot_x.FromAngleAxis(Ogre::Degree(90), Ogre::Vector3::UNIT_X);
+			orientation = orientation * rot_x;
 
 			entity = rviz::Shape::createEntity(entity_name, rviz::Shape::Cylinder, scene_manager_);
 			scale = Ogre::Vector3(cylinder.radius * 2, cylinder.length, cylinder.radius * 2);
@@ -187,16 +187,16 @@ TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::str
 	arrows_node_ = scene_node_->createChildSceneNode();
 #endif
 
-	for (auto taxel = taxels.begin(), end = taxels.end(); taxel != end; ++taxel) {
-		urdf::GeometryConstSharedPtr geometry = (*taxel)->geometry;
+	for (const auto &taxel : taxels) {
+		urdf::GeometryConstSharedPtr geometry = taxel->geometry;
 		TaxelEntityPtr t(new TaxelEntity(*geometry, urdf::Pose(), context, scene_node_));
 		taxels_.push_back(t);
-		mapping_.push_back((*taxel)->idx);
+		mapping_.push_back(taxel->idx);
 
 #if ENABLE_ARROWS
 		rviz::ArrowPtr arrow(new rviz::Arrow(context->getSceneManager(), arrows_node_));
-		const urdf::Vector3 &pos = (*taxel)->origin.position;
-		const urdf::Rotation &rot = (*taxel)->origin.rotation;
+		const urdf::Vector3 &pos = taxel->origin.position;
+		const urdf::Rotation &rot = taxel->origin.rotation;
 		arrow->setColor(1, 0, 0, 1);
 		arrow->setPosition(Ogre::Vector3(pos.x, pos.y, pos.z));
 		arrow->setDirection(Ogre::Quaternion(rot.w, rot.x, rot.y, rot.z).zAxis());
@@ -208,7 +208,7 @@ TactileTaxelsVisual::TactileTaxelsVisual(const std::string &name, const std::str
 
 void TactileTaxelsVisual::updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values)
 {
-	size_t N = values.size();
+	size_t N = values.size();  // NOLINT(readability-identifier-naming)
 	auto vit = values_.begin();
 	for (auto it = mapping_.begin(), end = mapping_.end(); it != end; ++it, ++vit) {
 		if (*it < N)

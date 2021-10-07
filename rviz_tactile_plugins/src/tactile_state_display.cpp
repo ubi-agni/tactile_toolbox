@@ -102,20 +102,20 @@ TactileStateDisplay::TactileStateDisplay() : mode_(::tactile::TactileValue::rawC
 	}
 
 	// init color maps
-	QStringList colorNames;
+	QStringList color_names;
 	abs_color_map_.init(0, 1);
-	colorNames << "black"
-	           << "lime"
-	           << "yellow"
-	           << "red";
-	abs_color_map_.append(colorNames);
+	color_names << "black"
+	            << "lime"
+	            << "yellow"
+	            << "red";
+	abs_color_map_.append(color_names);
 
 	rel_color_map_.init(-1, 1);
-	colorNames.clear();
-	colorNames << "red"
-	           << "black"
-	           << "lime";
-	rel_color_map_.append(colorNames);
+	color_names.clear();
+	color_names << "red"
+	            << "black"
+	            << "lime";
+	rel_color_map_.append(color_names);
 }
 
 TactileStateDisplay::~TactileStateDisplay()

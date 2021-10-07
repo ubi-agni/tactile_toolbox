@@ -66,20 +66,20 @@ QColor interpolate(const QColor &lo, const QColor &hi, float b)
 
 QColor ColorMap::map(float value) const
 {
-	static const QColor errColor("magenta");
+	static const QColor ERR_COLOR("magenta");
 	if (!std::isfinite(value))
-		return errColor;
+		return ERR_COLOR;
 
-	const int N = colors.size() - 1;
+	const int N = colors.size() - 1;  // NOLINT(readability-identifier-naming)
 	assert(N > 0);
 
 	float ratio = (value - fMin) / (fMax - fMin) * N;
 	if (ratio < 0)  // indicate undershooting with smooth transition to errColor
-		return interpolate(colors[0], errColor, 0.5f * std::min<float>(-ratio, 1.0f));
+		return interpolate(colors[0], ERR_COLOR, 0.5f * std::min<float>(-ratio, 1.0f));
 
 	int idx = ratio;
 	if (idx >= N)  // indicate overshooting with smooth transition to errColor
-		return interpolate(colors.last(), errColor, 0.5f * std::min<float>(ratio - N, 1.0f));
+		return interpolate(colors.last(), ERR_COLOR, 0.5f * std::min<float>(ratio - N, 1.0f));
 
 	return interpolate(colors[idx], colors[idx + 1], ratio - idx);
 }

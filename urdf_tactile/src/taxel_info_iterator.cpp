@@ -84,9 +84,9 @@ void TaxelInfoIteratorI::initInfo(TaxelInfo &info)
 
 void TaxelInfoIteratorI::finishInfo(TaxelInfo &info)
 {
-	static const urdf::Vector3 zAxis(0, 0, 1);
+	static const urdf::Vector3 Z_AXIS(0, 0, 1);
 	info.position = info.taxel_origin.position;
-	info.normal = info.taxel_origin.rotation * zAxis;
+	info.normal = info.taxel_origin.rotation * Z_AXIS;
 }
 
 /******************************************************************************

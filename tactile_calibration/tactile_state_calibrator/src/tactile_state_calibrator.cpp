@@ -15,7 +15,7 @@
 
 using namespace tactile;
 
-constexpr char detail[] = "detail";
+constexpr char DETAIL[] = "detail";
 
 TactileStateCalibrator::TactileStateCalibrator(const std::string &calib_filename)
 {
@@ -33,7 +33,7 @@ bool TactileStateCalibrator::fill_calibs(const std::map<unsigned int, std::share
 		if (el.first < min_key)
 			min_key = el.first;
 	}
-	ROS_DEBUG_STREAM_NAMED(detail, " min max are " << min_key << ", " << max_key);
+	ROS_DEBUG_STREAM_NAMED(DETAIL, " min max are " << min_key << ", " << max_key);
 	// validate that we start at 0
 	if (min_key != 0) {
 		ROS_ERROR("the range should start at zero");
@@ -62,7 +62,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node,
                                                const std::shared_ptr<Calibration> &calib)
 {
 	if (node.Type() == YAML::NodeType::Sequence) {
-		ROS_DEBUG_STREAM_NAMED(detail, " found an index range");
+		ROS_DEBUG_STREAM_NAMED(DETAIL, " found an index range");
 		std::vector<unsigned int> idx_range;
 		// Break from loop as soon as single_calib_ was configured to handle all taxels
 		for (YAML::const_iterator idx_range_it = node.begin(); idx_range_it != node.end() && !single_calib_;
@@ -70,21 +70,21 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node,
 			idx_range.clear();
 			switch ((*idx_range_it).Type()) {
 				case YAML::NodeType::Sequence: {
-					ROS_DEBUG_STREAM_NAMED(detail, "  found a sequence");
+					ROS_DEBUG_STREAM_NAMED(DETAIL, "  found a sequence");
 					const YAML::Node yaml_vec = (*idx_range_it);
-					ROS_DEBUG_STREAM_NAMED(detail, "  extract sequence");
+					ROS_DEBUG_STREAM_NAMED(DETAIL, "  extract sequence");
 					idx_range = yaml_vec.as<std::vector<unsigned int>>();
 					// must be pairs
 					if (idx_range.size() == 2) {
-						ROS_DEBUG_STREAM_NAMED(detail, "  found size 2");
+						ROS_DEBUG_STREAM_NAMED(DETAIL, "  found size 2");
 						// check the start and end are valid
 						if (idx_range[0] < idx_range[1] && idx_range[0] >= 0) {
-							ROS_DEBUG_STREAM_NAMED(detail, "  index range valid");
+							ROS_DEBUG_STREAM_NAMED(DETAIL, "  index range valid");
 							// add the range to the idx_map and associate it to the calibration pointer
 							for (unsigned int i = idx_range[0]; i <= idx_range[1]; ++i) {
 								map[i] = calib;
 							}
-							ROS_DEBUG_STREAM_NAMED(detail,
+							ROS_DEBUG_STREAM_NAMED(DETAIL,
 							                       "  added index in range [" << idx_range[0] << ", " << idx_range[1] << "]");
 						} else {
 							ROS_ERROR("Invalid range, start of range should be smaller then end of range and positive");
@@ -97,7 +97,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node,
 					break;
 				}
 				case YAML::NodeType::Scalar: {
-					ROS_DEBUG_STREAM_NAMED(detail, "  found a scalar");
+					ROS_DEBUG_STREAM_NAMED(DETAIL, "  found a scalar");
 					const YAML::Node yaml_scal = (*idx_range_it);
 					if (yaml_scal.as<int>() >= 0)
 						map[yaml_scal.as<unsigned int>()] = calib;
@@ -130,7 +130,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 
 			switch (yaml_calibs.Type()) {
 				case YAML::NodeType::Sequence:  // a sequence of calibration configuration
-					ROS_DEBUG_NAMED(detail, "found calibs");
+					ROS_DEBUG_NAMED(DETAIL, "found calibs");
 					// for each calib
 					for (YAML::const_iterator calib_it = yaml_calibs.begin(); calib_it != yaml_calibs.end(); ++calib_it) {
 						YAML::Node yaml_calib = *calib_it;
@@ -172,7 +172,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 
 						// extract range
 						if (yaml_calib["idx_range"]) {
-							ROS_DEBUG_STREAM_NAMED(detail, " extracting index range");
+							ROS_DEBUG_STREAM_NAMED(DETAIL, " extracting index range");
 							if (extract_idx_range(yaml_calib["idx_range"], idx_to_calib_map, calib_ptr)) {
 								// check the result
 								if (!single_calib_) {
@@ -199,7 +199,7 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 					// if required, prepare the calibs_ vector from the idx_to_calib map
 					if (!single_calib_ && !idx_to_calib_map.empty()) {
 						// fill calibs_
-						ROS_DEBUG_STREAM_NAMED(detail, " filling range");
+						ROS_DEBUG_STREAM_NAMED(DETAIL, " filling range");
 						fill_calibs(idx_to_calib_map);
 					}
 					break;
@@ -212,11 +212,11 @@ void TactileStateCalibrator::init(const std::string &calib_filename)
 					break;
 			}
 		} else {
-			ROS_DEBUG_STREAM_NAMED(detail, "found a single map");
+			ROS_DEBUG_STREAM_NAMED(DETAIL, "found a single map");
 			single_calib_ = std::make_shared<PieceWiseLinearCalib>(PieceWiseLinearCalib::load(yaml_node));
 		}
 		if (!single_calib_ && calibs_.empty()) {
-			ROS_DEBUG_STREAM_NAMED(detail, " calibs and single_calib empty");
+			ROS_DEBUG_STREAM_NAMED(DETAIL, " calibs and single_calib empty");
 			throw std::runtime_error("unable to create PieceWiseLinearCalib");
 			return;
 		}
@@ -248,7 +248,7 @@ void TactileStateCalibrator::tactile_state_cb(const tactile_msgs::TactileStateCo
 	// TODO Guillaume: use a different calib file for each type of sensor (maybe regex on the name)
 	for (size_t i = 0; i < msg->sensors.size(); ++i) {
 		// if one calibmap for this sensor,
-		if (calibs_.size() == 0 && single_calib_) {
+		if (calibs_.empty() && single_calib_) {
 			// same function as in the previous glove console
 			std::transform(msg->sensors[i].values.begin(), msg->sensors[i].values.end(), out_msg.sensors[i].values.begin(),
 			               std::bind(&tactile::Calibration::map, single_calib_.get(), std::placeholders::_1));

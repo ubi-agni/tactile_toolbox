@@ -226,14 +226,14 @@ void TactileContactDisplay::processMessages(const tactile_msgs::TactileContacts:
 	setStatus(StatusProperty::Ok, "Topic", "Ok");
 	last_msg_ = ros::Time::now();
 	boost::unique_lock<boost::mutex> lock(mutex_);
-	for (auto it = msg->contacts.begin(), end = msg->contacts.end(); it != end; ++it) {
-		processMessage(*it);
+	for (const auto &contact : msg->contacts) {
+		processMessage(contact);
 	}
 }
 
 void TactileContactDisplay::update(float wall_dt, float ros_dt)
 {
-	static const ros::Time zeroStamp;
+	static const ros::Time ZERO_STAMP;
 	if (!this->isEnabled())
 		return;
 
@@ -247,13 +247,13 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 	if (!last_msg_.isZero() && last_msg_ + timeout < now)
 		setStatus(StatusProperty::Warn, "Topic", "No recent msg");
 
-	for (auto it = contacts_.begin(), end = contacts_.end(); it != end; ++it) {
-		const tactile_msgs::TactileContact &msg = it->second.first;
-		WrenchVisualPtr &visual = it->second.second;
+	for (auto &contact : contacts_) {
+		const tactile_msgs::TactileContact &msg = contact.second.first;
+		WrenchVisualPtr &visual = contact.second.second;
 		bool new_visual = !visual;
 
 		// hide visuals if they are outdated
-		if (msg.header.stamp != zeroStamp && msg.header.stamp + timeout < now) {
+		if (msg.header.stamp != ZERO_STAMP && msg.header.stamp + timeout < now) {
 			if (visual)
 				visual->setVisible(false);
 			continue;  // skip further processing for this message
@@ -266,7 +266,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 		const std::string &tf_prefix = tf_prefix_property_->getStdString();
 		const std::string &frame = tf_prefix.empty() ? msg.header.frame_id : tf::resolve(tf_prefix, msg.header.frame_id);
 		// use zeroStamp to fetch most recent frame (tf is lacking behind our timestamps which caused issues)
-		if (!context_->getFrameManager()->getTransform(frame, zeroStamp, position, orientation)) {
+		if (!context_->getFrameManager()->getTransform(frame, ZERO_STAMP, position, orientation)) {
 			std::string error;
 			context_->getFrameManager()->transformHasProblems(frame, msg.header.stamp, error);
 			setStatusStd(StatusProperty::Error, frame, error);

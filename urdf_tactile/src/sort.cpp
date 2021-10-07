@@ -43,18 +43,18 @@ namespace tactile {
 
 enum SortKey
 {
-	byGroup,
-	byChannel
+	BY_GROUP,
+	BY_CHANNEL
 };
 template <SortKey key>
 const std::string &get(const urdf::SensorConstSharedPtr &sensor);
 template <>
-const std::string &get<byGroup>(const urdf::SensorConstSharedPtr &sensor)
+const std::string &get<BY_GROUP>(const urdf::SensorConstSharedPtr &sensor)
 {
 	return sensor->group_;
 }
 template <>
-const std::string &get<byChannel>(const urdf::SensorConstSharedPtr &sensor)
+const std::string &get<BY_CHANNEL>(const urdf::SensorConstSharedPtr &sensor)
 {
 	return tactile_sensor_cast(*sensor).channel_;
 }
@@ -99,15 +99,15 @@ Result sort(const SensorMap &sensors)
 
 SensorsMap sortByGroups(const SensorMap &sensors)
 {
-	return sort<SensorsMap, byGroup>(sensors);
+	return sort<SensorsMap, BY_GROUP>(sensors);
 }
 SensorsTree sortByGroupsHierarchical(const SensorMap &sensors)
 {
-	return sort<SensorsTree, byGroup>(sensors);
+	return sort<SensorsTree, BY_GROUP>(sensors);
 }
 SensorsMap sortByChannels(const SensorMap &sensors)
 {
-	return sort<SensorsMap, byChannel>(sensors);
+	return sort<SensorsMap, BY_CHANNEL>(sensors);
 }
 
 /******************************************************************************
@@ -164,8 +164,8 @@ TaxelsMap getTaxels(const SensorsMap &sensors)
 size_t maxIndex(const taxel_list &taxels)
 {
 	size_t m = 0;
-	for (auto it = taxels.begin(), end = taxels.end(); it != end; ++it) {
-		m = std::max(m, index(*it));
+	for (const auto &taxel : taxels) {
+		m = std::max(m, index(taxel));
 	}
 	return m;
 }
