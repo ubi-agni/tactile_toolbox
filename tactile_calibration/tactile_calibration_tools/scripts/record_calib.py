@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from __future__ import print_function
 import rospy
 
 import numpy as np
@@ -99,7 +100,7 @@ def raw_topic_cb(msg):
             msgs.append(m)
             # check max size
             if len(msgs) > MAX_MESSAGE_STORED:
-                print "Reached data size limit for raw data, stopping recording"
+                print("Reached data size limit for raw data, stopping recording")
                 recording_channel = None
                 state=RecordingState.PROCESS
         else:
@@ -134,7 +135,7 @@ def raw_ref_topic_cb(rawmsg, refmsg):
             
             # check max size
             if len(msgs) > MAX_MESSAGE_STORED:
-                print "Reached data size limit for raw data, stopping recording"
+                print("Reached data size limit for raw data, stopping recording")
                 recording_channel = None
                 state=RecordingState.PROCESS
         else:
@@ -157,7 +158,7 @@ def save_data(calibration_filename):
     with rosbag.Bag(calibration_filename, 'w') as outbag:
         for msg in msgs:
             outbag.write(args.raw_topic, msg, msg.header.stamp)
-    print "saved data in file", calibration_filename
+    print("saved data in file", calibration_filename)
     return True
 
 def wait_key_press(timeout):
@@ -181,7 +182,7 @@ def user_menu(choices={'c': "continue", 'r':"retry", 's': "save", 'q': "quit wit
     letter_string = "("
     for letter in choices:
         letter_string += letter + "/"
-        print  letter, "to", choices[letter]
+        print(letter, "to", choices[letter])
     letter_string += ") ?\n"
     #print "press c to continue, r to retry, d to detect a new channel, s to save and quit, or q to quit without saving"
     tcflush(sys.stdin, TCIFLUSH)
@@ -203,7 +204,7 @@ def user_yesno(default=True):
                 return True
             if ret == 'n' or ret == 'N':
                 return False
-        print "wrong choice, try again"
+        print("wrong choice, try again")
         tcflush(sys.stdin, TCIFLUSH)
 
 def move_previous_recording(processed_channels, detected_channel, folder):
@@ -217,7 +218,7 @@ def move_previous_recording(processed_channels, detected_channel, folder):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     os.rename(fullfilename, dirname +"/" + filename)
-    print "moving", filename, " into folder called ", folder
+    print("moving", filename, " into folder called ", folder)
 
 def display_channel(prev_raw, raw, detect_threshold):
     channel_disp = None
@@ -333,18 +334,18 @@ if __name__ == "__main__":
 
     # subscribe to raw topic or to raw and ref topics with a time synchronizer
     if args.ref_topic:
-        print "Initializing topic synchronizer"
+        print("Initializing topic synchronizer")
         raw_sub = message_filters.Subscriber(args.raw_topic, TactileState)
         ref_sub =  message_filters.Subscriber(args.ref_topic, TactileState)
         ts = message_filters.ApproximateTimeSynchronizer([raw_sub, ref_sub], 10, 0.1, allow_headerless=False)
         #ts = message_filters.TimeSynchronizer([raw_sub, ref_sub], 10)
         ts.registerCallback(raw_ref_topic_cb)
     else:
-        print "Initializing topic subscriber"
+        print("Initializing topic subscriber")
         raw_sub = rospy.Subscriber(args.raw_topic, TactileState, raw_topic_cb)
 
     # state machine loop
-    print "Started, waiting for data on topic", args.raw_topic
+    print("Started, waiting for data on topic", args.raw_topic)
     while not rospy.is_shutdown():
         now = rospy.get_time()
 
@@ -352,7 +353,7 @@ if __name__ == "__main__":
         if state==RecordingState.INIT:
             # wait for initial data in one or 2 topics
             if (raw_topic_init and (args.ref_topic is None or (args.ref_topic is not None and ref_topic_init))):
-                print "Found data on topics"
+                print("Found data on topics")
                 # handle the channel list
                 if (args.data_channel):  # user provided channel(s) in command line arguments
                     channel_list = args.data_channel
@@ -375,11 +376,11 @@ if __name__ == "__main__":
                     state=RecordingState.NEXTCHANNEL
                 else:
                     if calibrate_ref:
-                        print "starting tare recording, keep the calibration tool still in the rest position, press enter when ready"
+                        print("starting tare recording, keep the calibration tool still in the rest position, press enter when ready")
                         if wait_key_press(10):
                             state=RecordingState.TARE
                         else:
-                            print "No key was pressed in 10 seconds, what do you want to do ?"
+                            print("No key was pressed in 10 seconds, what do you want to do ?")
                             user_choice = user_menu({'t': "tare", 'k': "skip tare", 'q': "quit without saving"})
                             if user_choice == 'q':
                                 state=RecordingState.END
@@ -388,7 +389,7 @@ if __name__ == "__main__":
                             if user_choice == 'k':
                                 state=RecordingState.TARE
                     else:
-                        print "reference cannot be calibrated, so will not be tared"
+                        print("reference cannot be calibrated, so will not be tared")
                         tare = None
                         state=RecordingState.NEXTCHANNEL
 
@@ -398,21 +399,21 @@ if __name__ == "__main__":
             if not tare_recording:
                 tare_vec = []
                 tare_recording = True
-                print "Tare in progress..."
+                print("Tare in progress...")
             
             if len(tare_vec) > DEFAULT_TARE_RECORDINGS:
                 # enough samples
                 tare_recording = False
                 # compute tare from tare_vec
                 tare = compute_tare(tare_vec)
-                print "tare =", tare
+                print("tare =", tare)
                 state=RecordingState.NEXTCHANNEL
             #TODO: handle timeout if no data for a while
 
         # State Next Channel
         if state==RecordingState.NEXTCHANNEL:
             if channel_list is None: # no list, means ask if continue for a next one 
-                print "Do you want to detect a new channel ?"
+                print("Do you want to detect a new channel ?")
                 user_choice = user_yesno(default=True)
                 if user_choice == False:  # end there
                     state=RecordingState.END
@@ -423,8 +424,8 @@ if __name__ == "__main__":
                 
             else: # there is a list
                 if len(channel_list): # if not at the end of the channel list
-                    print len(channel_list), "channels remaining to be recorded"
-                    print "Proceeding to next channel, press enter to interrupt or wait for", DEFAULT_KEY_TIMEOUT, "seconds"
+                    print(len(channel_list), "channels remaining to be recorded")
+                    print("Proceeding to next channel, press enter to interrupt or wait for", DEFAULT_KEY_TIMEOUT, "seconds")
                     key_pressed = False
                     if wait_key_press(DEFAULT_KEY_TIMEOUT):
                         user_choice = user_menu({'c': "continue to detection", 'q': "quit without saving"})
@@ -442,7 +443,7 @@ if __name__ == "__main__":
                         ref_raw_previous_vec = []
                         state=RecordingState.DETECT
                 else: # at the end of the list, proceed to quit
-                    print "All channels have been recorded, quitting"
+                    print("All channels have been recorded, quitting")
                     state=RecordingState.END
   
         # State Detect
@@ -453,17 +454,17 @@ if __name__ == "__main__":
                 ref_raw_previous_vec = ref_raw_vec
                 detected_channel = None
                 # announce detection is underway
-                print "Selection detection in progress"
-                print " please press the channel that is to be calibrated hardware wise."
-                print " You can always interrupt by pressing enter."
-                print " ", str(DEFAULT_KEY_TIMEOUT) , "seconds after detection, calibration recording starts automaticly."
-                print "Then you have another", str(DEFAULT_RECORDING_DURATION) ,"seconds for recording."
-                print "Use the calibtool upright and press and release your selected channel evenly over", args.repetition,"iterations. \n\n" 
+                print("Selection detection in progress")
+                print(" please press the channel that is to be calibrated hardware wise.")
+                print(" You can always interrupt by pressing enter.")
+                print(" ", str(DEFAULT_KEY_TIMEOUT) , "seconds after detection, calibration recording starts automaticly.")
+                print("Then you have another", str(DEFAULT_RECORDING_DURATION) ,"seconds for recording.")
+                print("Use the calibtool upright and press and release your selected channel evenly over", args.repetition,"iterations. \n\n") 
             # display vector and detection level
             #channel_display_str = display_channel(raw_previous_vec, raw_vec, args.detect_threshold)
             channel_display_str = display_channel_color(raw_previous_vec, raw_vec, args.detect_threshold)
             if channel_display_str is not None:
-                print "\033[0m\r chan:", '\033[0m|'.join(channel_display_str),'\033[0m',
+                print("\033[0m\r chan:", '\033[0m|'.join(channel_display_str),'\033[0m', end=' ')
                 sys.stdout.flush()
             # detect changeschannel_disp
             # TODO handle the case of 2 channels
@@ -488,10 +489,10 @@ if __name__ == "__main__":
         # State Confirm detected channel
         if state==RecordingState.CONFIRM_DETECT:
             if detected_channel is not None:  # channel was chosen
-                print "channel", detected_channel, "was detected"
+                print("channel", detected_channel, "was detected")
                 # check if already recorded this channel
                 if detected_channel in processed_channels:
-                    print " this channel was already recorded, what do you want to do ?"
+                    print(" this channel was already recorded, what do you want to do ?")
                     user_choice = user_menu({'c': "continue, move the previous recording, and re-record this channel", 'd':"detect a new channel", 'q': "quit"})
                     if user_choice == "" or user_choice == 'c':
                         # move previously recorded calib file for this channel in an old folder
@@ -506,15 +507,15 @@ if __name__ == "__main__":
                 if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue
                     if channel_list is not None:  # check if channel is part of the list
                         if detected_channel not in channel_list:
-                            print " but this channel not in the channel list"
-                            print channel_list
-                            print "proceed with this channel anyway ?"
+                            print(" but this channel not in the channel list")
+                            print(channel_list)
+                            print("proceed with this channel anyway ?")
                             if user_yesno(default=False) == False:
                                 raw_previous_vec = []
                                 ref_raw_previous_vec = []
                                 state = RecordingState.DETECT
                     else:
-                        print " if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec"
+                        print(" if incorrect press enter, otherwise wait", str(DEFAULT_KEY_TIMEOUT), "sec")
                         if wait_key_press(DEFAULT_KEY_TIMEOUT):
                             # key pressed, reset previous values
                             raw_previous_vec = []
@@ -522,7 +523,7 @@ if __name__ == "__main__":
                             state=RecordingState.DETECT
                     if state==RecordingState.CONFIRM_DETECT:  # no change in state = continue with recording
                         # start recording
-                        print "starting recording"
+                        print("starting recording")
                         state=RecordingState.RECORD
                     # if confirmed
 
@@ -536,9 +537,9 @@ if __name__ == "__main__":
                 start_recording_time = rospy.Time.now()
                 recording_channel = detected_channel  # actually starts the recording of frames in the callback
                 # print "starting recording, please press the channel with the calibration tool in a push/release motion", args.repetition, "times in a row"
-                print " please press the channel with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
+                print(" please press the channel with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row")
                         
-                print " press enter to interrupt recording..."
+                print(" press enter to interrupt recording...")
             else: # we are recording
                 # TODO analyse the last recorded values and detect push/release
                 # if count_repetition >= args.repetition:
@@ -547,15 +548,15 @@ if __name__ == "__main__":
                 if elapsed_time > DEFAULT_RECORDING_DURATION :
                     recording_channel = None
                     state=RecordingState.PROCESS
-                    print "\nrecording ended"
+                    print("\nrecording ended")
                 else:
                   #display_raw_ref = display_channel_color([raw_previous_vec[i] for i in [detected_channel, args.ref_channel]] , [raw_vec[i] for i in [detected_channel, args.ref_channel] ], input_range_max)
                   #if display_raw_ref is not None:
                       #print "\033[0m\r chan:",display_raw_ref[0],"\033[0mref:",display_raw_ref[1],"\033[0m Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
                     if ref_topic_init is not None and ref_topic_init is True:
-                        print "\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(ref_raw_previous_vec[args.ref_channel], ref_raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                        print("\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(ref_raw_previous_vec[args.ref_channel], ref_raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time), end=' ')
                     else:
-                        print "\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(raw_previous_vec[args.ref_channel], raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
+                        print("\r", select_color(raw_previous_vec[detected_channel], raw_vec[detected_channel], input_range_max), " CHAN", " ", select_color(raw_previous_vec[args.ref_channel], raw_vec[args.ref_channel], input_range_max),"REF", "\033[0m, Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time), end=' ')
                     #else:
                     #    print "\033[0m\r Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
                     sys.stdout.flush()
@@ -565,13 +566,13 @@ if __name__ == "__main__":
                 # key pressed
                 # stop recording
                 recording_channel =  None
-                print "recording stopped"
+                print("recording stopped")
                 already_recorded_duration = rospy.Time.now() - start_recording_time
                 user_choice = user_menu({'c': "continue recording", 'r':"restart recording", 'd': "detect a new cell", 's': "save now", 'q': "quit without saving"})
                 if user_choice == "" or user_choice == 'c':
                     start_recording_time = rospy.Time.now() - already_recorded_duration
                     recording_channel = detected_channel
-                    print "continuing recording, for ", str(round(DEFAULT_RECORDING_DURATION-already_recorded_duration.to_sec(),1)) , " sec"
+                    print("continuing recording, for ", str(round(DEFAULT_RECORDING_DURATION-already_recorded_duration.to_sec(),1)) , " sec")
                 else:
                     if user_choice == 'q':
                         # TODO warn a second time, that all recording will be lost ?
@@ -583,7 +584,7 @@ if __name__ == "__main__":
                         raw_previous_vec=[]
                         ref_raw_previous_vec=[]
                     if user_choice == 'r':
-                        print "restarting recording"
+                        print("restarting recording")
                         state=RecordingState.RECORD
 
             # else:
@@ -598,7 +599,7 @@ if __name__ == "__main__":
             [inc, dec] = get_push_release_from_msgs(msgs, CHANGE_DETECT_THRESH, args.plot)
             
             if inc is None:
-                print " failed to extract push/release, verify the data visually, do you want to save anyway ?"
+                print(" failed to extract push/release, verify the data visually, do you want to save anyway ?")
                 if user_yesno(default=False):
                     state = RecordingState.SAVE
                 else:
@@ -610,15 +611,15 @@ if __name__ == "__main__":
                         raw_previous_vec=[]
                         ref_raw_previous_vec=[]
                     if user_choice == 'r':
-                        print "restarting recording"
+                        print("restarting recording")
                         state=RecordingState.RECORD
 
             else:
                 if len(inc) < args.repetition:
-                    print len(inc)," push/release actions found when", args.repetition, "were expected"
-                    print "restart recording ?"
+                    print(len(inc)," push/release actions found when", args.repetition, "were expected")
+                    print("restart recording ?")
                     if user_yesno(default=False):
-                        print "restarting recording, please press the channel with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row"
+                        print("restarting recording, please press the channel with the calibration tool in a push/release motion during the next", str(DEFAULT_RECORDING_DURATION) , " sec, ", args.repetition, "times in a row")
                         state = RecordingState.RECORD
                     else:
                         state=RecordingState.SAVE
@@ -642,7 +643,7 @@ if __name__ == "__main__":
                             channel_list.remove(detected_channel)
                         
             else:
-                print "No data to save or No channel selected"
+                print("No data to save or No channel selected")
             if detected_channel is not None:
                 processed_channels[detected_channel]= save_filename
             # loop
@@ -661,12 +662,12 @@ if __name__ == "__main__":
                 quit_request = True
                 state=RecordingState.SAVE
             else:
-                print "Channels recorded ", processed_channels.keys()
+                print("Channels recorded ", processed_channels.keys())
                 if channel_list is not None and len(channel_list) > 0:
-                    print "some channels were not recorded :", channel_list
+                    print("some channels were not recorded :", channel_list)
                 
                 if args.plot:
-                    print "close plot windows to quit"
+                    print("close plot windows to quit")
                     plt.show(block = True)
                 break;
 

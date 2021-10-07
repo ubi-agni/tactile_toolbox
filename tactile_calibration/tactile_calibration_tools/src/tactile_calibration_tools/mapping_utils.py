@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import yaml
 import csv
@@ -96,10 +97,10 @@ def save_mapping(mapping_dict, calib_channel, sensor_name, mapping_file=None, ou
                     if previous_calib:
                         for k in previous_calib.keys():
                             if type(k) != int:
-                                print "file is not a correct mapping, and cannot be merged"
+                                print("file is not a correct mapping, and cannot be merged")
                                 rename_oldcalib = True
                         if not rename_oldcalib:
-                            print "Old calib file detected, converting to new format and merging"
+                            print("Old calib file detected, converting to new format and merging")
                             calib = {"calib": [{'sensor_name': sensor_name, 'type': 'PWL', 'idx_range': flowmap([-1]), "values": previous_calib}]}
             #else: # file is empty
 
@@ -118,11 +119,11 @@ def save_mapping(mapping_dict, calib_channel, sensor_name, mapping_file=None, ou
                     cal['values'] = []
                 new_idx_range = check_idx_range_duplicate(cal["idx_range"], calib_channel)
                 if new_idx_range is not None: # data must be split
-                    print " found a calibration for channel", calib_channel, " replacing with new calib"
+                    print(" found a calibration for channel", calib_channel, " replacing with new calib")
                     if len(new_idx_range):
                         # keep the others
                         if type(new_idx_range)==list:
-                            print new_idx_range
+                            print(new_idx_range)
                             newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range':  flowmap(new_idx_range) , 'values': cal["values"]})
                         else:
                             newcalib["calib"].append({'sensor_name': cal["sensor_name"], 'type': cal["type"], 'idx_range': flowmap([new_idx_range]), 'values': cal["values"]})
@@ -134,6 +135,6 @@ def save_mapping(mapping_dict, calib_channel, sensor_name, mapping_file=None, ou
     except IOError:  # file does not exist, create it
         newcalib["calib"] = [{'sensor_name': sensor_name, 'type': 'PWL', 'idx_range': flowmap([calib_channel]), 'values': mapping_dict}]
         pass
-    print "Saving mapping to ", mapping_filename
+    print("Saving mapping to ", mapping_filename)
     with open(mapping_filename, 'w') as f:
         data = yaml.dump(newcalib, f, default_flow_style=False)  #sort_keys=False in python3 only

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import rosbag
 from tactile_msgs.msg import TactileState
 import numpy as np
@@ -80,9 +81,9 @@ def detect_channel_press(raw_previous_vec, raw_vec, ref_channel, detect_threshol
                             detected_channel = channel
                             break
                 else:  # 2 pressed and without ref
-                    print "More than one channel was pressed, retry"
+                    print("More than one channel was pressed, retry")
             if len(idx_above_thresh[0])>2:
-                print "More than one channel was pressed, retry"
+                print("More than one channel was pressed, retry")
         #else none pressed
     return detected_channel
 
@@ -101,7 +102,7 @@ def compute_tare(data, flatness_threshold=None):
             # we found a certain zone of flatness at the beginning of the data
             tare = np.mean(data[0:end_flat_range])
         else:
-            print "The ref is too flat, are you sure the correct channel was selected ?"
+            print("The ref is too flat, are you sure the correct channel was selected ?")
             tare = None
     else: # not extracting a flat, part, just using the whole vector
         tare = np.mean(data)
@@ -115,7 +116,7 @@ def calibrate_affine(raw, a, b):
 def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_threshold=0.3, user_is_raw=False):
     ref_raw = np.array(ref_vec)
     if user_is_raw:
-        print "calibrating ref with ratio=", ref_ratio, " offset=", ref_offset
+        print("calibrating ref with ratio=", ref_ratio, " offset=", ref_offset)
         # compute ref in newton 3.b    Calculate Ground Truth in Newton GTN: with Model GTN = -0,0154 * CtRAW+ 53,793    where   CrRAW = Calib-tool-RAW [12Bit] = "field.sensors0.values17" out of recorded rosbag file.
         # tare 3.c    Tare with each: GTtN = GTN - Mean(TareValues)
         ref_cal = calibrate_affine(ref_raw, ref_ratio, ref_offset)
@@ -130,7 +131,7 @@ def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_thres
             if tare is None:
                 tare = 0
             else:
-                print "extracted tare =", round(tare,3)
+                print("extracted tare =", round(tare,3))
         # tare
         ref_cal_tare = ref_cal - tare
 
@@ -138,7 +139,7 @@ def calibrate_ref(ref_vec, ref_ratio, ref_offset, user_tare=None, flatness_thres
         ref_cal_tare = np.array(ref_vec)
         # warn if data is strangly integers everywhere (which means is raw)
         if is_raw(ref_cal_tare):
-            print " # warning # ref values seem raw but option --ref_is_raw was not set to true, proceeding without calibration of ref"
+            print(" # warning # ref values seem raw but option --ref_is_raw was not set to true, proceeding without calibration of ref")
 
     return ref_cal_tare
 
@@ -153,7 +154,7 @@ def get_push_release(raw, ref, change_detect_threshold, doplot=False):
 
     # check there were some push/release
     if len(inc_idx)==0 or len(dec_idx)==0:
-        print "could not find push/release action in the data, verify the file or the channels"
+        print("could not find push/release action in the data, verify the file or the channels")
         return [None,None]
 
     # 3.a View recorded data in graphplot in order to validate correctness (no spurious wrong data or high noise)
@@ -263,10 +264,10 @@ def get_later_date(old, new):
                 return old
         except ValueError:
             # one of the format is invalid, take the new by default
-            print "error extracting date", datetime_str_old, datetime_str_new
+            print("error extracting date", datetime_str_old, datetime_str_new)
             pass
     else:
-        print "error finding dates", datetime_str_old, datetime_str_new
+        print("error finding dates", datetime_str_old, datetime_str_new)
     return new
 
 def get_channel_from_filename(filename):
@@ -323,7 +324,7 @@ def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_m
     raw_vec = []
     # TODO Guillaume : also handle the sensor name in case there are more than one sensor (like on iObject+)
     sensor_name = None
-    print "Reading", bagfilename," looking for ", user_topic, "channel", data_channel, " and ref ", ref_channel
+    print("Reading", bagfilename," looking for ", user_topic, "channel", data_channel, " and ref ", ref_channel)
     warned_size_tactile_vec = False
     for topic, msg, t in bag.read_messages(topics=[user_topic]):
         # if there is data
@@ -333,7 +334,7 @@ def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_m
             # warn if no channel provided but data is larger than 2 values
             if not warned_size_tactile_vec:
                 if len(msg.sensors[0].values) > 2 and not (data_channel and ref_channel):
-                    print "# Warning #, data size larger than 2 elements but not both data_channel and ref_channel were given"
+                    print("# Warning #, data size larger than 2 elements but not both data_channel and ref_channel were given")
                     warned_size_tactile_vec = True
 
             # validate index are in the range
@@ -344,7 +345,7 @@ def read_calib(bagfilename, user_topic, data_channel, ref_channel, input_range_m
                     ref_raw_vec.append(msg.sensors[0].values[ref_channel])
                     raw_vec.append(msg.sensors[0].values[data_channel])
                 else: # input range badly chosen
-                    print "Data ", msg.sensors[0].values[data_channel], " is higher than input resolution ", input_range_max
+                    print("Data ", msg.sensors[0].values[data_channel], " is higher than input resolution ", input_range_max)
                     bag.close()
                     exit(-1)
             # else drop the data of this message
