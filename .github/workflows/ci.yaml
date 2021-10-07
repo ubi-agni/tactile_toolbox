@@ -1,0 +1,53 @@
+# This config uses industrial_ci (https://github.com/ros-industrial/industrial_ci.git).
+# For troubleshooting, see readme (https://github.com/ros-industrial/industrial_ci/blob/master/README.rst)
+
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  default:
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [melodic, noetic]
+        include:
+          - distro: noetic
+            env:
+              CLANG_TIDY: true
+
+    env:
+      CXXFLAGS: "-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls"
+      CATKIN_LINT: true
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CACHE_PREFIX: ${{ matrix.distro }}
+      ROS_DISTRO: ${{ matrix.distro }}
+      UPSTREAM_WORKSPACE: rosinstall
+
+    name: "${{ matrix.distro }}${{ matrix.env.CLANG_TIDY && (github.event_name != 'workflow_dispatch' && ' • clang-tidy (delta)' || ' • clang-tidy (all)') || '' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache ccache
+        uses: pat-s/always-upload-cache@v2.1.5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
+            ccache-${{ env.CACHE_PREFIX }}
+
+      - name: industrial_ci
+        uses: ros-industrial/industrial_ci@master
+        env: ${{ matrix.env || env }}
+
+      - name: Upload test artifacts (on failure)
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-results
+          path: target_ws/**/test_results/**/*.xml
