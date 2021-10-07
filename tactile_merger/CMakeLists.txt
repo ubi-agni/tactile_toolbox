@@ -4,7 +4,6 @@ project(tactile_merger)
 set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED urdf_tactile tactile_msgs)
-find_package(tactile_filters REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
@@ -20,13 +19,20 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
+# Enforce a RUNPATH on the installed target (by cmake-default it is empty).
+# Usually libs are found by LD_LIBRARY_PATH in a ROS environment.
+# However, without an RUNPATH, sudo-elevated binaries will not find their libs,
+# because the LD_LIBRARY_PATH is cleared in this case for security reasons.
+# https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+
 add_library(${PROJECT_NAME}
   src/taxel.cpp
   src/taxel_group.cpp
   src/merger.cpp
 )
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters)
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node src/merger_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})

@@ -1,4 +1,4 @@
-find_package(Boost REQUIRED unit_test_framework)
+find_package(Boost REQUIRED system unit_test_framework)
 include_directories(${Boost_INCLUDE_DIR})
 
 # unit tests
