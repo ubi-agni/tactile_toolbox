@@ -3,7 +3,7 @@
   <name>tactile_state_calibrator</name>
   <version>0.1.0</version>
   <description>The tactile_state_calibrator applied a piece-wise linear calibration to a tactile_states</description>
-  
+
   <maintainer email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</maintainer>
 
   <license>BSD</license>
