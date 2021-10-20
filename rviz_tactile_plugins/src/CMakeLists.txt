@@ -6,9 +6,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct cmake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} MODULE
   tactile_state_display.cpp

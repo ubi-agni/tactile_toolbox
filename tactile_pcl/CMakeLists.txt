@@ -37,6 +37,6 @@ CATKIN_DEPENDS sensor_msgs tactile_msgs
 )
 
 ## Specify additional locations of header files
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 add_subdirectory(src)

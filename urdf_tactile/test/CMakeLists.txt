@@ -1,5 +1,5 @@
 find_package(Boost REQUIRED system unit_test_framework)
-include_directories(${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 # unit tests
 add_executable(test_parser parser.cpp)

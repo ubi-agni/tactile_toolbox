@@ -15,7 +15,7 @@ CATKIN_DEPENDS tactile_msgs
 #  DEPENDS
 )
 
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_publisher.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

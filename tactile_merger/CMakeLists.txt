@@ -13,11 +13,8 @@ catkin_package(
   DEPENDS
 )
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
-)
+include_directories(include)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 
 # Enforce a RUNPATH on the installed target (by cmake-default it is empty).
 # Usually libs are found by LD_LIBRARY_PATH in a ROS environment.

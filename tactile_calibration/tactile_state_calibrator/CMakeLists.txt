@@ -16,7 +16,7 @@ CATKIN_DEPENDS tactile_msgs roscpp
 #  DEPENDS
 )
 
-include_directories(${catkin_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS})
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} src/tactile_state_calibrator.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} tactile_filters ${YAML_LIBRARIES})
