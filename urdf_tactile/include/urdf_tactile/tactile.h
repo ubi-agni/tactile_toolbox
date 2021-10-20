@@ -122,7 +122,7 @@ using TactileArraySharedPtr = std::shared_ptr<TactileArray>;
 class TactileSensor : public urdf::SensorBase
 {
 public:
-	TactileSensor() { this->clear(); }
+	TactileSensor() { TactileSensor::clear(); }
 	std::vector<TactileTaxelSharedPtr> taxels_;
 	TactileArraySharedPtr array_;
 	std::string channel_;

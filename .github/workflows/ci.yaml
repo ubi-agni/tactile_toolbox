@@ -22,7 +22,7 @@ jobs:
 
     env:
       CXXFLAGS: "-Werror -Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls ${{ matrix.env.CXXFLAGS }}"
-      CLANG_TIDY_ARGS: --fix --fix-errors --format-style=file
+      CLANG_TIDY_ARGS: --fix --fix-errors --format-style=file -checks="-clang-diagnostic-deprecated-declarations,-clang-analyzer-cplusplus.NewDeleteLeaks"
       CATKIN_LINT: true
       BASEDIR: ${{ github.workspace }}/.work
       CCACHE_DIR: ${{ github.workspace }}/.ccache

@@ -42,7 +42,7 @@ RangeFloatProperty::RangeFloatProperty(const QString &name, float fallback_value
 {
 	setShouldBeSaved(false);
 	Property::setValue("");
-	setValue(fallback_value);
+	RangeFloatProperty::setValue(fallback_value);
 }
 
 bool RangeFloatProperty::setValue(const QVariant &new_value)
