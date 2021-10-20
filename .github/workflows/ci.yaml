@@ -17,11 +17,13 @@ jobs:
         include:
           - distro: noetic
             env:
-              CLANG_TIDY: true
+              CLANG_TIDY: pedantic
 
     env:
-      CXXFLAGS: "-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls"
+      CXXFLAGS: "-Werror -Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls"
+      CLANG_TIDY_ARGS: --fix --fix-errors --format-style=file
       CATKIN_LINT: true
+      BASEDIR: ${{ github.workspace }}/.work
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CACHE_PREFIX: ${{ matrix.distro }}
       ROS_DISTRO: ${{ matrix.distro }}
@@ -42,12 +44,20 @@ jobs:
             ccache-${{ env.CACHE_PREFIX }}
 
       - name: industrial_ci
+        id: ici
         uses: ros-industrial/industrial_ci@master
         env: ${{ matrix.env || env }}
 
       - name: Upload test artifacts (on failure)
         uses: actions/upload-artifact@v2
-        if: failure()
+        if: failure() && (steps.ici.outputs.run_target_test || steps.ici.outputs.target_test_results)
         with:
           name: test-results
-          path: target_ws/**/test_results/**/*.xml
+          path: ${{ env.BASEDIR }}/target_ws/**/test_results/**/*.xml
+
+      - name: Upload clang-tidy changes
+        uses: rhaschke/upload-git-patch-action@main
+        if: always() && matrix.env.CLANG_TIDY
+        with:
+          name: clang-tidy
+          path: ${{ env.BASEDIR }}/target_ws/src/$(basename $(pwd))
