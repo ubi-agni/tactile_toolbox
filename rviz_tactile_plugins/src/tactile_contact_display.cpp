@@ -153,7 +153,7 @@ void TactileContactDisplay::unsubscribe()
 	contacts_.clear();
 }
 
-void TactileContactDisplay::setTopic(const QString &topic, const QString &datatype)
+void TactileContactDisplay::setTopic(const QString &topic, const QString & /*datatype*/)
 {
 	topic_property_->setString(topic);
 }

@@ -18,9 +18,10 @@ jobs:
           - distro: noetic
             env:
               CLANG_TIDY: pedantic
+              CXXFLAGS: -Wno-error=deprecated-declarations
 
     env:
-      CXXFLAGS: "-Werror -Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls"
+      CXXFLAGS: "-Werror -Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls ${{ matrix.env.CXXFLAGS }}"
       CLANG_TIDY_ARGS: --fix --fix-errors --format-style=file
       CATKIN_LINT: true
       BASEDIR: ${{ github.workspace }}/.work

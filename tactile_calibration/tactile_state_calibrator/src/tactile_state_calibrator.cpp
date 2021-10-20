@@ -78,7 +78,7 @@ bool TactileStateCalibrator::extract_idx_range(const YAML::Node &node,
 					if (idx_range.size() == 2) {
 						ROS_DEBUG_STREAM_NAMED(DETAIL, "  found size 2");
 						// check the start and end are valid
-						if (idx_range[0] < idx_range[1] && idx_range[0] >= 0) {
+						if (idx_range[0] < idx_range[1]) {
 							ROS_DEBUG_STREAM_NAMED(DETAIL, "  index range valid");
 							// add the range to the idx_map and associate it to the calibration pointer
 							for (unsigned int i = idx_range[0]; i <= idx_range[1]; ++i) {

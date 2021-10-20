@@ -86,7 +86,7 @@ void RangeFloatProperty::load(const Config &config)
 	FloatProperty::load(config);
 }
 
-QWidget *RangeFloatProperty::createEditor(QWidget *parent, const QStyleOptionViewItem &option)
+QWidget *RangeFloatProperty::createEditor(QWidget *parent, const QStyleOptionViewItem & /*option*/)
 {
 	// use own editor to allow for empty input
 	QLineEdit *editor = new QLineEdit(parent);

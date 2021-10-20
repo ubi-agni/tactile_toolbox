@@ -8,6 +8,9 @@ using namespace urdf::tactile;
 #define BOOST_TEST_MODULE URDF_TACTILE_TOOLS_TEST
 // needed for automatic generation of the main()
 #define BOOST_TEST_DYN_LINK
+// enable BOOST_ASSERT
+#undef NDEBUG
+
 #include <boost/test/unit_test.hpp>
 
 urdf::SensorSharedPtr create_array(unsigned int rows, unsigned int cols,

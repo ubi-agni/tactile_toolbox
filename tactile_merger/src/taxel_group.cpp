@@ -90,6 +90,7 @@ void TaxelGroup::update(const TaxelMapping &mapping, Iterator input_begin, Itera
 {
 	for (const auto &pair : mapping) {
 		assert(input_begin + pair.first < input_end);
+		(void)(input_end);
 		taxels_[pair.second].weight = *(input_begin + pair.first);
 	}
 }
