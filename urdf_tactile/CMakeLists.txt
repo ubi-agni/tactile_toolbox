@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.3)
-project(urdf_tactile VERSION 0.1)
+project(urdf_tactile)
 
 set(CMAKE_CXX_STANDARD 14)
 
