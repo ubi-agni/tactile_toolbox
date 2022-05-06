@@ -48,7 +48,8 @@ repos:
       - id: catkin_lint
         name: catkin_lint
         description: Check package.xml and cmake files
-        entry: catkin_lint .
+        entry: catkin_lint
+        args: [ "--config", ".catkin_lint", "." ]
         language: system
         always_run: true
         pass_filenames: false

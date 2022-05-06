@@ -12,6 +12,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>urdf</depend>
+  <depend>urdfdom</depend>
   <depend>pluginlib</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
