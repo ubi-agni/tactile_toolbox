@@ -17,4 +17,12 @@
     <message_type>tactile_msgs/TactileContact</message_type>
     <message_type>tactile_msgs/TactileContacts</message_type>
   </class>
+
+  <class name="rviz_tactile_plugins/Glove Display Group"
+         type="rviz::tactile::GloveDisplayGroup"
+         base_class_type="rviz::Display">
+    <description>
+      display gloves
+    </description>
+  </class>
 </library>

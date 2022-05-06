@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} MODULE
   color_map.cpp
 
   tactile_contact_display.cpp
+  glove_display_group.cpp
   plugin_init.cpp
 )
 ## Specify libraries to link a library or executable target against
