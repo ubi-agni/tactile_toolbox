@@ -97,7 +97,7 @@ private:
 
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_;
-	std::map<std::string, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
+	std::map<std::pair<std::string, std::string>, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
 	boost::mutex mutex_;
 	ros::Time last_update_;  // last seen ROS timestamp
 	ros::Time last_msg_;  // timestamp when last received a message
