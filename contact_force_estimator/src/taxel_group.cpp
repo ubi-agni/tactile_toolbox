@@ -26,7 +26,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <tactile_merger/taxel_group.h>
+#include <contact_force_estimator/taxel_group.h>
 
 #include <ros/console.h>
 #include <urdf_tactile/taxel_info_iterator.h>

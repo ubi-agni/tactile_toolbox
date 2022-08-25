@@ -26,7 +26,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <tactile_merger/merger.h>
+#include <contact_force_estimator/contact_force_estimator.h>
 #include <ros/ros.h>
 #include <tactile_msgs/TactileContacts.h>
 #include <tactile_msgs/TactileState.h>
@@ -34,11 +34,11 @@
 
 static bool HAVE_NEW_DATA = false;
 
-void message_handler(tactile::Merger &merger, const tactile_msgs::TactileStateConstPtr &msg)
+void message_handler(tactile::ContactForceEstimator &estimator, const tactile_msgs::TactileStateConstPtr &msg)
 {
 	HAVE_NEW_DATA = true;
 	for (auto it = msg->sensors.begin(), end = msg->sensors.end(); it != end; ++it) {
-		merger.update(msg->header.stamp, it->name, it->values.begin(), it->values.end());
+		estimator.update(msg->header.stamp, it->name, it->values.begin(), it->values.end());
 	}
 }
 
@@ -48,13 +48,13 @@ int main(int argc, char *argv[])
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_priv("~");
 
-	tactile::Merger merger;
-	merger.init();
+	tactile::ContactForceEstimator estimator;
+	estimator.init();
 
 	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
 
 	const boost::function<void(const tactile_msgs::TactileStateConstPtr &)> callback =
-	    boost::bind(message_handler, boost::ref(merger), boost::placeholders::_1);
+	    boost::bind(message_handler, boost::ref(estimator), boost::placeholders::_1);
 	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
 	ros::Time last_update;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 		ros::Time now = ros::Time::now();
 		if (now < last_update) {
 			ROS_WARN_STREAM("Detected jump back in time of " << (last_update - now).toSec() << "s. Resetting data.");
-			merger.reset();
+			estimator.reset();
 			HAVE_NEW_DATA = false;
 		}
 		last_update = now;
@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
 		if (HAVE_NEW_DATA) {
 			HAVE_NEW_DATA = false;
 			if (no_clustering)
-				pub.publish(merger.getAllTaxelContacts());
+				pub.publish(estimator.getAllTaxelContacts());
 			else
-				pub.publish(merger.getGroupAveragedContacts());
+				pub.publish(estimator.getGroupAveragedContacts());
 			ros::spinOnce();
 		}
 		rate.sleep();
