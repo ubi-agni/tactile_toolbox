@@ -40,6 +40,7 @@
 #include <QApplication>
 #include <QTimer>
 #include <boost/thread/locks.hpp>
+#include <functional>
 
 namespace rviz {
 namespace tactile {
@@ -203,13 +204,13 @@ void TactileContactDisplay::triggerFullUpdate()
 
 void TactileContactDisplay::processMessage(const tactile_msgs::TactileContact &msg)
 {
-	std::string id = msg.header.frame_id + msg.name;
+	const auto &id = std::make_pair(msg.header.frame_id, msg.name);
 	auto it = contacts_.find(id);
 	if (it != contacts_.end()) {
 		tactile_msgs::TactileContact &m = it->second.first;
 		m = msg;
 	} else {
-		contacts_.insert(std::make_pair(id, std::make_pair(msg, WrenchVisualPtr())));
+		contacts_.insert(std::make_pair(std::cref(id), std::make_pair(msg, WrenchVisualPtr())));
 	}
 }
 
