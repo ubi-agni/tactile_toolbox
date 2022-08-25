@@ -26,36 +26,60 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#pragma once
-#include <urdf/sensor.h>
-#include "taxel_group.h"
-#include <ros/time.h>
+#include <contact_force_estimator/contact_force_estimator.h>
+#include <ros/ros.h>
 #include <tactile_msgs/TactileContacts.h>
+#include <tactile_msgs/TactileState.h>
+#include <boost/bind.hpp>
 
-namespace tactile {
+static bool HAVE_NEW_DATA = false;
 
-class Merger
+void message_handler(tactile::ContactForceEstimator &estimator, const tactile_msgs::TactileStateConstPtr &msg)
 {
-public:
-	Merger();
-	~Merger();
+	HAVE_NEW_DATA = true;
+	for (auto it = msg->sensors.begin(), end = msg->sensors.end(); it != end; ++it) {
+		estimator.update(msg->header.stamp, it->name, it->values.begin(), it->values.end());
+	}
+}
 
-	void init(const std::string &param = "robot_description");
+int main(int argc, char *argv[])
+{
+	ros::init(argc, argv, ROS_PACKAGE_NAME);
+	ros::NodeHandle nh;
+	ros::NodeHandle nh_priv("~");
 
-	template <typename Iterator>
-	void update(const ros::Time &stamp, const std::string &channel, Iterator begin, Iterator end);
-	void reset();
+	tactile::ContactForceEstimator estimator;
+	estimator.init();
 
-	tactile_msgs::TactileContacts getGroupAveragedContacts();
-	tactile_msgs::TactileContacts getAllTaxelContacts();
+	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
 
-private:
-	struct GroupData;
-	typedef boost::shared_ptr<GroupData> GroupDataPtr;
+	const boost::function<void(const tactile_msgs::TactileStateConstPtr &)> callback =
+	    boost::bind(message_handler, boost::ref(estimator), _1);
+	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
-	urdf::ManagedSensorParserMap parsers_;
-	std::map<std::string, GroupDataPtr> groups_;
-	std::multimap<std::string, std::pair<GroupDataPtr, const TaxelGroup::TaxelMapping *> > sensors_;
-};
+	ros::Time last_update;
+	ros::Rate rate(nh_priv.param("rate", 100.));
+	bool no_clustering = nh_priv.param("no_clustering", false);
+	while (ros::ok()) {
+		ros::spinOnce();
+		ros::Time now = ros::Time::now();
+		if (now < last_update) {
+			ROS_WARN_STREAM("Detected jump back in time of " << (last_update - now).toSec() << "s. Resetting data.");
+			estimator.reset();
+			HAVE_NEW_DATA = false;
+		}
+		last_update = now;
 
-}  // namespace tactile
+		if (HAVE_NEW_DATA) {
+			HAVE_NEW_DATA = false;
+			if (no_clustering)
+				pub.publish(estimator.getAllTaxelContacts());
+			else
+				pub.publish(estimator.getGroupAveragedContacts());
+			ros::spinOnce();
+		}
+		rate.sleep();
+	}
+
+	return 0;
+}
