@@ -25,6 +25,10 @@ jobs:
       CLANG_TIDY_ARGS: --fix --fix-errors --format-style=file -checks="-clang-diagnostic-deprecated-declarations,-clang-analyzer-cplusplus.NewDeleteLeaks"
       CATKIN_LINT: true
       BASEDIR: ${{ github.workspace }}/.work
+      AFTER_INIT: |
+        # Fix for https://github.blog/2022-04-12-git-security-vulnerability-announced
+        apt-get -qq install -y --no-upgrade --no-install-recommends git-core | grep -E 'Setting up'
+        git config --global --add safe.directory "*"
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CACHE_PREFIX: ${{ matrix.distro }}
       ROS_DISTRO: ${{ matrix.distro }}
