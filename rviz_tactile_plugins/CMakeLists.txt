@@ -30,12 +30,13 @@ find_package(tactile_filters REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES agni_tf_tools
+  LIBRARIES rviz_tactile_plugins
 CATKIN_DEPENDS rviz tactile_msgs roscpp
 #  DEPENDS system_lib
 )
 
 include_directories(include)
+
 
 #############
 ## sub dir ##
