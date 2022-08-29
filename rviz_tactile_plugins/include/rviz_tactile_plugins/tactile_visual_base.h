@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "group_property.h"
+#include "rviz_tactile_plugins/group_property.h"
 #include <urdf_tactile/tactile.h>
 #include <tactile_msgs/TactileState.h>
 #include <geometry_msgs/Pose.h>

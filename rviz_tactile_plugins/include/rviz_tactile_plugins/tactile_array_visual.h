@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "tactile_visual_base.h"
+#include "rviz_tactile_plugins/tactile_visual_base.h"
 #include <urdf_tactile/tactile.h>
 #include <rviz/ogre_helpers/point_cloud.h>
 

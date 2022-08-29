@@ -29,11 +29,13 @@ find_package(tactile_filters REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES agni_tf_tools
 CATKIN_DEPENDS rviz tactile_msgs roscpp
 #  DEPENDS system_lib
 )
+
+include_directories(include)
 
 #############
 ## sub dir ##
@@ -50,6 +52,11 @@ add_subdirectory(src)
 install(FILES
   plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
 
 #############
 ## Testing ##

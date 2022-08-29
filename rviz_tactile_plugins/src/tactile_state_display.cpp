@@ -29,10 +29,10 @@
  * Author: Robert Haschke <rhaschke@techfak.uni-bielefeld.de>
  */
 
-#include "tactile_state_display.h"
-#include "tactile_taxels_visual.h"
-#include "tactile_array_visual.h"
-#include "group_property.h"
+#include "rviz_tactile_plugins/tactile_state_display.h"
+#include "rviz_tactile_plugins/tactile_taxels_visual.h"
+#include "rviz_tactile_plugins/tactile_array_visual.h"
+#include "rviz_tactile_plugins/group_property.h"
 
 #include <urdf/sensor.h>
 #include <urdf_tactile/tactile.h>
