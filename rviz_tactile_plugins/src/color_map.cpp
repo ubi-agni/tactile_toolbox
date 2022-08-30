@@ -22,7 +22,7 @@
  *
  * ============================================================ */
 
-#include "rviz_tactile_plugins/color_map.h"
+#include <rviz_tactile_plugins/color_map.h>
 #include <assert.h>
 #include <cmath>
 

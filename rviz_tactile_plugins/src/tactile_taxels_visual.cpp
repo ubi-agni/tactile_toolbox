@@ -29,7 +29,7 @@
  * Author: Robert Haschke <rhaschke@techfak.uni-bielefeld.de>
  */
 
-#include "rviz_tactile_plugins/tactile_taxels_visual.h"
+#include <rviz_tactile_plugins/tactile_taxels_visual.h>
 
 #include <rviz/mesh_loader.h>
 #include <rviz/display_context.h>
