@@ -29,27 +29,52 @@
 
 #pragma once
 
-#include "tactile_visual_base.h"
+#include <rviz_tactile_plugins/tactile_visual_base.h>
 #include <urdf_tactile/tactile.h>
-#include <rviz/ogre_helpers/point_cloud.h>
+
+#define ENABLE_ARROWS 0
 
 namespace rviz {
+
+#if ENABLE_ARROWS
+class Arrow;
+typedef boost::shared_ptr<rviz::Arrow> ArrowPtr;
+#endif
+
 namespace tactile {
 
-class TactileArrayVisual : public TactileVisualBase
+class TaxelEntity;
+typedef boost::shared_ptr<TaxelEntity> TaxelEntityPtr;
+
+class TactileTaxelsVisual : public TactileVisualBase
 {
+	Q_OBJECT
 public:
-	TactileArrayVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
-	                   const urdf::tactile::TactileArraySharedPtr &array, Display *owner, DisplayContext *context,
-	                   Ogre::SceneNode *parent_node, rviz::Property *parent_property = nullptr);
+	TactileTaxelsVisual(const std::string &name, const std::string &frame, const urdf::Pose &origin,
+	                    const std::vector<urdf::tactile::TactileTaxelSharedPtr> &taxels, rviz::Display *owner,
+	                    rviz::DisplayContext *context, Ogre::SceneNode *parent_node,
+	                    Property *parent_property = nullptr);
 
 protected:
 	void updateValues(const ros::Time &stamp, const sensor_msgs::ChannelFloat32::_values_type &values) override;
 	void updateVisual() override;
 
+#if ENABLE_ARROWS
+protected Q_SLOTS:
+	void onVisibleChanged();
+	void onArrowsEnabled();
+#endif
+
 protected:
-	rviz::PointCloud *cloud_;
-	std::vector<rviz::PointCloud::Point> points_;
+	std::vector<unsigned int> mapping_;  /// mapping raw data indeces to taxels_
+	std::vector<TaxelEntityPtr> taxels_;
+
+#if ENABLE_ARROWS
+	rviz::BoolProperty *arrows_property_;
+	rviz::FloatProperty *arrows_scale_property_;
+	Ogre::SceneNode *arrows_node_;
+	std::vector<rviz::ArrowPtr> arrows_;
+#endif
 };
 
 }  // namespace tactile

@@ -29,7 +29,7 @@
  * Author: Robert Haschke <rhaschke@techfak.uni-bielefeld.de>
  */
 
-#include "tactile_contact_display.h"
+#include <rviz_tactile_plugins/tactile_contact_display.h>
 
 #include <rviz/visualization_manager.h>
 #include <rviz/frame_manager.h>

@@ -35,7 +35,7 @@
 #include <rviz/display.h>
 #include <tactile_msgs/TactileState.h>
 #include <tactile_filters/TactileValue.h>
-#include "color_map.h"
+#include <rviz_tactile_plugins/color_map.h>
 
 namespace rviz {
 class Property;

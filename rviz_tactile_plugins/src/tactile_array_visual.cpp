@@ -29,7 +29,7 @@
  * Author: Robert Haschke <rhaschke@techfak.uni-bielefeld.de>
  */
 
-#include "tactile_array_visual.h"
+#include <rviz_tactile_plugins/tactile_array_visual.h>
 
 #include <rviz/config.h>
 #include <ros/console.h>

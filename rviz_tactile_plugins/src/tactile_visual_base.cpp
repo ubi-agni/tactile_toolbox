@@ -29,9 +29,9 @@
  * Author: Robert Haschke <rhaschke@techfak.uni-bielefeld.de>
  */
 
-#include "tactile_visual_base.h"
-#include "range_property.h"
-#include "color_map.h"
+#include <rviz_tactile_plugins/tactile_visual_base.h>
+#include <rviz_tactile_plugins/range_property.h>
+#include <rviz_tactile_plugins/color_map.h>
 
 #include <rviz/properties/float_property.h>
 #include <rviz/frame_manager.h>
