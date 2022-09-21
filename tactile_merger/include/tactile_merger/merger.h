@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
+#include <urdf/sensor.h>
 #include "taxel_group.h"
 #include <ros/time.h>
 #include <tactile_msgs/TactileContacts.h>
@@ -37,6 +38,8 @@ class Merger
 {
 public:
 	Merger();
+	~Merger();
+
 	void init(const std::string &param = "robot_description");
 
 	template <typename Iterator>
@@ -50,6 +53,7 @@ private:
 	struct GroupData;
 	typedef boost::shared_ptr<GroupData> GroupDataPtr;
 
+	urdf::ManagedSensorParserMap parsers_;
 	std::map<std::string, GroupDataPtr> groups_;
 	std::multimap<std::string, std::pair<GroupDataPtr, const TaxelGroup::TaxelMapping *> > sensors_;
 };

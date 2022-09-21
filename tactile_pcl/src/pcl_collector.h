@@ -50,6 +50,7 @@ protected:
 
 protected:
 	std::string robot_root_frame_;
+	urdf::ManagedSensorParserMap parsers_;
 	urdf::SensorMap sensors_;  //< tactile sensors
 
 	std::string target_frame_;  //< target frame, the PCL should be expressed in

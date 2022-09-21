@@ -220,12 +220,11 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 	}
 
 	sensors_.clear();
-	urdf::SensorMap sensors;
 	const std::string &tf_prefix = tf_prefix_property_->getStdString();
 
 	try {
-		sensors =
-		    urdf::parseSensorsFromParam(robot_description_property_->getStdString(), urdf::getSensorParser("tactile"));
+		auto parsers = urdf::getSensorParser("tactile");
+		auto sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(), parsers);
 
 		// create a TactileVisual for each tactile sensor listed in the URDF model
 		for (const auto &sensor : sensors) {

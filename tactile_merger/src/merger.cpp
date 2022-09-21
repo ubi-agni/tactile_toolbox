@@ -47,13 +47,20 @@ struct Merger::GroupData
 Merger::GroupData::GroupData(const TaxelGroupPtr &group) : group(group) {}
 
 Merger::Merger() {}
+Merger::~Merger()
+{
+	sensors_.clear();
+	groups_.clear();
+	parsers_.clear();
+}
 
 void Merger::init(const std::string &param)
 {
 	sensors_.clear();
 	groups_.clear();
+	parsers_ = std::move(urdf::getSensorParser("tactile"));
 
-	const TaxelGroupMap &groups = TaxelGroup::load(param);
+	const TaxelGroupMap &groups = TaxelGroup::load(param, parsers_);
 	for (const auto &name_group : groups) {
 		TaxelGroupPtr group = name_group.second;
 		GroupDataPtr data(new GroupData(group));

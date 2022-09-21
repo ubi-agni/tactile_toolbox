@@ -41,7 +41,8 @@ void check_sensor_map(const urdf::SensorMap &sensors)
 
 BOOST_AUTO_TEST_CASE(test_pluginlib_parsing)
 {
-	check_sensor_map(urdf::parseSensorsFromFile("tactile.urdf", urdf::getSensorParser("tactile")));
+	auto parsers = urdf::getSensorParser("tactile");
+	check_sensor_map(urdf::parseSensorsFromFile("tactile.urdf", parsers));
 }
 
 void change_and_check_order_mode(const urdf::SensorParserSharedPtr &parser, TiXmlElement &tactile_xml,
@@ -56,7 +57,7 @@ void change_and_check_order_mode(const urdf::SensorParserSharedPtr &parser, TiXm
 
 BOOST_AUTO_TEST_CASE(test_tactile_array)
 {
-	urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
+	auto parsers = urdf::getSensorParser("tactile");
 	std::shared_ptr<TiXmlDocument> root = loadFromFile("tactile.urdf");
 	BOOST_REQUIRE(root);
 

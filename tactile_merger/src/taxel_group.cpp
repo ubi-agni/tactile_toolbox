@@ -68,11 +68,11 @@ void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor)
  *  A TaxelGroup is identified by link name.
  *  A TaxelGroup can hold several tactile sensors if they are attached to the same link.
  */
-TaxelGroupMap TaxelGroup::load(const std::string &desc_param)
+TaxelGroupMap TaxelGroup::load(const std::string &desc_param, const urdf::SensorParserMap &parsers)
 {
 	TaxelGroupMap result;
 
-	urdf::SensorMap sensors = urdf::parseSensorsFromParam(desc_param, urdf::getSensorParser("tactile"));
+	urdf::SensorMap sensors = urdf::parseSensorsFromParam(desc_param, parsers);
 	// create a TaxelGroup for each tactile sensor
 	for (auto &sensor : sensors) {
 		urdf::tactile::TactileSensorConstSharedPtr tactile = urdf::tactile::tactile_sensor_cast(sensor.second);

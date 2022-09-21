@@ -48,7 +48,9 @@ void PCLCollector::initFromRobotDescription(const std::string &param)
 			ROS_WARN_STREAM("failed to parse " << param);
 
 		// fetch sensor descriptions
-		sensors_ = parseSensors(xml_string, urdf::getSensorParser("tactile"));
+		sensors_.clear();
+		parsers_ = urdf::getSensorParser("tactile");
+		sensors_ = parseSensors(xml_string, parsers_);
 	} catch (const std::exception &e) {
 		ROS_WARN_STREAM("failed to parse robot description:" << e.what());
 	}

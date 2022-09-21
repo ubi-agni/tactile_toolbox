@@ -36,7 +36,7 @@ void TactileStatePublisher::config()
 	   Due to a bug in pluginlib, the unloading of the lib might throw on destruction of SensorParserMap.
 	*/
 	try {
-		urdf::SensorParserMap parsers = urdf::getSensorParser("tactile");
+		auto parsers = urdf::getSensorParser("tactile");
 		createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
 	} catch (const std::exception &e) {
 		ROS_ERROR_STREAM(e.what());
