@@ -50,7 +50,7 @@ void change_and_check_order_mode(const urdf::SensorParserSharedPtr &parser, TiXm
 {
 	TiXmlElement *array_xml = tactile_xml.FirstChildElement("array");
 	array_xml->SetAttribute("order", pcMode);
-	TactileSensorSharedPtr tactile = tactile_sensor_cast(parser->parse(tactile_xml));
+	TactileSensorSharedPtr tactile(tactile_sensor_cast(parser->parse(tactile_xml)));
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_->order == mode);
 }
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(test_tactile_array)
 	BOOST_REQUIRE(tactile_xml);
 
 	urdf::SensorParserSharedPtr parser = parsers["tactile"];
-	TactileSensorSharedPtr tactile = tactile_sensor_cast(parser->parse(*tactile_xml));
+	TactileSensorSharedPtr tactile(tactile_sensor_cast(parser->parse(*tactile_xml)));
 	BOOST_REQUIRE(tactile);
 
 	BOOST_CHECK(tactile->taxels_.empty());
@@ -79,14 +79,14 @@ BOOST_AUTO_TEST_CASE(test_tactile_array)
 
 	// missing spacing attribute defaults to size
 	array_xml->RemoveAttribute("spacing");
-	tactile = tactile_sensor_cast(parser->parse(*tactile_xml));
+	tactile.reset(tactile_sensor_cast(parser->parse(*tactile_xml)));
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_->spacing.x == tactile->array_->size.x);
 	BOOST_CHECK(tactile->array_->spacing.y == tactile->array_->size.y);
 
 	// missing offset attribute defaults to zero
 	array_xml->RemoveAttribute("offset");
-	tactile = tactile_sensor_cast(parser->parse(*tactile_xml));
+	tactile.reset(tactile_sensor_cast(parser->parse(*tactile_xml)));
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_->offset.x == 0);
 	BOOST_CHECK(tactile->array_->offset.y == 0);

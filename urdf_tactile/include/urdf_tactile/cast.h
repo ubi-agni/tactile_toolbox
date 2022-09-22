@@ -33,6 +33,15 @@
 namespace urdf {
 namespace tactile {
 
+inline const urdf::tactile::TactileSensor* tactile_sensor_cast(const urdf::SensorBase* sensor)
+{
+	return dynamic_cast<const urdf::tactile::TactileSensor*>(sensor);
+}
+inline urdf::tactile::TactileSensor* tactile_sensor_cast(urdf::SensorBase* sensor)
+{
+	return dynamic_cast<urdf::tactile::TactileSensor*>(sensor);
+}
+
 inline const urdf::tactile::TactileSensor& tactile_sensor_cast(const urdf::Sensor& sensor)
 {
 	return dynamic_cast<const urdf::tactile::TactileSensor&>(*sensor.sensor_);

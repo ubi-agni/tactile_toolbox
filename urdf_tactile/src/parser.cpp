@@ -123,9 +123,9 @@ bool parseTactileArray(TactileArray &array, TiXmlElement *config)
 	return true;
 }
 
-SensorBaseSharedPtr TactileSensorParser::parse(TiXmlElement &config)
+SensorBase *TactileSensorParser::parse(TiXmlElement &config)
 {
-	TactileSensorSharedPtr tactile(new TactileSensor());
+	auto tactile = std::make_unique<TactileSensor>();
 	tactile->channel_ = parseAttribute<std::string>(config, "channel");
 	tactile->group_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "group");
 
@@ -137,9 +137,8 @@ SensorBaseSharedPtr TactileSensorParser::parse(TiXmlElement &config)
 		if (parseTactileTaxel(*taxel, taxel_xml)) {
 			tactile->taxels_.push_back(taxel);
 		} else {
-			taxel.reset();
 			CONSOLE_BRIDGE_logError("Could not parse taxel element for tactile sensor");
-			return TactileSensorSharedPtr();
+			return nullptr;
 		}
 	}
 
@@ -152,9 +151,8 @@ SensorBaseSharedPtr TactileSensorParser::parse(TiXmlElement &config)
 		}
 		tactile->array_.reset(new TactileArray());
 		if (!parseTactileArray(*tactile->array_, array_xml)) {
-			tactile->array_.reset();
 			CONSOLE_BRIDGE_logError("Could not parse array element for tactile sensor");
-			return TactileSensorSharedPtr();
+			return nullptr;
 		}
 	}
 
@@ -162,7 +160,7 @@ SensorBaseSharedPtr TactileSensorParser::parse(TiXmlElement &config)
 		CONSOLE_BRIDGE_logWarn("Either an array or multiple taxel elements are allowed for a tactile sensor");
 		tactile->array_.reset();
 	}
-	return tactile;
+	return tactile.release();
 }
 
 }  // namespace tactile
