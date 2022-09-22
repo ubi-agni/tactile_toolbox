@@ -33,7 +33,7 @@ jobs:
       CACHE_PREFIX: ${{ matrix.distro }}
       ROS_DISTRO: ${{ matrix.distro }}
       UPSTREAM_WORKSPACE: rosinstall
-      ROSDEP_SKIP_KEYS: urdfdom  # urdfdom, as a cmake-only package, is not found as a ROS package from install space
+      ROSDEP_SKIP_KEYS: tinyxml_vendor console_bridge_vendor  # *_vendor packages are ROS2 specific
       CATKIN_LINT_ARGS: --config src/tactile_toolbox/.catkin_lint
 
     name: "${{ matrix.distro }}${{ matrix.env.CLANG_TIDY && (github.event_name != 'workflow_dispatch' && ' • clang-tidy (delta)' || ' • clang-tidy (all)') || '' }}"
