@@ -78,8 +78,9 @@ void TaxelInfoIteratorI::initInfo(TaxelInfo &info)
 {
 	// initialize common properties of all taxels
 	info.link = sensor->parent_link_;
-	info.group = sensor->group_;
-	info.channel = tactile_sensor_cast(*sensor).channel_;
+	const auto &ts = tactile_sensor_cast(*sensor);
+	info.group = ts.group_;
+	info.channel = ts.channel_;
 }
 
 void TaxelInfoIteratorI::finishInfo(TaxelInfo &info)

@@ -19,11 +19,11 @@ urdf::SensorSharedPtr create_array(unsigned int rows, unsigned int cols,
 	urdf::SensorSharedPtr s(new urdf::Sensor);
 	s->name_ = "array";
 	s->parent_link_ = "link";
-	s->group_ = "array";
 
 	TactileSensorSharedPtr tactile(new TactileSensor);
 	s->sensor_ = tactile;
 	tactile->channel_ = "channel";
+	tactile->group_ = "array";
 
 	TactileArraySharedPtr array(new TactileArray);
 	array->order = order;
@@ -82,11 +82,11 @@ urdf::SensorSharedPtr create_taxels(unsigned int num = 10)
 	urdf::SensorSharedPtr s(new urdf::Sensor);
 	s->name_ = "taxels";
 	s->parent_link_ = "link";
-	s->group_ = "taxels";
 
 	TactileSensorSharedPtr tactile(new TactileSensor);
 	s->sensor_ = tactile;
 	tactile->channel_ = "channel";
+	tactile->group_ = "taxels";
 
 	TactileTaxelSharedPtr taxel;
 	for (unsigned int i = 0; i < num; ++i) {

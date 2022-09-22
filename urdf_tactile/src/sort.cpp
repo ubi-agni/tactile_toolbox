@@ -51,7 +51,7 @@ const std::string &get(const urdf::SensorConstSharedPtr &sensor);
 template <>
 const std::string &get<BY_GROUP>(const urdf::SensorConstSharedPtr &sensor)
 {
-	return sensor->group_;
+	return tactile_sensor_cast(*sensor).group_;
 }
 template <>
 const std::string &get<BY_CHANNEL>(const urdf::SensorConstSharedPtr &sensor)

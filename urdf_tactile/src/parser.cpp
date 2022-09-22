@@ -127,6 +127,7 @@ SensorBaseSharedPtr TactileSensorParser::parse(TiXmlElement &config)
 {
 	TactileSensorSharedPtr tactile(new TactileSensor());
 	tactile->channel_ = parseAttribute<std::string>(config, "channel");
+	tactile->group_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "group");
 
 	// multiple Taxels (optional)
 	for (TiXmlElement *taxel_xml = config.FirstChildElement("taxel"); taxel_xml;

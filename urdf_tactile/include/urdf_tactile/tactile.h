@@ -126,12 +126,14 @@ public:
 	std::vector<TactileTaxelSharedPtr> taxels_;
 	TactileArraySharedPtr array_;
 	std::string channel_;
+	std::string group_;
 
 	void clear() override
 	{
 		taxels_.clear();
 		array_.reset();
-		channel_ = "";
+		channel_.clear();
+		group_.clear();
 	}
 };
 URDF_TYPEDEF_CLASS_POINTER(TactileSensor);

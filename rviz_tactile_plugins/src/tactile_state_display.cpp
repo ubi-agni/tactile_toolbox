@@ -242,9 +242,9 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 			}
 			if (visual) {
 				GroupProperty *group_property =
-				    getGroupProperty(QString::fromStdString(sensor.second->group_), sensors_property_);
+				    getGroupProperty(QString::fromStdString(tactile->group_), sensors_property_);
 				group_property->addChild(visual);
-				visual->setGroup(QString::fromStdString(sensor.second->group_));
+				visual->setGroup(QString::fromStdString(tactile->group_));
 				visual->setTFPrefix(tf_prefix);
 				sensors_.insert(std::make_pair(tactile->channel_, visual));
 
