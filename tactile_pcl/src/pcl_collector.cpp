@@ -11,13 +11,6 @@ namespace tactile {
 
 ros::Duration PCLCollector::timeout_;
 
-PCLCollector::PCLCollector(const std::string &target_frame, const double threshold)
-  : tf_buffer_(), tf_listener_(tf_buffer_), threshold_(threshold)
-{
-	initFromRobotDescription();
-	setTargetFrame(target_frame);
-}
-
 static void loadRobotDescription(std::string &xml_string, const std::string &param)
 {
 	ros::NodeHandle nh;
