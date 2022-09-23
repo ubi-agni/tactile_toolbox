@@ -7,10 +7,7 @@
  */
 
 #include "tactile_state_publisher.h"
-
-#include <urdf/sensor.h>
 #include <urdf_tactile/sensor.h>
-#include <urdf_tactile/cast.h>
 
 #include <boost/thread/locks.hpp>
 #include <map>
@@ -36,8 +33,7 @@ void TactileStatePublisher::config()
 	   Due to a bug in pluginlib, the unloading of the lib might throw on destruction of SensorParserMap.
 	*/
 	try {
-		auto parsers = urdf::getSensorParser("tactile");
-		createSensorDataMap(urdf::parseSensorsFromParam("robot_description", parsers));
+		createSensorDataMap(parseSensorsFromParam("robot_description"));
 	} catch (const std::exception &e) {
 		ROS_ERROR_STREAM(e.what());
 		return;
@@ -67,14 +63,11 @@ void TactileStatePublisher::config()
 	}
 }
 
-void TactileStatePublisher::createSensorDataMap(const urdf::SensorMap &sensors)
+void TactileStatePublisher::createSensorDataMap(const SensorMap &sensors)
 {
 	// loop over all the sensor found in the URDF
-	for (const auto &sensor : sensors) {
-		TactileSensorSharedPtr tactile = tactile_sensor_cast(sensor.second);
-		if (!tactile)
-			continue;  // some other sensor than tactile
-
+	for (const auto &item : sensors) {
+		const TactileSensorSharedPtr &tactile = item.second;
 		int sensor_idx = -1;
 
 		// find if the channel exists in the map

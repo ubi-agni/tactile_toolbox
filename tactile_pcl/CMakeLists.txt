@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 	tactile_msgs
 	pcl_conversions
 	tf2_ros
+	urdf
 	urdf_tactile
 )
 

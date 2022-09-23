@@ -85,10 +85,10 @@ private:
 
 class TaxelInfoIterable
 {
-	const urdf::SensorConstSharedPtr sensor_;
+	const TactileSensorConstSharedPtr sensor_;
 
 public:
-	TaxelInfoIterable(const urdf::SensorConstSharedPtr& sensor) : sensor_(sensor) {}
+	TaxelInfoIterable(const TactileSensorConstSharedPtr& sensor) : sensor_(sensor) {}
 	TaxelInfoIterator begin();
 	TaxelInfoIterator end();
 };

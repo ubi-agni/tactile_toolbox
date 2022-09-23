@@ -34,16 +34,17 @@
 
 /* Author: Robert Haschke */
 
-#include "parser.h"
-#include "urdf_tactile/sensor.h"
-#include <urdf_parser/utils.h>
-#include <urdf_parser/pose.h>
-#include <urdf_parser/link.h>
+#include "urdf_tactile/parser.h"
+#include "utils.h"
+#include <urdf_parser/urdf_parser.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <console_bridge/console.h>
+#include <ros/ros.h>
+#include <fstream>
 
 namespace urdf {
+namespace tactile {
 
 /* specialization of parseAttribute(const char* value) for TactileArray::DataOrder */
 template <>
@@ -76,8 +77,6 @@ tactile::Vector2<double> parseAttribute<tactile::Vector2<double> >(const char *v
 	return tactile::Vector2<double>(xy[0], xy[1]);
 }
 
-namespace tactile {
-
 bool parseTactileTaxel(TactileTaxel &taxel, TiXmlElement *config)
 {
 	taxel.clear();
@@ -87,7 +86,7 @@ bool parseTactileTaxel(TactileTaxel &taxel, TiXmlElement *config)
 		return false;
 
 	// Geometry
-	taxel.geometry = urdf::parseGeometry(config->FirstChildElement("geometry"));
+	taxel.geometry = parseGeometry(config->FirstChildElement("geometry"));
 	if (!taxel.geometry)
 		return false;
 
@@ -123,9 +122,22 @@ bool parseTactileArray(TactileArray &array, TiXmlElement *config)
 	return true;
 }
 
-SensorBase *TactileSensorParser::parse(TiXmlElement &config)
+TactileSensor *TactileSensorParser::parse(TiXmlElement &config) const
 {
+	TiXmlElement *parent = config.Parent()->ToElement()->FirstChildElement("parent");
+	if (!parent) {
+		CONSOLE_BRIDGE_logError("No <parent> tag given for the sensor.");
+		return nullptr;
+	}
+
 	auto tactile = std::make_unique<TactileSensor>();
+	tactile->name_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "name");
+	tactile->parent_link_ = parseAttribute<std::string>(*parent, "link");
+	if (TiXmlElement *o = config.Parent()->ToElement()->FirstChildElement("origin")) {
+		if (!parsePose(tactile->origin_, o))
+			return nullptr;
+	}
+
 	tactile->channel_ = parseAttribute<std::string>(config, "channel");
 	tactile->group_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "group");
 
@@ -163,8 +175,72 @@ SensorBase *TactileSensorParser::parse(TiXmlElement &config)
 	return tactile.release();
 }
 
+SensorMap parseSensorsFromFile(const std::string &filename)
+{
+	SensorMap result;
+	std::ifstream stream(filename.c_str());
+	if (!stream.is_open()) {
+		throw std::runtime_error("Could not open file [" + filename + "] for parsing.");
+	}
+
+	std::string xml_string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+	return parseSensors(xml_string);
+}
+
+SensorMap parseSensorsFromParam(const std::string &param)
+{
+	ros::NodeHandle nh;
+	std::string xml_string;
+
+	// gets the location of the robot description on the parameter server
+	std::string full_param;
+	if (!nh.searchParam(param, full_param)) {
+		throw std::runtime_error("Could not find parameter " + param + " on parameter server");
+	}
+
+	// read the robot description from the parameter server
+	if (!nh.getParam(full_param, xml_string)) {
+		throw std::runtime_error("Could not read parameter " + param + " on parameter server");
+	}
+	return parseSensors(xml_string);
+}
+
+SensorMap parseSensors(const std::string &xml_string)
+{
+	TiXmlDocument xml_doc;
+	xml_doc.Parse(xml_string.c_str());
+	if (xml_doc.Error())
+		throw std::runtime_error(std::string("Could not parse the xml document: ") + xml_doc.ErrorDesc());
+	return parseSensors(xml_doc);
+}
+
+SensorMap parseSensors(TiXmlDocument &urdf_xml)
+{
+	TiXmlElement *robot_xml = urdf_xml.FirstChildElement("robot");
+	if (!robot_xml) {
+		CONSOLE_BRIDGE_logError("Could not find the 'robot' element in the URDF");
+		return SensorMap();
+	}
+
+	TactileSensorParser parser;
+	SensorMap results;
+	// Get all sensor elements
+	for (TiXmlElement *sensor_xml = robot_xml->FirstChildElement("sensor"); sensor_xml;
+	     sensor_xml = sensor_xml->NextSiblingElement("sensor")) {
+		if (TiXmlElement *tactile_xml = sensor_xml->FirstChildElement("tactile")) {
+			if (TactileSensor *sensor = parser.parse(*tactile_xml)) {
+				auto res = results.insert(make_pair(sensor->name_, sensor));
+				if (!res.second)
+					CONSOLE_BRIDGE_logWarn("Sensor '%s' is not unique. Ignoring consecutive ones.", sensor->name_.c_str());
+				else
+					CONSOLE_BRIDGE_logDebug("urdfdom: successfully added a new sensor '%s'", sensor->name_.c_str());
+			} else {
+				CONSOLE_BRIDGE_logError("failed to parse sensor element");
+			}
+		}
+	}
+	return results;
+}
+
 }  // namespace tactile
 }  // namespace urdf
-
-#include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(urdf::tactile::TactileSensorParser, urdf::SensorParser)

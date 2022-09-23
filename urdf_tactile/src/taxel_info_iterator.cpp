@@ -30,7 +30,6 @@
 /* Author: Robert Haschke */
 
 #include <urdf_tactile/taxel_info_iterator.h>
-#include <urdf_tactile/cast.h>
 #include <cassert>
 
 namespace urdf {
@@ -57,7 +56,7 @@ urdf::Pose compose(const urdf::Pose &a, const urdf::Pose &b)
 class TaxelInfoIteratorI : public std::iterator<std::random_access_iterator_tag, TaxelInfo>
 {
 public:
-	TaxelInfoIteratorI(const urdf::SensorConstSharedPtr &sensor) : sensor(sensor) {}
+	TaxelInfoIteratorI(const TactileSensorConstSharedPtr &sensor) : sensor(sensor) {}
 	virtual TaxelInfoIteratorIPtr clone() const = 0;
 	virtual ~TaxelInfoIteratorI() {}
 
@@ -71,16 +70,15 @@ public:
 	virtual void updateInfo(TaxelInfo &info) = 0;
 	void finishInfo(TaxelInfo &info);
 
-	urdf::SensorConstSharedPtr sensor;
+	TactileSensorConstSharedPtr sensor;
 };
 
 void TaxelInfoIteratorI::initInfo(TaxelInfo &info)
 {
 	// initialize common properties of all taxels
 	info.link = sensor->parent_link_;
-	const auto &ts = tactile_sensor_cast(*sensor);
-	info.group = ts.group_;
-	info.channel = ts.channel_;
+	info.group = sensor->group_;
+	info.channel = sensor->channel_;
 }
 
 void TaxelInfoIteratorI::finishInfo(TaxelInfo &info)
@@ -104,7 +102,7 @@ protected:
 public:
 	typedef Iterator iterator;
 
-	explicit TaxelInfoIteratorBase(const urdf::SensorConstSharedPtr &sensor, Iterator it)
+	explicit TaxelInfoIteratorBase(const TactileSensorConstSharedPtr &sensor, Iterator it)
 	  : TaxelInfoIteratorI(sensor), it(it)
 	{}
 
@@ -175,7 +173,7 @@ void TaxelInfoIteratorBase<ArrayBaseIterator>::initInfo(TaxelInfo &info)
 	info.geometry_origin = sensor->origin_;
 	info.taxel_origin.rotation = info.geometry_origin.rotation;
 
-	const TactileArray &array = *tactile_sensor_cast(*sensor).array_;
+	const TactileArray &array = *sensor->array_;
 	urdf::Box *box = new urdf::Box();
 	box->dim = urdf::Vector3(array.size.x, array.size.y, 0);
 	info.geometry.reset(box);
@@ -184,7 +182,7 @@ void TaxelInfoIteratorBase<ArrayBaseIterator>::initInfo(TaxelInfo &info)
 template <>
 void TaxelInfoIteratorBase<ArrayBaseIterator>::updateInfo(TaxelInfo &info)
 {
-	const TactileArray &array = *tactile_sensor_cast(*sensor).array_;
+	const TactileArray &array = *sensor->array_;
 
 	info.idx = it;
 
@@ -290,28 +288,26 @@ void TaxelInfoIterator::validate() const
 
 TaxelInfoIterator TaxelInfoIterable::begin()
 {
-	const TactileSensor &tactile = tactile_sensor_cast(*sensor_);
 	TaxelInfoIteratorIPtr impl;
 
 	bool valid = true;
-	if (tactile.array_)
+	if (sensor_->array_)
 		impl.reset(new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor_, 0));
 	else {
-		impl.reset(new TaxelInfoIteratorBase<VectorBaseIterator>(sensor_, tactile.taxels_.begin()));
-		valid = (!tactile.taxels_.empty());
+		impl.reset(new TaxelInfoIteratorBase<VectorBaseIterator>(sensor_, sensor_->taxels_.begin()));
+		valid = (!sensor_->taxels_.empty());
 	}
 	return TaxelInfoIterator(impl, valid);
 }
 
 TaxelInfoIterator TaxelInfoIterable::end()
 {
-	const TactileSensor &tactile = tactile_sensor_cast(*sensor_);
 	TaxelInfoIteratorIPtr impl;
 
-	if (tactile.array_)
-		impl.reset(new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor_, tactile.array_->rows * tactile.array_->cols));
+	if (sensor_->array_)
+		impl.reset(new TaxelInfoIteratorBase<ArrayBaseIterator>(sensor_, sensor_->array_->rows * sensor_->array_->cols));
 	else
-		impl.reset(new TaxelInfoIteratorBase<VectorBaseIterator>(sensor_, tactile.taxels_.end()));
+		impl.reset(new TaxelInfoIteratorBase<VectorBaseIterator>(sensor_, sensor_->taxels_.end()));
 	return TaxelInfoIterator(impl, false);
 }
 

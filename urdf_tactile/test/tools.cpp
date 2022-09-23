@@ -13,25 +13,22 @@ using namespace urdf::tactile;
 
 #include <boost/test/unit_test.hpp>
 
-urdf::SensorSharedPtr create_array(unsigned int rows, unsigned int cols,
-                                   TactileArray::DataOrder order = TactileArray::ROWMAJOR)
+TactileSensorSharedPtr create_array(unsigned int rows, unsigned int cols,
+                                    TactileArray::DataOrder order = TactileArray::ROWMAJOR)
 {
-	urdf::SensorSharedPtr s(new urdf::Sensor);
+	auto s = std::make_shared<TactileSensor>();
 	s->name_ = "array";
 	s->parent_link_ = "link";
+	s->channel_ = "channel";
+	s->group_ = "array";
 
-	TactileSensorSharedPtr tactile(new TactileSensor);
-	s->sensor_ = tactile;
-	tactile->channel_ = "channel";
-	tactile->group_ = "array";
-
-	TactileArraySharedPtr array(new TactileArray);
+	auto array = std::make_shared<TactileArray>();
 	array->order = order;
 	array->rows = rows;
 	array->cols = cols;
 	array->size = urdf::tactile::Vector2<double>(0.5, 0.5);
 	array->spacing = urdf::tactile::Vector2<double>(1, 1);
-	tactile->array_ = array;
+	s->array_ = array;
 	return s;
 }
 
@@ -77,22 +74,17 @@ BOOST_AUTO_TEST_CASE(test_array_iterator_colmajor)
 	test_array_iterator(TactileArray::ROWMAJOR);
 }
 
-urdf::SensorSharedPtr create_taxels(unsigned int num = 10)
+TactileSensorSharedPtr create_taxels(unsigned int num = 10)
 {
-	urdf::SensorSharedPtr s(new urdf::Sensor);
+	auto s = std::make_shared<TactileSensor>();
 	s->name_ = "taxels";
 	s->parent_link_ = "link";
+	s->channel_ = "channel";
+	s->group_ = "taxels";
 
-	TactileSensorSharedPtr tactile(new TactileSensor);
-	s->sensor_ = tactile;
-	tactile->channel_ = "channel";
-	tactile->group_ = "taxels";
-
-	TactileTaxelSharedPtr taxel;
 	for (unsigned int i = 0; i < num; ++i) {
-		taxel.reset(new TactileTaxel);
-		taxel->idx = i;
-		tactile->taxels_.push_back(taxel);
+		s->taxels_.emplace_back(std::make_shared<TactileTaxel>());
+		s->taxels_.back()->idx = i;
 	}
 	return s;
 }
@@ -111,7 +103,7 @@ BOOST_AUTO_TEST_CASE(test_vector_iterator)
 
 void test_grouping(unsigned int taxels, unsigned int rows, unsigned int cols)
 {
-	urdf::SensorMap sensors;
+	SensorMap sensors;
 	sensors["taxels"] = create_taxels(taxels);
 	sensors["array"] = create_array(rows, cols);
 	auto groups = sortByGroups(sensors);

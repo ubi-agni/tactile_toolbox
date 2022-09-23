@@ -2,7 +2,7 @@
 
 #include <tactile_msgs/TactileState.h>
 #include <tactile_msgs/TactileContacts.h>
-#include <urdf/sensor.h>
+#include <urdf_tactile/sensor.h>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -50,8 +50,7 @@ protected:
 
 protected:
 	std::string robot_root_frame_;
-	urdf::ManagedSensorParserMap parsers_;
-	urdf::SensorMap sensors_;  //< tactile sensors
+	urdf::tactile::SensorMap sensors_;  //< tactile sensors
 
 	std::string target_frame_;  //< target frame, the PCL should be expressed in
 	pcl::PointCloud<ContactPoint> pcl_;

@@ -1,6 +1,4 @@
-#include "urdf_tactile/sensor.h"
-#include "urdf_tactile/cast.h"
-#include <urdf/sensor.h>
+#include "urdf_tactile/parser.h"
 #include <fstream>
 
 using namespace urdf::tactile;
@@ -25,13 +23,13 @@ static std::shared_ptr<TiXmlDocument> loadFromFile(const std::string &path)
 	return xml_doc;
 }
 
-void check_sensor_map(const urdf::SensorMap &sensors)
+void check_sensor_map(const SensorMap &sensors)
 {
-	TactileSensorSharedPtr tactile = urdf::getSensor<TactileSensor>("tactile_taxel_sensor", sensors);
+	TactileSensorSharedPtr tactile = sensors.at("tactile_taxel_sensor");
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->taxels_.size() == 2);
 
-	tactile = urdf::getSensor<TactileSensor>("tactile_array_sensor", sensors);
+	tactile = sensors.at("tactile_array_sensor");
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_);
 	BOOST_CHECK(tactile->array_->order == TactileArray::ROWMAJOR);
@@ -41,31 +39,29 @@ void check_sensor_map(const urdf::SensorMap &sensors)
 
 BOOST_AUTO_TEST_CASE(test_pluginlib_parsing)
 {
-	auto parsers = urdf::getSensorParser("tactile");
-	check_sensor_map(urdf::parseSensorsFromFile("tactile.urdf", parsers));
+	check_sensor_map(parseSensorsFromFile("tactile.urdf"));
 }
 
-void change_and_check_order_mode(const urdf::SensorParserSharedPtr &parser, TiXmlElement &tactile_xml,
-                                 const char *pcMode, TactileArray::DataOrder mode)
+void change_and_check_order_mode(const TactileSensorParser &parser, TiXmlElement &tactile_xml, const char *pcMode,
+                                 TactileArray::DataOrder mode)
 {
 	TiXmlElement *array_xml = tactile_xml.FirstChildElement("array");
 	array_xml->SetAttribute("order", pcMode);
-	TactileSensorSharedPtr tactile(tactile_sensor_cast(parser->parse(tactile_xml)));
+	TactileSensorSharedPtr tactile(parser.parse(tactile_xml));
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_->order == mode);
 }
 
 BOOST_AUTO_TEST_CASE(test_tactile_array)
 {
-	auto parsers = urdf::getSensorParser("tactile");
+	TactileSensorParser parser;
 	std::shared_ptr<TiXmlDocument> root = loadFromFile("tactile.urdf");
 	BOOST_REQUIRE(root);
 
 	TiXmlElement *tactile_xml = root->RootElement()->FirstChildElement("sensor")->FirstChildElement("tactile");
 	BOOST_REQUIRE(tactile_xml);
 
-	urdf::SensorParserSharedPtr parser = parsers["tactile"];
-	TactileSensorSharedPtr tactile(tactile_sensor_cast(parser->parse(*tactile_xml)));
+	TactileSensorSharedPtr tactile(parser.parse(*tactile_xml));
 	BOOST_REQUIRE(tactile);
 
 	BOOST_CHECK(tactile->taxels_.empty());
@@ -79,14 +75,14 @@ BOOST_AUTO_TEST_CASE(test_tactile_array)
 
 	// missing spacing attribute defaults to size
 	array_xml->RemoveAttribute("spacing");
-	tactile.reset(tactile_sensor_cast(parser->parse(*tactile_xml)));
+	tactile.reset(parser.parse(*tactile_xml));
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_->spacing.x == tactile->array_->size.x);
 	BOOST_CHECK(tactile->array_->spacing.y == tactile->array_->size.y);
 
 	// missing offset attribute defaults to zero
 	array_xml->RemoveAttribute("offset");
-	tactile.reset(tactile_sensor_cast(parser->parse(*tactile_xml)));
+	tactile.reset(parser.parse(*tactile_xml));
 	BOOST_REQUIRE(tactile);
 	BOOST_CHECK(tactile->array_->offset.x == 0);
 	BOOST_CHECK(tactile->array_->offset.y == 0);

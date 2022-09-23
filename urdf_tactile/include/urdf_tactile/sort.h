@@ -28,7 +28,7 @@
  */
 #pragma once
 
-#include <urdf_parser/sensor_parser.h>
+#include <urdf_tactile/sensor.h>
 #include <deque>
 #include <memory>
 
@@ -38,7 +38,7 @@ namespace tactile {
 /******************************************************************************
  * sort sensors by group or channel name
  ******************************************************************************/
-typedef urdf::SensorMap::const_iterator iterator;
+using iterator = urdf::tactile::SensorMap::const_iterator;
 using iterator_list = std::deque<iterator>;
 struct Sensors
 {
@@ -55,9 +55,9 @@ struct SensorsTree : Sensors
 	map_type children;
 };
 
-SensorsMap sortByGroups(const urdf::SensorMap &sensors);
-SensorsTree sortByGroupsHierarchical(const urdf::SensorMap &sensors);
-SensorsMap sortByChannels(const urdf::SensorMap &sensors);
+SensorsMap sortByGroups(const SensorMap &sensors);
+SensorsTree sortByGroupsHierarchical(const SensorMap &sensors);
+SensorsMap sortByChannels(const SensorMap &sensors);
 
 /******************************************************************************
  * retrieving taxels

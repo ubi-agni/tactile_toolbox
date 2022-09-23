@@ -28,7 +28,6 @@
  */
 #pragma once
 #include "taxel.h"
-#include <urdf_parser/sensor_parser.h>
 #include <urdf_tactile/sensor.h>
 #include <tactile_msgs/TactileContact.h>
 #include <Eigen/Dense>
@@ -54,10 +53,10 @@ public:
 	using SensorToTaxelMapping = std::map<std::string, TaxelMapping>;
 
 	/// load TaxelGroups from robot_description, identified by group name
-	static TaxelGroupMap load(const std::string &desc_param, const urdf::SensorParserMap &parsers);
+	static TaxelGroupMap load(const std::string &desc_param);
 
 	TaxelGroup(const std::string &frame);
-	void addTaxels(const urdf::SensorConstSharedPtr &sensor);
+	void addTaxels(const urdf::tactile::TactileSensorConstSharedPtr &sensor);
 
 	const std::string &frame() const { return frame_; }
 	const std::vector<Taxel> &taxels() const { return taxels_; }

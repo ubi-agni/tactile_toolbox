@@ -36,12 +36,12 @@
 
 #pragma once
 
-#include <urdf_sensor/types.h>
 #include <urdf_model/pose.h>
 #include <urdf_model/link.h>
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace urdf {
 namespace tactile {
@@ -119,17 +119,26 @@ public:
 using TactileTaxelSharedPtr = std::shared_ptr<TactileTaxel>;
 using TactileArraySharedPtr = std::shared_ptr<TactileArray>;
 
-class TactileSensor : public urdf::SensorBase
+class TactileSensor
 {
 public:
 	TactileSensor() { TactileSensor::clear(); }
+
+	std::string name_;  //< sensor name must be unique
+	double update_rate_;  //< update rate in Hz
+	std::string parent_link_;  //< name of parent link this sensor is attached to
+	Pose origin_;  //< transform from parent frame sensor frame
+
 	std::vector<TactileTaxelSharedPtr> taxels_;
 	TactileArraySharedPtr array_;
 	std::string channel_;
 	std::string group_;
 
-	void clear() override
+	void clear()
 	{
+		name_.clear();
+		parent_link_.clear();
+		origin_.clear();
 		taxels_.clear();
 		array_.reset();
 		channel_.clear();
@@ -137,6 +146,8 @@ public:
 	}
 };
 URDF_TYPEDEF_CLASS_POINTER(TactileSensor);
+
+using SensorMap = std::map<std::string, TactileSensorSharedPtr>;
 
 }  // namespace tactile
 }  // namespace urdf
