@@ -355,12 +355,10 @@ void TactileStateDisplay::update(float wall_dt, float ros_dt)
 	for (auto &it : sensors_) {
 		TactileVisualBase &sensor = *it.second;
 		sensor.updateRangeProperty();
-		if (!sensor.isVisible())
-			continue;
 
 		bool enabled = !sensor.expired(now, timeout) && sensor.updatePose();
 		sensor.setEnabled(enabled);
-		if (!enabled)
+		if (!enabled || !sensor.isVisible())
 			continue;
 
 		sensor.updateVisual();
