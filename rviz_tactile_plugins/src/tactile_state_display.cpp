@@ -48,7 +48,6 @@
 #include <rviz/properties/enum_property.h>
 #include <rviz/validate_floats.h>
 
-#include <boost/foreach.hpp>
 static const QString ROBOT_DESC = "robot description";
 
 using namespace urdf::tactile;
@@ -192,7 +191,7 @@ GroupProperty *TactileStateDisplay::getGroupProperty(const QString &path, GroupP
 {
 	assert(parent);
 	QStringList names = path.split("/", QString::SkipEmptyParts);
-	Q_FOREACH (const QString &name, names) {
+	for (const QString &name : names) {
 		GroupProperty *child = nullptr;
 		for (int i = 0, end = parent->numChildren(); i < end && !child; ++i) {
 			rviz::Property *prop = parent->childAtUnchecked(i);
