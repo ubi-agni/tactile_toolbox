@@ -217,6 +217,8 @@ void TactileVisualBase::setVisible(bool visible)
 
 void TactileVisualBase::setEnabled(bool enabled)
 {
+	if (enabled == enabled_)
+		return;
 	enabled_ = enabled;
 	onVisibleChanged();
 }
