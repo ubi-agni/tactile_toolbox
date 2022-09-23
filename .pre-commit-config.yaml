@@ -49,7 +49,7 @@ repos:
         name: catkin_lint
         description: Check package.xml and cmake files
         entry: catkin_lint
-        args: [ "--config", ".catkin_lint", "." ]
+        args: [ "." ]
         language: system
         always_run: true
         pass_filenames: false

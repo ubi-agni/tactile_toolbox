@@ -1,5 +1,1 @@
-# As tactile-toolbox relies on new, not yet released urdf features, we need to pull in those for travis testing
-- git: {local-name: urdfdom_headers, uri: 'https://github.com/ubi-agni/urdfdom_headers', version: ros-sensor-refactoring}
-- git: {local-name: urdfdom, uri: 'https://github.com/ubi-agni/urdfdom', version: sensor-refactoring}
-- git: {local-name: urdf, uri: 'https://github.com/ubi-agni/urdf', version: sensor-parsing}
 - git: {local-name: tactile_filters, uri: 'https://github.com/ubi-agni/tactile_filters', version: master}
