@@ -12,6 +12,7 @@ public:
 	{
 		connectInput(f);
 	}
+	~ContactForwarder() { incoming_connection_.disconnect(); }
 
 	template <class F>
 	void connectInput(F& f)

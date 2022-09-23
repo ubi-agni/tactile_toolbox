@@ -13,6 +13,7 @@
 #include <tf2_ros/message_filter.h>
 
 #include <boost/thread/mutex.hpp>
+#include <memory>
 
 namespace tactile {
 
@@ -24,18 +25,20 @@ class PCLCollector : public boost::mutex
 public:
 	typedef pcl::PointXYZINormal ContactPoint;
 
-	PCLCollector(const std::string &target_frame = "", const double threshold = 0.0);
-	void initFromRobotDescription(const std::string &param = "robot_description");
-
-	template <typename M, typename F>
-	void setSource(F &f, unsigned int queue_size)
+	template <typename F>
+	PCLCollector(F &f, unsigned int queue_size, const std::string &target_frame = "", const double threshold = 0.0)
+	  : tf_buffer_(), tf_listener_(tf_buffer_), threshold_(threshold)
 	{
+		initFromRobotDescription();
+		setTargetFrame(target_frame);
+
+		using M = tactile_msgs::TactileContact;
 		// connect F to a tf filter that signals to process()
-		tf2_ros::MessageFilter<M> *tf_filter =
-		    new tf2_ros::MessageFilter<M>(f, tf_buffer_, target_frame_, queue_size, nullptr);
-		tf_filter_.reset(tf_filter);
+		auto tf_filter = std::make_shared<tf2_ros::MessageFilter<M>>(f, tf_buffer_, target_frame_, queue_size, nullptr);
 		tf_filter->registerCallback(&PCLCollector::process<M>, this);
+		tf_filter_ = std::move(tf_filter);
 	}
+	void initFromRobotDescription(const std::string &param = "robot_description");
 
 	void setTargetFrame(const std::string &frame);
 	const std::string &targetFrame() const { return target_frame_; }
@@ -60,7 +63,7 @@ protected:
 	tf2_ros::TransformListener tf_listener_;
 
 	// hold back messages until transform becomes available
-	boost::shared_ptr<tf2_ros::MessageFilterBase> tf_filter_;
+	std::shared_ptr<tf2_ros::MessageFilterBase> tf_filter_;
 
 	static ros::Duration timeout_;
 	double threshold_;

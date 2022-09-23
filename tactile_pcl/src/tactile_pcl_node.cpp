@@ -36,24 +36,25 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh_priv("~");
 
 	ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("tactile_pcl", 10);
-	PCLCollector collector(nh_priv.param<std::string>("frame", ""), nh_priv.param<double>("threshold", 0.0));
 	ros::Rate rate(nh_priv.param("rate", 100.));
+	double threshold = nh_priv.param<double>("threshold", 0.0);
+	auto frame = nh_priv.param<std::string>("frame", "");
 
 	switch (1) {
 		case 0: {
 			message_filters::Subscriber<tactile_msgs::TactileContact> sub(nh, "tactile_contact_state", 100);
-			collector.setSource<tactile_msgs::TactileContact>(sub, 10);
+			PCLCollector collector(sub, 10, frame, threshold);
 			run(pub, collector, rate);
 		} break;
 		case 1: {
 			message_filters::Subscriber<tactile_msgs::TactileContacts> sub(nh, "tactile_contact_states", 10);
 			ContactForwarder forwarder(sub);
-			collector.setSource<tactile_msgs::TactileContact>(forwarder, 100);
+			PCLCollector collector(forwarder, 100, frame, threshold);
 			run(pub, collector, rate);
 		} break;
 		case 2: {
 			//		message_filters::Subscriber<tactile_msgs::TactileState> sub(nh, "tactile_states", 10);
-			//		collector.setSource(sub);
+			//		PCLCollector collector(sub, 10, frame, threshold);
 			//		run(pub, collector, rate);
 		} break;
 	}
