@@ -13,7 +13,7 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <tactile_msgs/TactileState.h>
 #include <sensor_msgs/ChannelFloat32.h>
-#include <urdf_parser/sensor_parser.h>
+#include <urdf_tactile/parser.h>
 
 #include <string>
 #include <vector>
@@ -49,7 +49,7 @@ private:
 	 * initiliaze subscribers and publisher
 	 */
 	void init();
-	void createSensorDataMap(const urdf::SensorMap& sensors);
+	void createSensorDataMap(const urdf::tactile::SensorMap& sensors);
 	void config();
 
 	/**

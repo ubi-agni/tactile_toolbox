@@ -7,7 +7,9 @@ set(CMAKE_CXX_STANDARD 14)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(Boost REQUIRED system)
-find_package(catkin REQUIRED pluginlib urdf)
+find_package(urdfdom REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp cmake_modules)
+find_package(TinyXML REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -20,10 +22,9 @@ find_package(catkin REQUIRED pluginlib urdf)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  # Don't export the plugin-lib! This should be loaded dynamically only.
-  LIBRARIES ${PROJECT_NAME}_tools
-  CATKIN_DEPENDS urdf
-  DEPENDS Boost
+  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_tools
+  CATKIN_DEPENDS roscpp
+  DEPENDS urdfdom Boost TinyXML
 )
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
@@ -41,10 +42,6 @@ endif()
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-install(FILES
-  plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 install(DIRECTORY
   include/${PROJECT_NAME}/

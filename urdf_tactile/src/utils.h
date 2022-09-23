@@ -1,3 +1,4 @@
+
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
@@ -32,111 +33,59 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Guillaume Walck */
+/* Author: Robert Haschke */
 
 #pragma once
 
-#include <urdf_sensor/types.h>
-#include <urdf_model/pose.h>
+#include <urdf_exception/exception.h>
+#include <urdf_model/utils.h>
+#include <urdf_model/types.h>
 #include <urdf_model/link.h>
-#include <memory>
-#include <string>
-#include <vector>
+#include <tinyxml.h>
 
 namespace urdf {
 namespace tactile {
 
 template <typename T>
-class Vector2
+T parseAttribute(const char* value);
+
+template <>
+inline std::string parseAttribute<std::string>(const char* value)
 {
-public:
-	Vector2(T _x, T _y)
-	{
-		this->x = _x;
-		this->y = _y;
-	}
-	Vector2() { this->clear(); }
-	T x;
-	T y;
+	return value;
+}
 
-	void clear() { this->x = this->y = 0; }
-
-	Vector2<T> operator+(const Vector2<T> &vec) { return Vector2(this->x + vec.x, this->y + vec.y); }
-};
-
-/** A taxel describes the location (origin), geometry,
-    and vector index in the TactileState message.
-*/
-class TactileTaxel
+template <>
+inline double parseAttribute<double>(const char* value)
 {
-public:
-	TactileTaxel() { this->clear(); }
+	return strToDouble(value);
+}
 
-	unsigned int idx;  /// index into TactileState
-	Pose origin;  /// location of taxel w.r.t. sensor frame
-	GeometrySharedPtr geometry;  /// geometry of taxel
-
-	void clear()
-	{
-		this->idx = 0;
-		this->origin.clear();
-		this->geometry.reset();
-	}
-};
-
-/** A tactile array is a rectangular layout of taxels of size row x col.
-    The order specifies the ordering of taxels in the TactileState msg.
-*/
-class TactileArray
+template <>
+inline unsigned int parseAttribute<unsigned int>(const char* value)
 {
-public:
-	TactileArray() { this->clear(); }
+	return std::stoul(value);
+}
 
-	enum DataOrder
-	{
-		ROWMAJOR,
-		COLUMNMAJOR
-	};
-
-	unsigned int rows;
-	unsigned int cols;
-	DataOrder order;
-	Vector2<double> size;
-	Vector2<double> spacing;
-	Vector2<double> offset;
-
-	void clear()
-	{
-		this->rows = 0;
-		this->cols = 0;
-		this->order = ROWMAJOR;
-		this->size.clear();
-		this->spacing.clear();
-		this->offset.clear();
-	}
-};
-
-using TactileTaxelSharedPtr = std::shared_ptr<TactileTaxel>;
-using TactileArraySharedPtr = std::shared_ptr<TactileArray>;
-
-class TactileSensor : public urdf::SensorBase
+template <typename T>
+T parseAttribute(const TiXmlElement& tag, const char* attr, const T* default_value = nullptr)
 {
-public:
-	TactileSensor() { TactileSensor::clear(); }
-	std::vector<TactileTaxelSharedPtr> taxels_;
-	TactileArraySharedPtr array_;
-	std::string channel_;
-	std::string group_;
-
-	void clear() override
-	{
-		taxels_.clear();
-		array_.reset();
-		channel_.clear();
-		group_.clear();
+	const char* value = tag.Attribute(attr);
+	if (!value) {
+		if (default_value)
+			return *default_value;
+		else
+			throw ParseError(std::string("missing '") + attr + "'' attribute");
 	}
-};
-URDF_TYPEDEF_CLASS_POINTER(TactileSensor);
+
+	try {
+		return parseAttribute<T>(value);
+	} catch (const std::exception& e) {
+		throw ParseError(std::string("failed to parse '") + attr + "' attribute: " + e.what());
+	}
+}
+
+urdf::GeometrySharedPtr parseGeometry(TiXmlElement* g);
 
 }  // namespace tactile
 }  // namespace urdf

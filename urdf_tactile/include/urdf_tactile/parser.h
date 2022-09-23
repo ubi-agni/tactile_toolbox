@@ -36,16 +36,22 @@
 
 #pragma once
 
-#include <urdf_parser/sensor_parser.h>
+#include "sensor.h"
+#include <tinyxml.h>
 
 namespace urdf {
 namespace tactile {
 
-class URDFDOM_DLLAPI TactileSensorParser : public urdf::SensorParser
+class TactileSensorParser
 {
 public:
-	SensorBase* parse(TiXmlElement& sensor_element) override;
+	TactileSensor *parse(TiXmlElement &sensor_element) const;
 };
+
+SensorMap parseSensors(TiXmlDocument &urdf_xml);
+SensorMap parseSensors(const std::string &xml);
+SensorMap parseSensorsFromParam(const std::string &param);
+SensorMap parseSensorsFromFile(const std::string &filename);
 
 }  // namespace tactile
 }  // namespace urdf

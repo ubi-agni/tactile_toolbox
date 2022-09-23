@@ -2,8 +2,8 @@
 #include "conversions.h"
 
 #include <boost/thread/locks.hpp>
-#include <urdf/sensor.h>
 #include <urdf/model.h>
+#include <urdf_tactile/parser.h>
 
 using namespace tactile_msgs;
 
@@ -41,9 +41,7 @@ void PCLCollector::initFromRobotDescription(const std::string &param)
 			ROS_WARN_STREAM("failed to parse " << param);
 
 		// fetch sensor descriptions
-		sensors_.clear();
-		parsers_ = urdf::getSensorParser("tactile");
-		sensors_ = parseSensors(xml_string, parsers_);
+		sensors_ = urdf::tactile::parseSensors(xml_string);
 	} catch (const std::exception &e) {
 		ROS_WARN_STREAM("failed to parse robot description:" << e.what());
 	}

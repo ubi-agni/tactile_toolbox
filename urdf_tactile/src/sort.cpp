@@ -29,10 +29,8 @@
 
 /* Author: Robert Haschke */
 
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <urdf_tactile/sort.h>
-#include <urdf_tactile/cast.h>
-#include <memory>
 
 #include <urdf_tactile/taxel_info_iterator.h>
 #include <boost/algorithm/string/split.hpp>
@@ -47,16 +45,16 @@ enum SortKey
 	BY_CHANNEL
 };
 template <SortKey key>
-const std::string &get(const urdf::SensorConstSharedPtr &sensor);
+const std::string &get(const TactileSensorConstSharedPtr &sensor);
 template <>
-const std::string &get<BY_GROUP>(const urdf::SensorConstSharedPtr &sensor)
+const std::string &get<BY_GROUP>(const TactileSensorConstSharedPtr &sensor)
 {
-	return tactile_sensor_cast(*sensor).group_;
+	return sensor->group_;
 }
 template <>
-const std::string &get<BY_CHANNEL>(const urdf::SensorConstSharedPtr &sensor)
+const std::string &get<BY_CHANNEL>(const TactileSensorConstSharedPtr &sensor)
 {
-	return tactile_sensor_cast(*sensor).channel_;
+	return sensor->channel_;
 }
 
 template <typename Result>
@@ -84,14 +82,10 @@ Result sort(const SensorMap &sensors)
 	Result result;
 
 	for (auto it = sensors.begin(), end = sensors.end(); it != end; ++it) {
-		TactileSensorSharedPtr tactile = tactile_sensor_cast(it->second);
-		if (!tactile)
-			continue;  // some other sensor than tactile
-
 		Sensors &g = getOrInsertEntry<Result>(result, get<key>(it->second));
-		if (tactile->array_)
+		if (it->second->array_)
 			g.arrays.push_back(it);
-		else if (!tactile->taxels_.empty())
+		else if (!it->second->taxels_.empty())
 			g.taxels.push_back(it);
 	}
 	return result;

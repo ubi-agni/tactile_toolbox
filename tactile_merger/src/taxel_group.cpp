@@ -28,10 +28,11 @@
  */
 #include <tactile_merger/taxel_group.h>
 
-#include <urdf/sensor.h>
 #include <ros/console.h>
 #include <urdf_tactile/taxel_info_iterator.h>
-#include <urdf_tactile/cast.h>
+#include <urdf_tactile/parser.h>
+
+using namespace urdf::tactile;
 
 namespace tactile {
 
@@ -51,34 +52,28 @@ static TaxelGroupPtr &getGroup(TaxelGroupMap &groups, const std::string &frame)
 	return res.first->second;
 }
 
-void TaxelGroup::addTaxels(const urdf::SensorConstSharedPtr &sensor)
+void TaxelGroup::addTaxels(const TactileSensorConstSharedPtr &sensor)
 {
 	TaxelGroup::TaxelMapping mapping;
-	const urdf::tactile::TactileSensor &tactile = urdf::tactile::tactile_sensor_cast(*sensor);
 
-	auto taxels = urdf::tactile::TaxelInfoIterable(sensor);
+	auto taxels = TaxelInfoIterable(sensor);
 	for (const auto &taxel : taxels) {
 		mapping[taxel.idx] = size();
 		addTaxel(Taxel(taxel.position, taxel.normal));
 	}
-	mappings_.insert(std::make_pair(tactile.channel_, mapping));
+	mappings_.insert(std::make_pair(sensor->channel_, mapping));
 }
 
 /** Create a TaxelGroup for each link for which we have a tactile sensor
  *  A TaxelGroup is identified by link name.
  *  A TaxelGroup can hold several tactile sensors if they are attached to the same link.
  */
-TaxelGroupMap TaxelGroup::load(const std::string &desc_param, const urdf::SensorParserMap &parsers)
+TaxelGroupMap TaxelGroup::load(const std::string &desc_param)
 {
 	TaxelGroupMap result;
 
-	urdf::SensorMap sensors = urdf::parseSensorsFromParam(desc_param, parsers);
 	// create a TaxelGroup for each tactile sensor
-	for (auto &sensor : sensors) {
-		urdf::tactile::TactileSensorConstSharedPtr tactile = urdf::tactile::tactile_sensor_cast(sensor.second);
-		if (!tactile)
-			continue;  // some other sensor than tactile
-
+	for (auto &sensor : parseSensorsFromParam(desc_param)) {
 		TaxelGroupPtr &group = getGroup(result, sensor.second->parent_link_);
 		group->addTaxels(sensor.second);
 	}
