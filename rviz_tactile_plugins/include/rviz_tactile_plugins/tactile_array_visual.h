@@ -30,7 +30,7 @@
 #pragma once
 
 #include <rviz_tactile_plugins/tactile_visual_base.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <rviz/ogre_helpers/point_cloud.h>
 
 namespace rviz {

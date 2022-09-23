@@ -29,7 +29,7 @@
 
 /* Author: Robert Haschke */
 
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <urdf_tactile/sort.h>
 #include <urdf_tactile/cast.h>
 #include <memory>

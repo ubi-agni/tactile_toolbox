@@ -1,4 +1,4 @@
-#include "urdf_tactile/tactile.h"
+#include "urdf_tactile/sensor.h"
 #include "urdf_tactile/taxel_info_iterator.h"
 #include "urdf_tactile/sort.h"
 

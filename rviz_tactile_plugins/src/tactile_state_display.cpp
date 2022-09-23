@@ -35,7 +35,7 @@
 #include <rviz_tactile_plugins/group_property.h>
 
 #include <urdf/sensor.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <urdf_tactile/cast.h>
 
 #include <rviz/visualization_manager.h>

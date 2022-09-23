@@ -9,7 +9,7 @@
 #include "tactile_state_publisher.h"
 
 #include <urdf/sensor.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <urdf_tactile/cast.h>
 
 #include <boost/thread/locks.hpp>

@@ -28,7 +28,7 @@
  */
 #pragma once
 
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 
 namespace urdf {
 namespace tactile {

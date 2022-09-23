@@ -28,7 +28,7 @@
  */
 #pragma once
 
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <memory>
 #include "taxel_info.h"
 

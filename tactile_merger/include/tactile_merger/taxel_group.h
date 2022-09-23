@@ -29,7 +29,7 @@
 #pragma once
 #include "taxel.h"
 #include <urdf_parser/sensor_parser.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <tactile_msgs/TactileContact.h>
 #include <Eigen/Dense>
 #include <map>
