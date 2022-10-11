@@ -221,8 +221,9 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 	sensors_.clear();
 	const std::string &tf_prefix = tf_prefix_property_->getStdString();
 
+	// Keep parsers outside of try block to keep them alive in case of an exception as well!
+	auto parsers = urdf::getSensorParser("tactile");
 	try {
-		auto parsers = urdf::getSensorParser("tactile");
 		auto sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(), parsers);
 
 		// create a TactileVisual for each tactile sensor listed in the URDF model
