@@ -126,8 +126,9 @@ bool parseTactileArray(TactileArray &array, TiXmlElement *config)
 SensorBase *TactileSensorParser::parse(TiXmlElement &config)
 {
 	auto tactile = std::make_unique<TactileSensor>();
+	const std::string empty;
 	tactile->channel_ = parseAttribute<std::string>(config, "channel");
-	tactile->group_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "group");
+	tactile->group_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "group", &empty);
 
 	// multiple Taxels (optional)
 	for (TiXmlElement *taxel_xml = config.FirstChildElement("taxel"); taxel_xml;
