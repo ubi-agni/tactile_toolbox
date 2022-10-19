@@ -329,11 +329,13 @@ void TactileStateDisplay::processMessage(const tactile_msgs::TactileState::Const
 	if (msg->header.stamp + ros::Duration(timeout_property_->getFloat()) < last_msg_)
 		setStatus(StatusProperty::Error, "Topic", "Received an outdated msg");
 	else
-		setStatus(StatusProperty::Ok, "Topic", "Ok");
+		setStatus(StatusProperty::Ok, "Topic", "Received message(s)");
 
 	for (auto sensor = msg->sensors.begin(), end = msg->sensors.end(); sensor != end; ++sensor) {
 		const std::string &channel = sensor->name;
 		auto range = sensors_.equal_range(channel);
+		if (range.first == range.second)
+			ROS_WARN_ONCE("No sensor found matching channel '%s'", channel.c_str());
 		for (auto s = range.first, range_end = range.second; s != range_end; ++s) {
 			s->second->updateValues(msg->header.stamp, sensor->values);
 		}
