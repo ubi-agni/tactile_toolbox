@@ -4,13 +4,12 @@
   <version>0.1.0</version>
   <description>Convert TactileState or TactileContact messages into pcl messages</description>
 
-  <maintainer email="troehlig@techfak.uni-bielefeld.de">Tobias Roehlig</maintainer>
+  <maintainer email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</maintainer>
 
-  <license>GPLv3</license>
+  <license>LGPLv3</license>
 
   <author email="troehlig@techfak.uni-bielefeld.de">Tobias Roehlig</author>
   <author email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</author>
-  <maintainer email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</maintainer>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>sensor_msgs</depend>

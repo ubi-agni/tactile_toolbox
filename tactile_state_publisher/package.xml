@@ -6,7 +6,7 @@
                offers concatenating several messages from a source of tactile_states
                and provides a tactile_bias node</description>
 
-  <maintainer email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</maintainer>
+  <maintainer email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</maintainer>
 
   <author email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</author>
   <author email="rhaschke@techfak.uni-bielefeld.de">Robert Haschke</author>
