@@ -38,6 +38,7 @@ class Merger
 {
 public:
 	Merger();
+	explicit Merger(const std::string &tf_prefix = "");
 	~Merger();
 
 	void init(const std::string &param = "robot_description");
@@ -50,6 +51,7 @@ public:
 	tactile_msgs::TactileContacts getAllTaxelContacts();
 
 private:
+	std::string tf_prefix_;
 	struct GroupData;
 	typedef boost::shared_ptr<GroupData> GroupDataPtr;
 
