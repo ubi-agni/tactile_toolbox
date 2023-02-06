@@ -46,7 +46,17 @@ struct Merger::GroupData
 
 Merger::GroupData::GroupData(const TaxelGroupPtr &group) : group(group) {}
 
-Merger::Merger() {}
+Merger::Merger(const std::string &tf_prefix) : tf_prefix_(tf_prefix)
+{
+	// prepare tf_prefix for easy future concatenation
+	if (!tf_prefix_.empty()) {
+		if (tf_prefix_[0] == '/')
+			tf_prefix_.erase(0, 1);  // strip front slash if any
+		if (!tf_prefix_.empty() && tf_prefix_.back() != '/')
+			tf_prefix_.push_back('/');  // if still non-empty and not trailing slash, add it
+	}
+}
+
 Merger::~Merger()
 {
 	sensors_.clear();
@@ -117,7 +127,7 @@ tactile_msgs::TactileContacts Merger::getAllTaxelContacts()
 
 		tactile_msgs::TactileContact contact;
 		contact.name = name_data.first;  // group name
-		contact.header.frame_id = data->group->frame();
+		contact.header.frame_id = tf_prefix_ + data->group->frame();
 		contact.header.stamp = data->timestamp;
 		// insert all contacts of the group into result array
 		data->group->all(contacts.contacts, contact);
@@ -141,7 +151,7 @@ tactile_msgs::TactileContacts Merger::getGroupAveragedContacts()
 		}
 		tactile_msgs::TactileContact contact;
 		contact.name = name_data.first;  // group name
-		contact.header.frame_id = data->group->frame();
+		contact.header.frame_id = tf_prefix_ + data->group->frame();
 		contact.header.stamp = data->timestamp;
 		if (!data->group->average(contact)) {
 			ROS_DEBUG_STREAM_NAMED("contacts", "getGroupAveragedContacts no contact for group of frame_id "

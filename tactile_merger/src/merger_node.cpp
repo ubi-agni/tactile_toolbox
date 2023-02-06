@@ -48,7 +48,8 @@ int main(int argc, char *argv[])
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_priv("~");
 
-	tactile::Merger merger;
+	std::string tf_prefix = nh_priv.param("tf_prefix", std::string());
+	tactile::Merger merger(tf_prefix);
 	merger.init();
 
 	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
@@ -60,6 +61,7 @@ int main(int argc, char *argv[])
 	ros::Time last_update;
 	ros::Rate rate(nh_priv.param("rate", 100.));
 	bool no_clustering = nh_priv.param("no_clustering", false);
+
 	while (ros::ok()) {
 		ros::spinOnce();
 		ros::Time now = ros::Time::now();
