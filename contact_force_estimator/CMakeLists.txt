@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.3)
-project(tactile_merger)
+project(contact_force_estimator)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -23,15 +23,14 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-
 add_library(${PROJECT_NAME}
   src/taxel.cpp
   src/taxel_group.cpp
-  src/merger.cpp
+  src/contact_force_estimator.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_node src/merger_node.cpp)
+add_executable(${PROJECT_NAME}_node src/node.cpp)
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
@@ -44,5 +43,5 @@ install(TARGETS
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/
-        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-        FILES_MATCHING PATTERN "*.h")
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h")

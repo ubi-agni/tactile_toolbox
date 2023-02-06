@@ -9,7 +9,7 @@ This software package adds tactile messages, a tactile sensor description to URD
 * [tactile_calibration](tactile_calibration)
   * `tactile_state_calibrator`: maps raw tactile values to calibrated ones
 * [urdf_tactile](urdf_tactile/README.md): extension to URDF to describe tactile sensors, requires modified [`urdf`](https://github.com/ubi-agni/urdf) and [`urdfdom`](https://github.com/ubi-agni/urdfdom) packages.
-* [tactile_merger](tactile_merger): Map [`tactile_msgs/TactileState`](tactile_msgs/msg/TactileState.msg) onto [`tactile_msgs/TactileContacts`](tactile_msgs/msg/TactileContacts.msg), i.e. contact position, force, and normal, merging contact data of all taxels per link into a single wrench vector
+* [contact_force_estimator](contact_force_estimator): Map [`tactile_msgs/TactileState`](tactile_msgs/msg/TactileState.msg) onto [`tactile_msgs/TactileContacts`](tactile_msgs/msg/TactileContacts.msg), i.e. contact position, force, and normal, aggregating contact data of all taxels per link into a single wrench vector.
 * [tactile_pcl](tactile_pcl): Compute and publish Tactile Point Cloud data from [`tactile_msgs/TactileContacts`](tactile_msgs/msg/TactileState.msg).
 * [rviz_tactile_plugins](rviz_tactile_plugins): rviz visualization tools for [raw tactile data](tactile_msgs/msg/TactileState.msg) and [contact information](tactile_msgs/msg/TactileContacts.msg).
 

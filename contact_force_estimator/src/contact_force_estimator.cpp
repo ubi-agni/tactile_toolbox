@@ -26,7 +26,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <tactile_merger/merger.h>
+#include <contact_force_estimator/contact_force_estimator.h>
 #include <tactile_msgs/TactileContacts.h>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
@@ -35,7 +35,7 @@
 
 namespace tactile {
 
-struct Merger::GroupData
+struct ContactForceEstimator::GroupData
 {
 	GroupData(const TaxelGroupPtr &group);
 
@@ -44,17 +44,17 @@ struct Merger::GroupData
 	ros::Time timestamp;
 };
 
-Merger::GroupData::GroupData(const TaxelGroupPtr &group) : group(group) {}
+ContactForceEstimator::GroupData::GroupData(const TaxelGroupPtr &group) : group(group) {}
 
-Merger::Merger() {}
-Merger::~Merger()
+ContactForceEstimator::ContactForceEstimator() {}
+ContactForceEstimator::~ContactForceEstimator()
 {
 	sensors_.clear();
 	groups_.clear();
 	parsers_.clear();
 }
 
-void Merger::init(const std::string &param)
+void ContactForceEstimator::init(const std::string &param)
 {
 	sensors_.clear();
 	groups_.clear();
@@ -73,14 +73,14 @@ void Merger::init(const std::string &param)
 	}
 }
 
-void Merger::reset()
+void ContactForceEstimator::reset()
 {
 	for (auto &group : groups_)
 		group.second->timestamp = ros::Time();
 }
 
 template <typename Iterator>
-void Merger::update(const ros::Time &stamp, const std::string &channel, Iterator begin, Iterator end)
+void ContactForceEstimator::update(const ros::Time &stamp, const std::string &channel, Iterator begin, Iterator end)
 {
 	auto range = sensors_.equal_range(channel);
 	if (range.first == range.second) {
@@ -99,11 +99,11 @@ void Merger::update(const ros::Time &stamp, const std::string &channel, Iterator
 		}
 	}
 }
-template void Merger::update<std::vector<float>::const_iterator>(const ros::Time &stamp, const std::string &sensor_name,
-                                                                 std::vector<float>::const_iterator begin,
-                                                                 std::vector<float>::const_iterator end);
+template void ContactForceEstimator::update<std::vector<float>::const_iterator>(
+    const ros::Time &stamp, const std::string &sensor_name, std::vector<float>::const_iterator begin,
+    std::vector<float>::const_iterator end);
 
-tactile_msgs::TactileContacts Merger::getAllTaxelContacts()
+tactile_msgs::TactileContacts ContactForceEstimator::getAllTaxelContacts()
 {
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
@@ -125,7 +125,7 @@ tactile_msgs::TactileContacts Merger::getAllTaxelContacts()
 	return contacts;
 }
 
-tactile_msgs::TactileContacts Merger::getGroupAveragedContacts()
+tactile_msgs::TactileContacts ContactForceEstimator::getGroupAveragedContacts()
 {
 	static ros::Duration timeout(1);
 	ros::Time now = ros::Time::now();
