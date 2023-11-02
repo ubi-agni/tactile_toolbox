@@ -30,7 +30,7 @@
 #include <ros/ros.h>
 #include <tactile_msgs/TactileContacts.h>
 #include <tactile_msgs/TactileState.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 static bool HAVE_NEW_DATA = false;
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	ros::Publisher pub = nh.advertise<tactile_msgs::TactileContacts>("tactile_contact_states", 5);
 
 	const boost::function<void(const tactile_msgs::TactileStateConstPtr &)> callback =
-	    boost::bind(message_handler, boost::ref(merger), _1);
+	    boost::bind(message_handler, boost::ref(merger), boost::placeholders::_1);
 	ros::Subscriber sub = nh.subscribe("tactile_states", 1, callback);
 
 	ros::Time last_update;
