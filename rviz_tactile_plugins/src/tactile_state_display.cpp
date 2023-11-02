@@ -188,7 +188,13 @@ void TactileStateDisplay::onTopicChanged()
 GroupProperty *TactileStateDisplay::getGroupProperty(const QString &path, GroupProperty *parent)
 {
 	assert(parent);
-	QStringList names = path.split("/", QString::SkipEmptyParts);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+	const auto split_beahvior = Qt::SkipEmptyParts;
+#else
+	const auto split_beahvior = QString::SkipEmptyParts;
+#endif
+	QStringList names = path.split("/", split_beahvior);
+
 	for (const QString &name : names) {
 		GroupProperty *child = nullptr;
 		for (int i = 0, end = parent->numChildren(); i < end && !child; ++i) {

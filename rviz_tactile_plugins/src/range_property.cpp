@@ -141,9 +141,15 @@ bool RangeProperty::updateFromChildren()
 
 bool RangeProperty::setValue(const QVariant &new_value)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+	const auto split_beahvior = Qt::SkipEmptyParts;
+#else
+	const auto split_beahvior = QString::SkipEmptyParts;
+#endif
+
 	if (new_value == Property::getValue())
 		return true;
-	QStringList values = new_value.toString().split(";", QString::KeepEmptyParts);
+	QStringList values = new_value.toString().split(";", split_beahvior);
 	if (values.size() != 2) {
 		values.clear();
 		values << ""
