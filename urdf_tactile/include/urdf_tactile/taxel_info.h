@@ -29,7 +29,7 @@
 #pragma once
 
 #include <urdf_sensor/types.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <memory>
 
 namespace urdf {

@@ -1,8 +1,9 @@
 add_library(${PROJECT_NAME} SHARED
 	parser.cpp
+	utils.cpp
 	${PROJECT_INCLUDES}
 )
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES} ${urdfdom_LIBRARIES} ${catkin_LIBRARIES})
 
 add_library(${PROJECT_NAME}_tools SHARED
 	taxel_info_iterator.cpp

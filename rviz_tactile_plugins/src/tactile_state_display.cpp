@@ -34,9 +34,7 @@
 #include <rviz_tactile_plugins/tactile_array_visual.h>
 #include <rviz_tactile_plugins/group_property.h>
 
-#include <urdf/sensor.h>
-#include <urdf_tactile/tactile.h>
-#include <urdf_tactile/cast.h>
+#include <urdf_tactile/parser.h>
 
 #include <rviz/visualization_manager.h>
 #include <rviz/frame_manager.h>
@@ -221,16 +219,12 @@ void TactileStateDisplay::onRobotDescriptionChanged()
 	sensors_.clear();
 	const std::string &tf_prefix = tf_prefix_property_->getStdString();
 
-	// Keep parsers outside of try block to keep them alive in case of an exception as well!
-	auto parsers = urdf::getSensorParser("tactile");
 	try {
-		auto sensors = urdf::parseSensorsFromParam(robot_description_property_->getStdString(), parsers);
+		auto sensors = urdf::tactile::parseSensorsFromParam(robot_description_property_->getStdString());
 
 		// create a TactileVisual for each tactile sensor listed in the URDF model
 		for (const auto &sensor : sensors) {
-			urdf::tactile::TactileSensorConstSharedPtr tactile = urdf::tactile::tactile_sensor_cast(sensor.second);
-			if (!tactile)
-				continue;  // some other sensor than tactile
+			const TactileSensorConstSharedPtr &tactile = sensor.second;
 
 			TactileVisualBase *visual = nullptr;
 			if (tactile->array_) {

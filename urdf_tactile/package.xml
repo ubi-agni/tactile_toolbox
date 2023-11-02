@@ -11,13 +11,11 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>urdf</depend>
-  <depend>urdfdom</depend>
-  <depend>pluginlib</depend>
+  <build_depend>cmake_modules</build_depend>
+  <depend>liburdfdom-dev</depend>
+  <depend>roscpp</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-    <urdf plugin="${prefix}/plugin_description.xml"/>
   </export>
 </package>

@@ -30,7 +30,7 @@
 #pragma once
 
 #include <rviz_tactile_plugins/group_property.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 #include <tactile_msgs/TactileState.h>
 #include <geometry_msgs/Pose.h>
 #include <tactile_filters/TactileValueArray.h>

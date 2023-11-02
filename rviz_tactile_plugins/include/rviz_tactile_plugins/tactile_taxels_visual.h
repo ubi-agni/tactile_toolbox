@@ -30,7 +30,7 @@
 #pragma once
 
 #include <rviz_tactile_plugins/tactile_visual_base.h>
-#include <urdf_tactile/tactile.h>
+#include <urdf_tactile/sensor.h>
 
 #define ENABLE_ARROWS 0
 
