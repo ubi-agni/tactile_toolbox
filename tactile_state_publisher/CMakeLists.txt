@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(tactile_state_publisher)
 
-set(CMAKE_CXX_STANDARD 14)
-
 find_package(catkin REQUIRED COMPONENTS
   tactile_msgs
   urdf_tactile

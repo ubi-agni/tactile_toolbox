@@ -1,5 +1,3 @@
-set (CMAKE_CXX_STANDARD 14)
-
 add_executable(tactile_pcl_node
 	pcl_collector.cpp
 	tactile_pcl_node.cpp

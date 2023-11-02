@@ -1,5 +1,3 @@
-set(CMAKE_CXX_STANDARD 14)
-
 ## QT stuff ##
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

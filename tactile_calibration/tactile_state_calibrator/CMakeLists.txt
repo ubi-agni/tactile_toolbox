@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(tactile_state_calibrator)
 
-set(CMAKE_CXX_STANDARD 14)
-
 find_package(catkin REQUIRED COMPONENTS roscpp tactile_msgs)
 find_package(tactile_filters REQUIRED)
 

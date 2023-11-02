@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(tactile_merger)
 
-set(CMAKE_CXX_STANDARD 14)
-
 find_package(catkin REQUIRED urdf_tactile tactile_msgs)
 find_package(Eigen3 REQUIRED)
 
