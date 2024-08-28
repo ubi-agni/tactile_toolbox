@@ -22,12 +22,12 @@ from datetime import datetime
 
 from tactile_calibration_tools.calibration_utils import *
 
-#import curses
-#import os
+# import curses
+# import os
 
 
-#import curses
-#stdscr = curses.initscr()
+# import curses
+# stdscr = curses.initscr()
 # curses.noecho()
 # stdscr.nodelay(1) # set getch() non-blocking
 
@@ -179,7 +179,7 @@ def wait_key_press(timeout):
         return True
     return False
 # def wait_key_press(win, timeout):
-    #now = rospy.Time.now()
+    # now = rospy.Time.now()
     # while((rospy.Time.now()-now).to_sec() < timeout):
     # try:
     # key = win.getkey()
@@ -198,7 +198,7 @@ def user_menu(choices={'c': "continue", 'r': "retry", 's': "save", 'q': "quit wi
     letter_string += ") ?\n"
     # print "press c to continue, r to retry, d to detect a new channel, s to save and quit, or q to quit without saving"
     tcflush(sys.stdin, TCIFLUSH)
-    #user_choice = stdscr.getch()
+    # user_choice = stdscr.getch()
     return input(letter_string)
 
 
@@ -208,7 +208,7 @@ def user_yesno(default=True):
     else:
         text = "y/[n] ?"
     tcflush(sys.stdin, TCIFLUSH)
-    while(1):
+    while (1):
         ret = input(text)
         if ret == "":
             return default
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         raw_sub = message_filters.Subscriber(args.raw_topic, TactileState)
         ref_sub = message_filters.Subscriber(args.ref_topic, TactileState)
         ts = message_filters.ApproximateTimeSynchronizer([raw_sub, ref_sub], 10, 0.1, allow_headerless=False)
-        #ts = message_filters.TimeSynchronizer([raw_sub, ref_sub], 10)
+        # ts = message_filters.TimeSynchronizer([raw_sub, ref_sub], 10)
         ts.registerCallback(raw_ref_topic_cb)
     else:
         print("Initializing topic subscriber")
@@ -479,7 +479,7 @@ if __name__ == "__main__":
                 print("Use the calibtool upright and press and release your selected channel evenly over",
                       args.repetition, "iterations. \n\n")
             # display vector and detection level
-            #channel_display_str = display_channel(raw_previous_vec, raw_vec, args.detect_threshold)
+            # channel_display_str = display_channel(raw_previous_vec, raw_vec, args.detect_threshold)
             channel_display_str = display_channel_color(raw_previous_vec, raw_vec, args.detect_threshold)
             if channel_display_str is not None:
                 print("\033[0m\r chan:", '\033[0m|'.join(channel_display_str), '\033[0m', end=' ')
@@ -571,7 +571,7 @@ if __name__ == "__main__":
                     state = RecordingState.PROCESS
                     print("\nrecording ended")
                 else:
-                  #display_raw_ref = display_channel_color([raw_previous_vec[i] for i in [detected_channel, args.ref_channel]] , [raw_vec[i] for i in [detected_channel, args.ref_channel] ], input_range_max)
+                  # display_raw_ref = display_channel_color([raw_previous_vec[i] for i in [detected_channel, args.ref_channel]] , [raw_vec[i] for i in [detected_channel, args.ref_channel] ], input_range_max)
                   # if display_raw_ref is not None:
                     # print "\033[0m\r chan:",display_raw_ref[0],"\033[0mref:",display_raw_ref[1],"\033[0m Remaining time :", round(DEFAULT_RECORDING_DURATION-elapsed_time),
                     if ref_topic_init is not None and ref_topic_init is True:
