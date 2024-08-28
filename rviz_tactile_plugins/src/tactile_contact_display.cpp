@@ -265,7 +265,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 		Ogre::Quaternion orientation;
 
 		const std::string &tf_prefix = tf_prefix_property_->getStdString();
-		const std::string &frame = tf_prefix.empty() ? msg.header.frame_id : tf::resolve(tf_prefix, msg.header.frame_id);
+		const std::string &frame = tf::resolve(tf_prefix, msg.header.frame_id);
 		// use zeroStamp to fetch most recent frame (tf is lacking behind our timestamps which caused issues)
 		if (!context_->getFrameManager()->getTransform(frame, ZERO_STAMP, position, orientation)) {
 			std::string error;

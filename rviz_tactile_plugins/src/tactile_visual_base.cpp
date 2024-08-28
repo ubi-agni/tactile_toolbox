@@ -159,7 +159,7 @@ bool TactileVisualBase::updatePose()
 {
 	Ogre::Vector3 pos;
 	Ogre::Quaternion quat;
-	const std::string &frame = tf_prefix_.empty() ? frame_ : tf::resolve(tf_prefix_, frame_);
+	const std::string &frame = tf::resolve(tf_prefix_, frame_);
 	if (!context_->getFrameManager()->transform(frame, ros::Time(), pose_, pos, quat)) {
 		std::string error;
 		context_->getFrameManager()->transformHasProblems(frame, ros::Time(), error);
