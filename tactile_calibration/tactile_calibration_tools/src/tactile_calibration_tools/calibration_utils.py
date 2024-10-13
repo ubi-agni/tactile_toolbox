@@ -378,7 +378,7 @@ def generate_mapping_pwl(x, y, input_range_max, calib_channel, seg=4, no_extrapo
 
     xs = np.array(x)
     ys = np.array(y)
-    #ys = smooth(y_inc,100)
+    # ys = smooth(y_inc,100)
 
     pwlf_result = pwlf.PiecewiseLinFit(xs, ys)
     # request a fit with n points
