@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.3)
+cmake_minimum_required(VERSION 3.22)
 project(tactile_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
