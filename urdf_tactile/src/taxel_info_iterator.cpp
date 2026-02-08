@@ -53,9 +53,15 @@ urdf::Pose compose(const urdf::Pose &a, const urdf::Pose &b)
 /******************************************************************************
  * common interface class TaxelInfoIteratorI for implementations
  ******************************************************************************/
-class TaxelInfoIteratorI : public std::iterator<std::random_access_iterator_tag, TaxelInfo>
+class TaxelInfoIteratorI
 {
 public:
+	using iterator_category = std::random_access_iterator_tag;
+	using value_type = TaxelInfo;
+	using difference_type = std::ptrdiff_t;
+	using pointer = TaxelInfo *;
+	using reference = TaxelInfo &;
+
 	TaxelInfoIteratorI(const TactileSensorConstSharedPtr &sensor) : sensor(sensor) {}
 	virtual TaxelInfoIteratorIPtr clone() const = 0;
 	virtual ~TaxelInfoIteratorI() {}
