@@ -5,7 +5,7 @@ project(urdf_tactile)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(Boost REQUIRED system)
-find_package(urdfdom REQUIRED)
+find_package(urdfdom 4 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp cmake_modules)
 find_package(TinyXML2 REQUIRED)
 
