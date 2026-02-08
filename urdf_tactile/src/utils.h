@@ -41,7 +41,7 @@
 #include <urdf_model/utils.h>
 #include <urdf_model/types.h>
 #include <urdf_model/link.h>
-#include <tinyxml.h>
+#include <tinyxml2.h>
 
 namespace urdf {
 namespace tactile {
@@ -68,7 +68,7 @@ inline unsigned int parseAttribute<unsigned int>(const char* value)
 }
 
 template <typename T>
-T parseAttribute(const TiXmlElement& tag, const char* attr, const T* default_value = nullptr)
+T parseAttribute(const tinyxml2::XMLElement& tag, const char* attr, const T* default_value = nullptr)
 {
 	const char* value = tag.Attribute(attr);
 	if (!value) {
@@ -85,7 +85,7 @@ T parseAttribute(const TiXmlElement& tag, const char* attr, const T* default_val
 	}
 }
 
-urdf::GeometrySharedPtr parseGeometry(TiXmlElement* g);
+urdf::GeometrySharedPtr parseGeometry(tinyxml2::XMLElement* g);
 
 }  // namespace tactile
 }  // namespace urdf
