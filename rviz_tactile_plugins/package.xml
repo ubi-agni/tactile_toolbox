@@ -15,6 +15,7 @@
 
   <depend>roscpp</depend>
   <depend>rviz</depend>
+  <depend>qtbase5-dev</depend>
   <depend>urdf_tactile</depend>
   <depend>tactile_msgs</depend>
   <depend>tactile_filters</depend>
