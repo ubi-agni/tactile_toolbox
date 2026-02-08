@@ -37,7 +37,7 @@
 #pragma once
 
 #include "sensor.h"
-#include <tinyxml.h>
+#include <tinyxml2.h>
 
 namespace urdf {
 namespace tactile {
@@ -45,10 +45,10 @@ namespace tactile {
 class TactileSensorParser
 {
 public:
-	TactileSensor *parse(TiXmlElement &sensor_element) const;
+	TactileSensor *parse(tinyxml2::XMLElement &sensor_element) const;
 };
 
-SensorMap parseSensors(TiXmlDocument &urdf_xml);
+SensorMap parseSensors(tinyxml2::XMLDocument &urdf_xml);
 SensorMap parseSensors(const std::string &xml);
 SensorMap parseSensorsFromParam(const std::string &param);
 SensorMap parseSensorsFromFile(const std::string &filename);

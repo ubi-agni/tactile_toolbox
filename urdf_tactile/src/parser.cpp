@@ -77,7 +77,7 @@ tactile::Vector2<double> parseAttribute<tactile::Vector2<double> >(const char *v
 	return tactile::Vector2<double>(xy[0], xy[1]);
 }
 
-bool parseTactileTaxel(TactileTaxel &taxel, TiXmlElement *config)
+bool parseTactileTaxel(TactileTaxel &taxel, tinyxml2::XMLElement *config)
 {
 	taxel.clear();
 
@@ -101,7 +101,7 @@ bool parseTactileTaxel(TactileTaxel &taxel, TiXmlElement *config)
 	return true;
 }
 
-bool parseTactileArray(TactileArray &array, TiXmlElement *config)
+bool parseTactileArray(TactileArray &array, tinyxml2::XMLElement *config)
 {
 	array.clear();
 	try {
@@ -122,9 +122,9 @@ bool parseTactileArray(TactileArray &array, TiXmlElement *config)
 	return true;
 }
 
-TactileSensor *TactileSensorParser::parse(TiXmlElement &config) const
+TactileSensor *TactileSensorParser::parse(tinyxml2::XMLElement &config) const
 {
-	TiXmlElement *parent = config.Parent()->ToElement()->FirstChildElement("parent");
+	tinyxml2::XMLElement *parent = config.Parent()->ToElement()->FirstChildElement("parent");
 	if (!parent) {
 		CONSOLE_BRIDGE_logError("No <parent> tag given for the sensor.");
 		return nullptr;
@@ -134,7 +134,7 @@ TactileSensor *TactileSensorParser::parse(TiXmlElement &config) const
 	const std::string empty;
 	tactile->name_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "name");
 	tactile->parent_link_ = parseAttribute<std::string>(*parent, "link");
-	if (TiXmlElement *o = config.Parent()->ToElement()->FirstChildElement("origin")) {
+	if (tinyxml2::XMLElement *o = config.Parent()->ToElement()->FirstChildElement("origin")) {
 		if (!parsePose(tactile->origin_, o))
 			return nullptr;
 	}
@@ -143,7 +143,7 @@ TactileSensor *TactileSensorParser::parse(TiXmlElement &config) const
 	tactile->group_ = parseAttribute<std::string>(*config.Parent()->ToElement(), "group", &empty);
 
 	// multiple Taxels (optional)
-	for (TiXmlElement *taxel_xml = config.FirstChildElement("taxel"); taxel_xml;
+	for (tinyxml2::XMLElement *taxel_xml = config.FirstChildElement("taxel"); taxel_xml;
 	     taxel_xml = taxel_xml->NextSiblingElement("taxel")) {
 		TactileTaxelSharedPtr taxel;
 		taxel.reset(new TactileTaxel());
@@ -156,7 +156,7 @@ TactileSensor *TactileSensorParser::parse(TiXmlElement &config) const
 	}
 
 	// a single array (optional)
-	for (TiXmlElement *array_xml = config.FirstChildElement("array"); array_xml;
+	for (tinyxml2::XMLElement *array_xml = config.FirstChildElement("array"); array_xml;
 	     array_xml = array_xml->NextSiblingElement("array")) {
 		if (tactile->array_) {
 			CONSOLE_BRIDGE_logWarn("Only a single array element is allowed for a tactile sensor");
@@ -208,16 +208,15 @@ SensorMap parseSensorsFromParam(const std::string &param)
 
 SensorMap parseSensors(const std::string &xml_string)
 {
-	TiXmlDocument xml_doc;
-	xml_doc.Parse(xml_string.c_str());
-	if (xml_doc.Error())
-		throw std::runtime_error(std::string("Could not parse the xml document: ") + xml_doc.ErrorDesc());
+	tinyxml2::XMLDocument xml_doc;
+	if (xml_doc.Parse(xml_string.c_str()) != tinyxml2::XML_SUCCESS)
+		throw std::runtime_error(std::string("Could not parse the xml document: ") + xml_doc.ErrorStr());
 	return parseSensors(xml_doc);
 }
 
-SensorMap parseSensors(TiXmlDocument &urdf_xml)
+SensorMap parseSensors(tinyxml2::XMLDocument &urdf_xml)
 {
-	TiXmlElement *robot_xml = urdf_xml.FirstChildElement("robot");
+	tinyxml2::XMLElement *robot_xml = urdf_xml.FirstChildElement("robot");
 	if (!robot_xml) {
 		CONSOLE_BRIDGE_logError("Could not find the 'robot' element in the URDF");
 		return SensorMap();
@@ -226,9 +225,9 @@ SensorMap parseSensors(TiXmlDocument &urdf_xml)
 	TactileSensorParser parser;
 	SensorMap results;
 	// Get all sensor elements
-	for (TiXmlElement *sensor_xml = robot_xml->FirstChildElement("sensor"); sensor_xml;
+	for (tinyxml2::XMLElement *sensor_xml = robot_xml->FirstChildElement("sensor"); sensor_xml;
 	     sensor_xml = sensor_xml->NextSiblingElement("sensor")) {
-		if (TiXmlElement *tactile_xml = sensor_xml->FirstChildElement("tactile")) {
+		if (tinyxml2::XMLElement *tactile_xml = sensor_xml->FirstChildElement("tactile")) {
 			if (TactileSensor *sensor = parser.parse(*tactile_xml)) {
 				auto res = results.insert(make_pair(sensor->name_, sensor));
 				if (!res.second)

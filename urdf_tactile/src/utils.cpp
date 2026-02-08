@@ -41,7 +41,7 @@
 namespace {
 using namespace urdf;
 
-bool parseSphere(Sphere &s, TiXmlElement *c)
+bool parseSphere(Sphere &s, tinyxml2::XMLElement *c)
 {
 	s.clear();
 
@@ -63,7 +63,7 @@ bool parseSphere(Sphere &s, TiXmlElement *c)
 	return true;
 }
 
-bool parseBox(Box &b, TiXmlElement *c)
+bool parseBox(Box &b, tinyxml2::XMLElement *c)
 {
 	b.clear();
 
@@ -82,7 +82,7 @@ bool parseBox(Box &b, TiXmlElement *c)
 	return true;
 }
 
-bool parseCylinder(Cylinder &y, TiXmlElement *c)
+bool parseCylinder(Cylinder &y, tinyxml2::XMLElement *c)
 {
 	y.clear();
 
@@ -113,7 +113,7 @@ bool parseCylinder(Cylinder &y, TiXmlElement *c)
 	return true;
 }
 
-bool parseMesh(Mesh &m, TiXmlElement *c)
+bool parseMesh(Mesh &m, tinyxml2::XMLElement *c)
 {
 	m.clear();
 
@@ -143,41 +143,41 @@ bool parseMesh(Mesh &m, TiXmlElement *c)
 namespace urdf {
 namespace tactile {
 
-GeometrySharedPtr parseGeometry(TiXmlElement *g)
+GeometrySharedPtr parseGeometry(tinyxml2::XMLElement *g)
 {
 	GeometrySharedPtr geom;
 	if (!g)
 		return geom;
 
-	TiXmlElement *shape = g->FirstChildElement();
+	tinyxml2::XMLElement *shape = g->FirstChildElement();
 	if (!shape) {
 		CONSOLE_BRIDGE_logError("Geometry tag contains no child element.");
 		return geom;
 	}
 
-	std::string type_name = shape->ValueStr();
-	if (type_name == "sphere") {
+	const char *type_name = shape->Value();
+	if (strcmp(type_name, "sphere") == 0) {
 		Sphere *s = new Sphere();
 		geom.reset(s);
 		if (parseSphere(*s, shape))
 			return geom;
-	} else if (type_name == "box") {
+	} else if (strcmp(type_name, "box") == 0) {
 		Box *b = new Box();
 		geom.reset(b);
 		if (parseBox(*b, shape))
 			return geom;
-	} else if (type_name == "cylinder") {
+	} else if (strcmp(type_name, "cylinder") == 0) {
 		Cylinder *c = new Cylinder();
 		geom.reset(c);
 		if (parseCylinder(*c, shape))
 			return geom;
-	} else if (type_name == "mesh") {
+	} else if (strcmp(type_name, "mesh") == 0) {
 		Mesh *m = new Mesh();
 		geom.reset(m);
 		if (parseMesh(*m, shape))
 			return geom;
 	} else {
-		CONSOLE_BRIDGE_logError("Unknown geometry type '%s'", type_name.c_str());
+		CONSOLE_BRIDGE_logError("Unknown geometry type '%s'", type_name);
 		return geom;
 	}
 
