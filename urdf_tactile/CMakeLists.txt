@@ -25,7 +25,7 @@ catkin_package(
   DEPENDS urdfdom Boost TinyXML
 )
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIR} ${urdfdom_INCLUDE_DIRS})
 include_directories(SYSTEM include ${catkin_INCLUDE_DIRS})
 file(GLOB_RECURSE PROJECT_INCLUDES *.h)
 
