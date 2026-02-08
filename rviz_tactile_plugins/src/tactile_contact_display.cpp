@@ -210,7 +210,7 @@ void TactileContactDisplay::processMessage(const tactile_msgs::TactileContact &m
 		tactile_msgs::TactileContact &m = it->second.first;
 		m = msg;
 	} else {
-		contacts_.insert(std::make_pair(std::cref(id), std::make_pair(msg, WrenchVisualPtr())));
+		contacts_.insert(std::make_pair(std::cref(id), std::make_pair(msg, ScrewVisualPtr())));
 	}
 }
 
@@ -250,7 +250,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 
 	for (auto &contact : contacts_) {
 		const tactile_msgs::TactileContact &msg = contact.second.first;
-		WrenchVisualPtr &visual = contact.second.second;
+		ScrewVisualPtr &visual = contact.second.second;
 		bool new_visual = !visual;
 
 		// hide visuals if they are outdated
@@ -280,7 +280,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 
 		// create visual if not yet done
 		if (new_visual)
-			visual.reset(new WrenchVisual(context_->getSceneManager(), scene_node_));
+			visual.reset(new ScrewVisual(context_->getSceneManager(), scene_node_));
 
 		if (this->full_update_ || new_visual) {
 			Ogre::ColourValue force_color = force_color_property_->getOgreColor();
@@ -292,10 +292,10 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 			float torque_scale = scale * torque_scale_property_->getFloat();
 			float width = scale * width_property_->getFloat();
 
-			visual->setForceColor(force_color.r, force_color.g, force_color.b, alpha);
-			visual->setTorqueColor(torque_color.r, torque_color.g, torque_color.b, alpha);
-			visual->setForceScale(force_scale);
-			visual->setTorqueScale(torque_scale);
+			visual->setLinearColor(force_color.r, force_color.g, force_color.b, alpha);
+			visual->setAngularColor(torque_color.r, torque_color.g, torque_color.b, alpha);
+			visual->setLinearScale(force_scale);
+			visual->setAngularScale(torque_scale);
 			visual->setHideSmallValues(hide_small_values_property_->getBool());
 			visual->setWidth(width);
 		}
@@ -312,7 +312,7 @@ void TactileContactDisplay::update(float wall_dt, float ros_dt)
 		visual->setVisible(true);
 		visual->setFramePosition(position);
 		visual->setFrameOrientation(orientation);
-		visual->setWrench(force, torque);
+		visual->setScrew(force, torque);
 	}
 	this->full_update_ = false;
 }

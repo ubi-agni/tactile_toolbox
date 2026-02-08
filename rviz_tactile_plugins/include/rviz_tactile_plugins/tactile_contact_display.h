@@ -39,7 +39,7 @@
 namespace rviz {
 class FloatProperty;
 class ColorProperty;
-class WrenchVisual;
+class ScrewVisual;
 
 namespace tactile {
 
@@ -54,7 +54,7 @@ protected Q_SLOTS:
 	void fillTopicList() override;
 };
 
-typedef boost::shared_ptr<WrenchVisual> WrenchVisualPtr;
+typedef boost::shared_ptr<ScrewVisual> ScrewVisualPtr;
 
 class TactileContactDisplay : public rviz::Display
 {
@@ -97,7 +97,7 @@ private:
 
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_;
-	std::map<std::pair<std::string, std::string>, std::pair<tactile_msgs::TactileContact, WrenchVisualPtr> > contacts_;
+	std::map<std::pair<std::string, std::string>, std::pair<tactile_msgs::TactileContact, ScrewVisualPtr> > contacts_;
 	boost::mutex mutex_;
 	ros::Time last_update_;  // last seen ROS timestamp
 	ros::Time last_msg_;  // timestamp when last received a message
