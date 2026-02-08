@@ -20,7 +20,7 @@
   <exec_depend>tactile_state_publisher</exec_depend>
   <exec_depend>tactile_state_calibrator</exec_depend>
   <exec_depend>tactile_calibration_tools</exec_depend>
-  <exec_depend>tactile_merger</exec_depend>
+  <exec_depend>contact_force_estimator</exec_depend>
   <exec_depend>tactile_pcl</exec_depend>
   <exec_depend>rviz_tactile_plugins</exec_depend>
 
