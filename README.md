@@ -17,19 +17,15 @@ This software package adds tactile messages, a tactile sensor description to URD
 
 ### Pre-Requirements
 
-* Ubuntu Bionic with ROS Melodic:
+* Ubuntu >= 20.04 with ROS Noetic or One:
   ```bash
-  sudo apt install python-wstool python-rosdep python-catkin-tools
-  ```
-* or Ubuntu Focal with ROS Noetic:
-  ```bash
-  sudo apt install python3-wstool python3-rosdep python3-catkin-tools
+  sudo apt install python3-vcstool python3-rosdep python3-catkin-tools
   ```
 
 ### Setup and build catkin workspace
 ```bash
 export CATKIN_WS=~/catkin_ws  # Change to your preferred location
-export ROS_DISTRO=melodic     # Change to your ROS distro
+export ROS_DISTRO=one         # Change to your ROS distro
 
 mkdir -p $CATKIN_WS/src
 cd $CATKIN_WS
@@ -37,9 +33,7 @@ catkin config --extend /opt/ros/${ROS_DISTRO}
 
 # Fetch sources from rosinstall file
 cd src
-wstool init
-wstool merge https://raw.githubusercontent.com/ubi-agni/tactile_toolbox/melodic-devel/rosinstall
-wstool update
+vcs import --input https://raw.githubusercontent.com/ubi-agni/tactile_toolbox/obese-devel/rosinstall .
 
 # Install dependencies
 rosdep install -y --from-paths . --ignore-src --rosdistro ${ROS_DISTRO}

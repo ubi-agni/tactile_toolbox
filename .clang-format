@@ -25,6 +25,7 @@ BraceWrapping:
   BeforeElse: false
   IndentBraces: false
   SplitEmptyRecord: false
+  SplitEmptyFunction: false
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false

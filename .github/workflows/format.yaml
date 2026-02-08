@@ -11,14 +11,12 @@ on:
 jobs:
   pre-commit:
     name: pre-commit
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install clang-format-10
-        run: sudo apt-get install clang-format-10
-      - uses: rhaschke/install-catkin_lint-action@v1.0
-        with:
-          distro: noetic
+      - uses: actions/checkout@v6
+      - name: Install clang-format
+        run: sudo apt-get install clang-format
+      - uses: rhaschke/install-catkin_lint-action@main
       - uses: pre-commit/action@v3.0.1
         id: precommit
       - name: Upload pre-commit changes

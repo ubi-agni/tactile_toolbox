@@ -152,8 +152,7 @@ bool RangeProperty::setValue(const QVariant &new_value)
 	QStringList values = new_value.toString().split(";", split_beahvior);
 	if (values.size() != 2) {
 		values.clear();
-		values << ""
-		       << "";
+		values << "" << "";
 	}
 	ignore_children_updates_ = true;
 	min_property_->setManuallyEdited();
